@@ -7,9 +7,6 @@ class Category(models.Model):
     """Product category model."""
     name = models.CharField(_('name'), max_length=100)
     description = models.TextField(_('description'), blank=True)
-    parent = models.ForeignKey('self', verbose_name=_('parent category'),
-                              on_delete=models.CASCADE, null=True, blank=True,
-                              related_name='children')
     created_at = models.DateTimeField(_('created at'), auto_now_add=True)
     updated_at = models.DateTimeField(_('updated at'), auto_now=True)
 

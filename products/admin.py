@@ -3,8 +3,7 @@ from .models import Category, Unit, Product
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ('name', 'parent', 'created_at')
-    list_filter = ('parent',)
+    list_display = ('name', 'created_at')
     search_fields = ('name', 'description')
     ordering = ('name',)
 
