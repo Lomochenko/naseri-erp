@@ -1,0 +1,140 @@
+/* فایل CSS اصلی برای رابط کاربری فارسی */
+@font-face {
+    font-family: 'Vazir';
+    src: url('/static/fonts/Vazir.eot');
+    src: url('/static/fonts/Vazir.eot?#iefix') format('embedded-opentype'),
+         url('/static/fonts/Vazir.woff2') format('woff2'),
+         url('/static/fonts/Vazir.woff') format('woff'),
+         url('/static/fonts/Vazir.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Vazir';
+    src: url('/static/fonts/Vazir-Bold.eot');
+    src: url('/static/fonts/Vazir-Bold.eot?#iefix') format('embedded-opentype'),
+         url('/static/fonts/Vazir-Bold.woff2') format('woff2'),
+         url('/static/fonts/Vazir-Bold.woff') format('woff'),
+         url('/static/fonts/Vazir-Bold.ttf') format('truetype');
+    font-weight: bold;
+    font-style: normal;
+}
+
+body {
+    font-family: 'Vazir', 'Tahoma', sans-serif;
+    direction: rtl;
+    text-align: right;
+    background-color: #f5f5f5;
+    color: #333;
+}
+
+.ltr {
+    direction: ltr;
+    text-align: left;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.header {
+    background-color: #2c3e50;
+    color: white;
+    padding: 15px 0;
+    margin-bottom: 20px;
+}
+
+.footer {
+    background-color: #2c3e50;
+    color: white;
+    padding: 15px 0;
+    margin-top: 20px;
+    text-align: center;
+}
+
+/* دکمه‌ها */
+.btn {
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.3s;
+}
+
+.btn-primary {
+    background-color: #3498db;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #2980b9;
+}
+
+.btn-success {
+    background-color: #2ecc71;
+    color: white;
+}
+
+.btn-success:hover {
+    background-color: #27ae60;
+}
+
+.btn-danger {
+    background-color: #e74c3c;
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #c0392b;
+}
+
+/* فرم‌ها */
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-family: 'Vazir', 'Tahoma', sans-serif;
+}
+
+/* جداول */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.table th, .table td {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+.table th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+}
+
+/* اعداد فارسی */
+.persian-number {
+    font-feature-settings: "ss01";
+}
+
+/* کلاس‌های کمکی */
+.text-center {
+    text-align: center;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.text-left {
+    text-align: left;
+}

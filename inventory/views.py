@@ -4,27 +4,10 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Sum
 from .models import Warehouse, InventoryTransaction, StockAdjustment, StockAdjustmentItem
 from products.models import Product
-
-# Placeholder for serializers - we'll create these later
-class WarehouseSerializer:
-    class Meta:
-        model = Warehouse
-        fields = '__all__'
-
-class InventoryTransactionSerializer:
-    class Meta:
-        model = InventoryTransaction
-        fields = '__all__'
-
-class StockAdjustmentSerializer:
-    class Meta:
-        model = StockAdjustment
-        fields = '__all__'
-
-class StockAdjustmentItemSerializer:
-    class Meta:
-        model = StockAdjustmentItem
-        fields = '__all__'
+from .serializers import (
+    WarehouseSerializer, InventoryTransactionSerializer,
+    StockAdjustmentSerializer, StockAdjustmentItemSerializer
+)
 
 class WarehouseViewSet(viewsets.ModelViewSet):
     """ViewSet for viewing and editing Warehouse instances."""

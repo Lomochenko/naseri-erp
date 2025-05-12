@@ -135,7 +135,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
@@ -153,6 +153,43 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+    ],
+    'DATETIME_FORMAT': 'jY/jm/jd H:i:s',
+    'DATE_FORMAT': 'jY/jm/jd',
+    'COERCE_DECIMAL_TO_STRING': False,
+    'UNICODE_JSON': True,
+}
+
+# Swagger settings
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'Basic': {
+            'type': 'basic'
+        },
+        'Bearer': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header'
+        }
+    },
+    'USE_SESSION_AUTH': True,
+    'LOGIN_URL': 'rest_framework:login',
+    'LOGOUT_URL': 'rest_framework:logout',
+    'VALIDATOR_URL': None,
+    'DEFAULT_MODEL_RENDERING': 'example',
+    'OPERATIONS_SORTER': 'alpha',
+    'PERSIST_AUTH': True,
+}
+
+# ReDoc settings
+REDOC_SETTINGS = {
+    'LAZY_RENDERING': False,
+    'HIDE_HOSTNAME': False,
+    'EXPAND_RESPONSES': 'all',
+    'PATH_IN_MIDDLE': False,
 }
 
 # Media files
@@ -167,3 +204,9 @@ STATICFILES_DIRS = [
 
 # Custom user model
 AUTH_USER_MODEL = 'users.User'
+
+# Authentication URLs
+LOGIN_URL = '/api/users/login/'
+LOGIN_REDIRECT_URL = '/api/users/profile/'
+LOGOUT_URL = '/api/users/logout/'
+LOGOUT_REDIRECT_URL = '/api/users/login/'

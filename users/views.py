@@ -34,6 +34,10 @@ class LoginView(APIView):
     """API view for user login."""
     permission_classes = [permissions.AllowAny]
 
+    def get(self, request):
+        """Handle GET requests for user login."""
+        return Response({'message': _('Please login with POST request')})
+
     def post(self, request):
         """Handle POST requests for user login."""
         serializer = LoginSerializer(data=request.data)
@@ -60,6 +64,11 @@ class LogoutView(APIView):
 
     def post(self, request):
         """Handle POST requests for user logout."""
+        logout(request)
+        return Response({'message': _('Logout successful')})
+
+    def get(self, request):
+        """Handle GET requests for user logout."""
         logout(request)
         return Response({'message': _('Logout successful')})
 

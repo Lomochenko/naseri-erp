@@ -1,12 +1,10 @@
 @echo off
-echo Creating virtual environment...
-python -m venv venv_naseri
-echo Activating virtual environment...
-call venv_naseri\Scripts\activate
-echo Installing requirements...
+echo ===== فعال‌سازی محیط مجازی =====
+call venv\Scripts\activate
+echo ===== نصب پکیج‌های مورد نیاز =====
 pip install -r requirements.txt
-echo Running migrations...
+echo ===== اجرای مایگریشن‌ها =====
 python manage.py migrate
-echo Starting server...
+echo ===== شروع سرور =====
 python manage.py runserver
 pause
