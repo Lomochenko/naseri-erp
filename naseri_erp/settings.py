@@ -40,6 +40,7 @@ INSTALLED_APPS = [
 
     # Third-party apps
     'rest_framework',
+    'rest_framework.authtoken',  # برای پشتیبانی از توکن احراز هویت
     'corsheaders',
     'drf_yasg',
     'django_filters',
@@ -66,6 +67,7 @@ MIDDLEWARE = [
 
 # CORS settings
 CORS_ALLOW_ALL_ORIGINS = True  # Only for development, set specific origins in production
+CORS_ALLOW_CREDENTIALS = True  # برای اجازه دادن به کوکی‌ها
 
 ROOT_URLCONF = 'naseri_erp.urls'
 
@@ -145,6 +147,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # REST Framework settings
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',  # احراز هویت مبتنی بر توکن
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
     ],
