@@ -1,0 +1,24 @@
+feat: Implement complete sales management system and fix bugs
+
+This commit includes the following changes:
+
+1. Added complete sales management system with the following components:
+   - SalesList.vue: Page for viewing, searching, and filtering sales
+   - NewSale.vue: Page for creating new sales with product selection and customer management
+   - SaleDetail.vue: Page for viewing sale details and managing sale status
+   - Enhanced Pinia store for sales management (sales.js)
+   - Customer management functionality
+
+2. Fixed several bugs and improved performance:
+   - Fixed the duplicate ApiService class definition in apiService.js
+   - Optimized application startup by modifying initAuth method in main.js
+   - Fixed "Unterminated string literal" errors in sales-related components
+   - Improved UI responsiveness across all screen sizes
+
+3. Updated documentation:
+   - Updated main README.md with information about the sales management system
+   - Enhanced frontend README.md with detailed component structure
+   - Created backend_README.md with API documentation
+   - Added troubleshooting information for common issues
+
+These changes provide a complete end-to-end sales management solution with improved reliability and performance. 

@@ -1,142 +1,356 @@
 <template>
   <div>
-    <div class="d-flex justify-space-between align-center mb-6">
-      <h1 class="text-h4">مدیریت محصولات</h1>
-      <v-btn color="primary" prepend-icon="mdi-plus" @click="openAddProductDialog">
-        افزودن محصول جدید
-      </v-btn>
-    </div>
-
-    <!-- Filters -->
     <v-card class="mb-6">
+      <v-card-title class="d-flex align-center justify-space-between">
+        <span class="text-h5">مدیریت محصولات</span>
+        <v-btn 
+          color="primary" 
+          prepend-icon="mdi-plus" 
+          variant="elevated"
+          @click="addNewProduct"
+        >
+          محصول جدید
+        </v-btn>
+      </v-card-title>
+
       <v-card-text>
         <v-row>
+          <!-- فیلترهای جستجو -->
           <v-col cols="12" md="3">
             <v-text-field
-              v-model="search"
-              label="جستجو"
+              v-model="filters.search"
+              label="جستجو در محصولات"
               variant="outlined"
               density="compact"
               prepend-inner-icon="mdi-magnify"
-              clearable
-              @update:model-value="updateFilters({ search: $event })"
+              hide-details
+              @update:model-value="updateFilters"
             ></v-text-field>
           </v-col>
+
           <v-col cols="12" md="3">
             <v-select
-              v-model="selectedCategory"
-              label="دسته‌بندی"
-              variant="outlined"
-              density="compact"
+              v-model="filters.category"
               :items="categories"
               item-title="name"
               item-value="id"
-              clearable
-              return-object
-              @update:model-value="updateFilters({ category: $event })"
-            ></v-select>
-          </v-col>
-          <v-col cols="12" md="3">
-            <v-select
-              v-model="sortBy"
-              label="مرتب‌سازی بر اساس"
+              label="دسته‌بندی"
               variant="outlined"
               density="compact"
-              :items="sortOptions"
-              @update:model-value="updateFilters({ sortBy: $event })"
+              hide-details
+              clearable
+              return-object
+              @update:model-value="updateFilters"
             ></v-select>
           </v-col>
-          <v-col cols="12" md="3" class="d-flex align-center">
-            <v-btn color="primary" variant="tonal" @click="loadProducts">
-              اعمال فیلتر
-            </v-btn>
-            <v-btn color="error" variant="text" class="ms-2" @click="resetFilters">
-              حذف فیلتر‌ها
+
+          <v-col cols="12" md="3">
+            <v-select
+              v-model="filters.status"
+              :items="[
+                { title: 'همه محصولات', value: null },
+                { title: 'محصولات فعال', value: 'active' },
+                { title: 'محصولات غیرفعال', value: 'inactive' },
+                { title: 'موجودی کم', value: 'low_stock' },
+                { title: 'اتمام موجودی', value: 'out_of_stock' }
+              ]"
+              item-title="title"
+              item-value="value"
+              label="وضعیت"
+              variant="outlined"
+              density="compact"
+              hide-details
+              @update:model-value="updateFilters"
+            ></v-select>
+          </v-col>
+
+          <v-col cols="12" md="3" class="d-flex justify-end align-center">
+            <v-btn 
+              color="secondary" 
+              variant="text" 
+              prepend-icon="mdi-refresh"
+              @click="resetFilters"
+            >
+              بازنشانی فیلترها
             </v-btn>
           </v-col>
         </v-row>
       </v-card-text>
     </v-card>
 
-    <!-- Products Table -->
+    <!-- جدول نمایش محصولات -->
     <v-card>
       <v-data-table
         :headers="headers"
         :items="products"
         :loading="loading"
-        :items-per-page="pagination.itemsPerPage"
-        :items-per-page-options="[10, 20, 50]"
-        density="compact"
-        class="elevation-1"
-        @update:options="handleTableOptionsChange"
+        :items-per-page="itemsPerPage"
+        :page="page"
+        :server-items-length="totalItems"
+        class="elevation-1 rtl-table"
+        hover
+        @update:options="handleOptions"
       >
-        <!-- Code column -->
-        <template v-slot:item.code="{ item }">
-          <div class="font-weight-bold">{{ item.code }}</div>
+        <!-- لودینگ -->
+        <template v-slot:loader>
+          <v-progress-linear indeterminate color="primary"></v-progress-linear>
         </template>
 
-        <!-- Image column -->
+        <!-- نمایش تصویر محصول -->
         <template v-slot:item.image="{ item }">
-          <v-avatar size="40">
-            <v-img :src="item.image || 'https://via.placeholder.com/40'" cover></v-img>
-          </v-avatar>
+          <div class="d-flex align-center">
+            <v-avatar size="50" rounded class="mr-3" variant="outlined">
+              <v-img 
+                :src="item.image || '/images/no-image.png'" 
+                cover
+                :alt="item.name"
+              ></v-img>
+            </v-avatar>
+          </div>
         </template>
 
-        <!-- Price column -->
-        <template v-slot:item.price="{ item }">
-          {{ item.price.toLocaleString() }} تومان
+        <!-- نمایش نام محصول و کد -->
+        <template v-slot:item.name="{ item }">
+          <div>
+            <div class="text-subtitle-2 font-weight-bold">{{ item.name }}</div>
+            <div class="text-body-2 text-medium-emphasis">کد: {{ item.code }}</div>
+          </div>
         </template>
 
-        <!-- Status column -->
-        <template v-slot:item.stock="{ item }">
+        <!-- نمایش دسته‌بندی -->
+        <template v-slot:item.category="{ item }">
           <v-chip
-            :color="getStockColor(item.stock)"
+            v-if="item.category"
             size="small"
+            color="secondary"
+            text-color="white"
+            variant="flat"
           >
-            {{ getStockLabel(item.stock) }}
+            {{ item.category.name }}
+          </v-chip>
+          <span v-else class="text-disabled">-</span>
+        </template>
+
+        <!-- نمایش قیمت فروش -->
+        <template v-slot:item.selling_price="{ item }">
+          <div class="text-right">
+            <div class="font-weight-medium">{{ formatPrice(item.selling_price) }}</div>
+            <div class="text-caption text-medium-emphasis">خرید: {{ formatPrice(item.purchase_price) }}</div>
+          </div>
+        </template>
+
+        <!-- نمایش موجودی -->
+        <template v-slot:item.stock="{ item }">
+          <div class="d-flex align-center">
+            <v-chip
+              :color="getStockColor(item.stock, item.min_stock)"
+              size="small"
+              variant="flat"
+            >
+              {{ getStockLabel(item.stock, item.min_stock) }}
+            </v-chip>
+          </div>
+        </template>
+
+        <!-- نمایش وضعیت -->
+        <template v-slot:item.is_active="{ item }">
+          <v-chip
+            :color="item.is_active ? 'success' : 'error'"
+            size="small"
+            variant="flat"
+          >
+            {{ item.is_active ? 'فعال' : 'غیرفعال' }}
           </v-chip>
         </template>
 
-        <!-- Actions column -->
+        <!-- نمایش دکمه‌های عملیات -->
         <template v-slot:item.actions="{ item }">
-          <v-icon 
-            size="small" 
-            class="me-2"
-            @click="editProduct(item)"
-          >
-            mdi-pencil
-          </v-icon>
-          <v-icon 
-            size="small" 
-            color="error"
-            @click="confirmDelete(item)"
-          >
-            mdi-delete
-          </v-icon>
+          <div class="d-flex justify-end">
+            <v-btn
+              icon="mdi-eye"
+              size="small"
+              variant="text"
+              color="info"
+              class="ml-1"
+              @click="viewProduct(item)"
+            ></v-btn>
+            <v-btn
+              icon="mdi-pencil"
+              size="small"
+              variant="text"
+              color="warning"
+              class="ml-1"
+              @click="editProduct(item)"
+            ></v-btn>
+            <v-btn
+              icon="mdi-delete"
+              size="small"
+              variant="text"
+              color="error"
+              @click="confirmDelete(item)"
+            ></v-btn>
+          </div>
+        </template>
+
+        <!-- نمایش در حالت خالی بودن لیست -->
+        <template v-slot:no-data>
+          <div class="text-center pa-5">
+            <v-icon size="large" icon="mdi-package-variant" color="secondary" class="mb-3"></v-icon>
+            <div>محصولی یافت نشد</div>
+            <v-btn 
+              variant="text" 
+              color="primary" 
+              class="mt-3" 
+              @click="loadProducts"
+            >
+              تلاش مجدد
+            </v-btn>
+          </div>
         </template>
       </v-data-table>
-      
-      <!-- Pagination -->
-      <v-pagination
-        v-if="pagination.totalPages > 1"
-        v-model="pagination.page"
-        :length="pagination.totalPages"
-        @update:model-value="handlePageChange"
-        class="pt-4 pb-2"
-      ></v-pagination>
     </v-card>
 
-    <!-- Delete Confirmation Dialog -->
-    <v-dialog v-model="deleteDialog" max-width="500px">
+    <!-- دیالوگ فرم محصول -->
+    <product-form
+      v-model="productDialog"
+      :edited-product="editedProduct"
+      @product-saved="onProductSaved"
+    />
+
+    <!-- دیالوگ جزئیات محصول -->
+    <v-dialog v-model="detailDialog" max-width="600px">
+      <v-card v-if="selectedProduct">
+        <v-img
+          v-if="selectedProduct.image"
+          :src="selectedProduct.image"
+          height="200"
+          cover
+          class="text-white"
+        >
+          <template v-slot:placeholder>
+            <v-row class="fill-height ma-0" align="center" justify="center">
+              <v-progress-circular indeterminate color="primary"></v-progress-circular>
+            </v-row>
+          </template>
+        </v-img>
+
+        <v-card-title class="text-h5">{{ selectedProduct.name }}</v-card-title>
+
+        <v-card-text>
+          <v-list lines="two">
+            <v-list-item>
+              <template v-slot:prepend>
+                <v-icon icon="mdi-barcode"></v-icon>
+              </template>
+              <v-list-item-title>کد محصول:</v-list-item-title>
+              <v-list-item-subtitle>{{ selectedProduct.code }}</v-list-item-subtitle>
+            </v-list-item>
+
+            <v-list-item v-if="selectedProduct.barcode">
+              <template v-slot:prepend>
+                <v-icon icon="mdi-barcode-scan"></v-icon>
+              </template>
+              <v-list-item-title>بارکد:</v-list-item-title>
+              <v-list-item-subtitle>{{ selectedProduct.barcode }}</v-list-item-subtitle>
+            </v-list-item>
+
+            <v-list-item v-if="selectedProduct.category">
+              <template v-slot:prepend>
+                <v-icon icon="mdi-tag"></v-icon>
+              </template>
+              <v-list-item-title>دسته‌بندی:</v-list-item-title>
+              <v-list-item-subtitle>{{ selectedProduct.category.name }}</v-list-item-subtitle>
+            </v-list-item>
+
+            <v-list-item>
+              <template v-slot:prepend>
+                <v-icon icon="mdi-tape-measure"></v-icon>
+              </template>
+              <v-list-item-title>واحد:</v-list-item-title>
+              <v-list-item-subtitle>{{ selectedProduct.unit?.name }} ({{ selectedProduct.unit?.symbol }})</v-list-item-subtitle>
+            </v-list-item>
+
+            <v-list-item>
+              <template v-slot:prepend>
+                <v-icon icon="mdi-cash"></v-icon>
+              </template>
+              <v-list-item-title>قیمت فروش:</v-list-item-title>
+              <v-list-item-subtitle>{{ formatPrice(selectedProduct.selling_price) }}</v-list-item-subtitle>
+            </v-list-item>
+
+            <v-list-item>
+              <template v-slot:prepend>
+                <v-icon icon="mdi-shopping"></v-icon>
+              </template>
+              <v-list-item-title>قیمت خرید:</v-list-item-title>
+              <v-list-item-subtitle>{{ formatPrice(selectedProduct.purchase_price) }}</v-list-item-subtitle>
+            </v-list-item>
+
+            <v-list-item>
+              <template v-slot:prepend>
+                <v-icon icon="mdi-package-variant"></v-icon>
+              </template>
+              <v-list-item-title>موجودی:</v-list-item-title>
+              <v-list-item-subtitle>
+                <v-chip
+                  :color="getStockColor(selectedProduct.stock, selectedProduct.min_stock)"
+                  size="small"
+                  variant="flat"
+                >
+                  {{ selectedProduct.stock }} {{ selectedProduct.unit?.symbol }}
+                </v-chip>
+                (حداقل موجودی: {{ selectedProduct.min_stock }} {{ selectedProduct.unit?.symbol }})
+              </v-list-item-subtitle>
+            </v-list-item>
+
+            <v-list-item v-if="selectedProduct.description">
+              <template v-slot:prepend>
+                <v-icon icon="mdi-text-box"></v-icon>
+              </template>
+              <v-list-item-title>توضیحات:</v-list-item-title>
+              <v-list-item-subtitle>{{ selectedProduct.description }}</v-list-item-subtitle>
+            </v-list-item>
+          </v-list>
+        </v-card-text>
+
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="primary" variant="text" @click="detailDialog = false">
+            بستن
+          </v-btn>
+          <v-btn
+            color="warning"
+            variant="elevated"
+            prepend-icon="mdi-pencil"
+            @click="editSelectedProduct"
+          >
+            ویرایش
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- دیالوگ حذف محصول -->
+    <v-dialog v-model="deleteDialog" max-width="400px">
       <v-card>
         <v-card-title class="text-h5">حذف محصول</v-card-title>
         <v-card-text>
-          آیا از حذف محصول "{{ selectedProduct?.name }}" اطمینان دارید؟ این عمل قابل بازگشت نیست.
+          آیا از حذف محصول <strong>{{ deleteItem?.name }}</strong> اطمینان دارید؟
+          <div class="text-caption text-medium-emphasis mt-2">
+            این عملیات غیرقابل بازگشت است و تمام اطلاعات مربوط به این محصول حذف خواهد شد.
+          </div>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="primary" variant="text" @click="deleteDialog = false">انصراف</v-btn>
-          <v-btn color="error" variant="elevated" @click="deleteProduct" :loading="loading">حذف</v-btn>
+          <v-btn color="secondary" variant="text" @click="deleteDialog = false">انصراف</v-btn>
+          <v-btn 
+            color="error" 
+            variant="elevated" 
+            @click="deleteProduct" 
+            :loading="loading"
+          >
+            حذف
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -144,124 +358,150 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useProductsStore } from '../../store/products';
+import ProductForm from './ProductForm.vue';
 
-// استفاده از استور محصولات
+// استور محصولات
 const productsStore = useProductsStore();
 
-// Table headers
+// ثابت‌های نمایش
 const headers = [
-  { title: 'تصویر', key: 'image', sortable: false, align: 'center' },
-  { title: 'کد محصول', key: 'code', sortable: true, align: 'start' },
-  { title: 'نام محصول', key: 'name', sortable: true, align: 'start' },
-  { title: 'دسته‌بندی', key: 'category.name', sortable: true, align: 'start' },
-  { title: 'واحد', key: 'unit.name', sortable: true, align: 'start' },
-  { title: 'قیمت', key: 'price', sortable: true, align: 'end' },
-  { title: 'موجودی', key: 'stock', sortable: true, align: 'center' },
-  { title: 'عملیات', key: 'actions', sortable: false, align: 'center' }
+  { title: 'تصویر', key: 'image', align: 'center', sortable: false },
+  { title: 'نام محصول', key: 'name', align: 'start', sortable: true },
+  { title: 'دسته‌بندی', key: 'category', align: 'center', sortable: false },
+  { title: 'قیمت فروش (تومان)', key: 'selling_price', align: 'center', sortable: true },
+  { title: 'موجودی', key: 'stock', align: 'center', sortable: true },
+  { title: 'وضعیت', key: 'is_active', align: 'center', sortable: true },
+  { title: 'عملیات', key: 'actions', align: 'center', sortable: false },
 ];
 
-// Reactive data
+// متغیرهای واکنش‌پذیر
+const productDialog = ref(false);
+const detailDialog = ref(false);
 const deleteDialog = ref(false);
+const editedProduct = ref(null);
 const selectedProduct = ref(null);
+const deleteItem = ref(null);
+const page = ref(1);
+const itemsPerPage = ref(10);
 
-// استفاده از داده‌های استور
+// دریافت داده‌ها از استور
+const loading = computed(() => productsStore.loading);
 const products = computed(() => productsStore.products);
 const categories = computed(() => productsStore.categories);
-const loading = computed(() => productsStore.loading);
-const error = computed(() => productsStore.error);
-const pagination = computed(() => productsStore.pagination);
+const totalItems = computed(() => productsStore.totalItems);
+const filters = computed(() => productsStore.filters);
 
-// متغیرهای محلی برای فیلترها
-const search = ref('');
-const selectedCategory = ref(null);
-const sortBy = ref('name');
-
-// Sort options
-const sortOptions = [
-  { title: 'نام (صعودی)', value: 'name' },
-  { title: 'نام (نزولی)', value: '-name' },
-  { title: 'قیمت (صعودی)', value: 'price' },
-  { title: 'قیمت (نزولی)', value: '-price' },
-  { title: 'موجودی (صعودی)', value: 'stock' },
-  { title: 'موجودی (نزولی)', value: '-stock' }
-];
-
-// Methods
-const loadProducts = async () => {
-  await productsStore.fetchProducts();
+// فرمت‌کننده قیمت
+const formatPrice = (price) => {
+  return new Intl.NumberFormat('fa-IR').format(price);
 };
 
-const loadCategories = async () => {
-  await productsStore.fetchCategories();
+// بررسی وضعیت موجودی
+const getStockColor = (stock, minStock) => {
+  if (stock <= 0) return 'error';
+  if (stock <= minStock) return 'warning';
+  return 'success';
 };
 
-const updateFilters = (newFilters) => {
-  productsStore.updateFilters(newFilters);
+const getStockLabel = (stock, minStock) => {
+  if (stock <= 0) return 'اتمام موجودی';
+  if (stock <= minStock) return 'موجودی کم';
+  return `${stock} عدد`;
+};
+
+// مدیریت فیلترها
+const updateFilters = () => {
+  productsStore.updateFilters({
+    search: filters.value.search,
+    category: filters.value.category?.id,
+    status: filters.value.status
+  });
 };
 
 const resetFilters = () => {
   productsStore.resetFilters();
-  search.value = '';
-  selectedCategory.value = null;
-  sortBy.value = 'name';
 };
 
-const handlePageChange = (newPage) => {
-  productsStore.setPage(newPage);
-  loadProducts();
+// بارگذاری محصولات
+const loadProducts = async () => {
+  await productsStore.fetchProducts();
 };
 
-const handleTableOptionsChange = (options) => {
-  const { itemsPerPage } = options;
-  if (itemsPerPage !== pagination.value.itemsPerPage) {
-    productsStore.setItemsPerPage(itemsPerPage);
-    loadProducts();
+// مدیریت گزینه‌های جدول
+const handleOptions = (options) => {
+  page.value = options.page;
+  itemsPerPage.value = options.itemsPerPage;
+  
+  // تنظیم مرتب‌سازی
+  const sortBy = options.sortBy.length > 0 ? options.sortBy[0] : null;
+  
+  if (sortBy) {
+    productsStore.updateFilters({
+      sortBy: sortBy.key,
+      sortDesc: sortBy.order === 'desc'
+    });
   }
+  
+  // بروزرسانی تنظیمات صفحه‌بندی
+  productsStore.setPage(page.value);
+  productsStore.setItemsPerPage(itemsPerPage.value);
 };
 
-const openAddProductDialog = () => {
-  // TODO: اینجا بایستی دیالوگ افزودن محصول جدید باز شود
-  console.log('Open add product dialog');
+// مدیریت محصولات
+const addNewProduct = () => {
+  editedProduct.value = null;
+  productDialog.value = true;
 };
 
-const editProduct = (product) => {
-  // TODO: اینجا بایستی دیالوگ ویرایش محصول باز شود
-  console.log('Edit product:', product);
+const editProduct = (item) => {
+  editedProduct.value = { ...item };
+  productDialog.value = true;
 };
 
-const confirmDelete = (product) => {
-  selectedProduct.value = product;
+const viewProduct = (item) => {
+  selectedProduct.value = { ...item };
+  detailDialog.value = true;
+};
+
+const editSelectedProduct = () => {
+  editedProduct.value = { ...selectedProduct.value };
+  detailDialog.value = false;
+  productDialog.value = true;
+};
+
+const confirmDelete = (item) => {
+  deleteItem.value = item;
   deleteDialog.value = true;
 };
 
 const deleteProduct = async () => {
-  if (selectedProduct.value) {
-    const success = await productsStore.deleteProduct(selectedProduct.value.id);
-    if (success) {
-      deleteDialog.value = false;
-      // نمایش پیام موفقیت‌آمیز
-      // TODO: اضافه کردن سیستم نمایش پیام با Snackbar
-    }
+  if (await productsStore.deleteProduct(deleteItem.value.id)) {
+    deleteDialog.value = false;
+    deleteItem.value = null;
   }
 };
 
-const getStockColor = (stock) => {
-  if (stock <= 5) return 'error';
-  if (stock <= 10) return 'warning';
-  return 'success';
+const onProductSaved = () => {
+  loadProducts();
 };
 
-const getStockLabel = (stock) => {
-  if (stock <= 5) return 'بحرانی';
-  if (stock <= 10) return 'کم';
-  return 'موجود';
-};
-
-// Lifecycle hooks
+// دریافت داده‌ها در زمان بارگذاری
 onMounted(async () => {
-  await loadCategories();
+  if (categories.value.length === 0) {
+    await productsStore.fetchCategories();
+  }
+  
   await loadProducts();
 });
-</script> 
+</script>
+
+<style scoped>
+.rtl-table :deep(th) {
+  text-align: right;
+}
+.v-chip {
+  font-size: 0.8rem;
+}
+</style> 

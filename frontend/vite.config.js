@@ -11,11 +11,15 @@ export default defineConfig({
     }
   },
   server: {
+    cors: true,
+    port: 5173,
+    strictPort: false,
     proxy: {
       '/api': {
         target: 'http://localhost:8000',
         changeOrigin: true,
-        secure: false
+        secure: false,
+        rewrite: (path) => path
       }
     }
   }

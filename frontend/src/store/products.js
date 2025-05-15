@@ -13,16 +13,15 @@ export const useProductsStore = defineStore('products', {
     filters: {
       search: '',
       category: null,
-      sortBy: 'name'
+      status: null,
+      sortBy: 'name',
+      sortDesc: false
     },
     
-    // پیجینیشن
-    pagination: {
-      page: 1,
-      itemsPerPage: 10,
-      totalItems: 0,
-      totalPages: 0
-    }
+    // اطلاعات صفحه‌بندی
+    page: 1,
+    itemsPerPage: 10,
+    totalItems: 0
   }),
   
   getters: {
@@ -31,15 +30,17 @@ export const useProductsStore = defineStore('products', {
     },
     
     getProductsByCategory: (state) => (categoryId) => {
-      return state.products.filter(product => product.category.id === categoryId);
+      return state.products.filter(product => product.category?.id === categoryId);
     },
     
     getLowStockProducts: (state) => {
-      return state.products.filter(product => product.stock <= 10);
+      return state.products.filter(product => 
+        product.current_stock <= product.min_stock && product.current_stock > 0
+      );
     },
     
-    getCriticalStockProducts: (state) => {
-      return state.products.filter(product => product.stock <= 5);
+    getOutOfStockProducts: (state) => {
+      return state.products.filter(product => product.current_stock <= 0);
     },
     
     getCategoryById: (state) => (id) => {
@@ -58,19 +59,48 @@ export const useProductsStore = defineStore('products', {
       this.error = null;
       
       try {
+        // ساخت پارامترهای API
         const params = {
-          search: this.filters.search,
-          category: this.filters.category?.id,
-          ordering: this.filters.sortBy,
-          page: this.pagination.page,
-          page_size: this.pagination.itemsPerPage
+          search: this.filters.search || undefined,
+          page: this.page,
+          page_size: this.itemsPerPage
         };
         
+        // اضافه کردن دسته‌بندی به پارامترها
+        if (this.filters.category) {
+          params.category = this.filters.category.id;
+        }
+        
+        // اضافه کردن مرتب‌سازی
+        let ordering = this.filters.sortBy;
+        if (this.filters.sortDesc) {
+          ordering = `-${ordering}`;
+        }
+        params.ordering = ordering;
+        
+        // اضافه کردن فیلتر وضعیت
+        if (this.filters.status) {
+          switch (this.filters.status) {
+            case 'active':
+              params.is_active = true;
+              break;
+            case 'inactive':
+              params.is_active = false;
+              break;
+            case 'low_stock':
+              params.low_stock = true;
+              break;
+            case 'out_of_stock':
+              params.stock_lte = 0;
+              break;
+          }
+        }
+        
+        console.log('Fetching products with params:', params);
         const response = await productsService.getList(params);
         
         this.products = response.results;
-        this.pagination.totalItems = response.count;
-        this.pagination.totalPages = Math.ceil(response.count / this.pagination.itemsPerPage);
+        this.totalItems = response.count;
         return this.products;
       } catch (error) {
         this.error = error.response?.data?.detail || 'خطا در دریافت لیست محصولات';
@@ -87,7 +117,10 @@ export const useProductsStore = defineStore('products', {
       this.error = null;
       
       try {
-        const response = await categoriesService.getList();
+        const response = await categoriesService.getList({
+          ordering: 'name',
+          page_size: 100 // تعداد بیشتری دسته‌بندی دریافت می‌کنیم
+        });
         this.categories = response.results;
         return this.categories;
       } catch (error) {
@@ -105,7 +138,10 @@ export const useProductsStore = defineStore('products', {
       this.error = null;
       
       try {
-        const response = await unitsService.getList();
+        const response = await unitsService.getList({
+          ordering: 'name',
+          page_size: 100 // تعداد بیشتری واحد دریافت می‌کنیم
+        });
         this.units = response.results;
         return this.units;
       } catch (error) {
@@ -149,11 +185,18 @@ export const useProductsStore = defineStore('products', {
       this.error = null;
       
       try {
+        console.log('Adding new product:', productData);
         const response = await productsService.create(productData);
-        this.products.push(response);
+        
+        // بروزرسانی لیست محصولات
+        await this.fetchProducts();
+        
         return response;
       } catch (error) {
-        this.error = error.response?.data?.detail || 'خطا در افزودن محصول';
+        const errorMsg = error.response?.data?.detail || 
+                        Object.values(error.response?.data || {}).flat().join(', ') ||
+                        'خطا در افزودن محصول';
+        this.error = errorMsg;
         console.error('Error adding product:', error);
         return null;
       } finally {
@@ -167,17 +210,18 @@ export const useProductsStore = defineStore('products', {
       this.error = null;
       
       try {
+        console.log('Updating product:', productId, productData);
         const response = await productsService.update(productId, productData);
         
-        // به‌روزرسانی محصول در آرایه محصولات
-        const index = this.products.findIndex(p => p.id === productId);
-        if (index !== -1) {
-          this.products[index] = response;
-        }
+        // بروزرسانی لیست محصولات
+        await this.fetchProducts();
         
         return response;
       } catch (error) {
-        this.error = error.response?.data?.detail || 'خطا در ویرایش محصول';
+        const errorMsg = error.response?.data?.detail || 
+                        Object.values(error.response?.data || {}).flat().join(', ') ||
+                        'خطا در ویرایش محصول';
+        this.error = errorMsg;
         console.error('Error updating product:', error);
         return null;
       } finally {
@@ -212,13 +256,68 @@ export const useProductsStore = defineStore('products', {
       this.error = null;
       
       try {
+        console.log('Adding new category:', categoryData);
         const response = await categoriesService.create(categoryData);
-        this.categories.push(response);
+        
+        // بروزرسانی لیست دسته‌بندی‌ها
+        await this.fetchCategories();
+        
         return response;
       } catch (error) {
-        this.error = error.response?.data?.detail || 'خطا در افزودن دسته‌بندی';
+        const errorMsg = error.response?.data?.detail || 
+                        Object.values(error.response?.data || {}).flat().join(', ') ||
+                        'خطا در افزودن دسته‌بندی';
+        this.error = errorMsg;
         console.error('Error adding category:', error);
         return null;
+      } finally {
+        this.loading = false;
+      }
+    },
+    
+    // ویرایش دسته‌بندی
+    async updateCategory(categoryId, categoryData) {
+      this.loading = true;
+      this.error = null;
+      
+      try {
+        console.log('Updating category:', categoryId, categoryData);
+        const response = await categoriesService.update(categoryId, categoryData);
+        
+        // بروزرسانی لیست دسته‌بندی‌ها
+        await this.fetchCategories();
+        
+        return response;
+      } catch (error) {
+        const errorMsg = error.response?.data?.detail || 
+                        Object.values(error.response?.data || {}).flat().join(', ') ||
+                        'خطا در ویرایش دسته‌بندی';
+        this.error = errorMsg;
+        console.error('Error updating category:', error);
+        return null;
+      } finally {
+        this.loading = false;
+      }
+    },
+    
+    // دریافت محصولات با موجودی کم
+    async fetchLowStockProducts() {
+      this.loading = true;
+      this.error = null;
+      
+      try {
+        const response = await productsService.request(
+          'get', 
+          'low-stock/', 
+          null, 
+          { ordering: 'name' }
+        );
+        
+        return response.results || response;
+      } catch (error) {
+        this.error = error.response?.data?.detail || 'خطا در دریافت محصولات با موجودی کم';
+        console.error('Error fetching low stock products:', error);
+        return [];
       } finally {
         this.loading = false;
       }
@@ -227,18 +326,21 @@ export const useProductsStore = defineStore('products', {
     // به‌روزرسانی فیلترها
     updateFilters(newFilters) {
       this.filters = { ...this.filters, ...newFilters };
-      this.pagination.page = 1; // بازگشت به صفحه اول با تغییر فیلترها
+      this.page = 1; // بازگشت به صفحه اول با تغییر فیلترها
+      return this.fetchProducts();
     },
     
     // تنظیم صفحه جاری
     setPage(page) {
-      this.pagination.page = page;
+      this.page = page;
+      return this.fetchProducts();
     },
     
     // تنظیم تعداد آیتم در هر صفحه
     setItemsPerPage(count) {
-      this.pagination.itemsPerPage = count;
-      this.pagination.page = 1; // بازگشت به صفحه اول با تغییر تعداد آیتم‌ها
+      this.itemsPerPage = count;
+      this.page = 1; // بازگشت به صفحه اول با تغییر تعداد آیتم‌ها
+      return this.fetchProducts();
     },
     
     // بازنشانی فیلترها
@@ -246,9 +348,12 @@ export const useProductsStore = defineStore('products', {
       this.filters = {
         search: '',
         category: null,
-        sortBy: 'name'
+        status: null,
+        sortBy: 'name',
+        sortDesc: false
       };
-      this.pagination.page = 1;
+      this.page = 1;
+      return this.fetchProducts();
     }
   }
 }); 

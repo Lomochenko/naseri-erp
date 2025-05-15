@@ -1,241 +1,339 @@
-import axiosInstance from './axios';
-import { cacheService } from './cacheService';
+import axios from './axios';
+import cacheService from './cacheService';
 
 /**
- * سرویس API مشترک برای عملیات CRUD استاندارد
- * این کلاس برای کاهش کد تکراری در استورهای مختلف استفاده می‌شود
+ * کلاس سرویس API برای مدیریت تمام درخواست‌های HTTP
  */
 export class ApiService {
   /**
    * سازنده کلاس
-   * @param {string} baseUrl - آدرس پایه API
+   * @constructor
    */
-  constructor(baseUrl) {
-    this.baseUrl = baseUrl;
+  constructor() {
+    this.axios = axios;
+  }
+
+  /**
+   * ارسال درخواست GET
+   * @param {string} url - آدرس API
+   * @param {Object} params - پارامترهای Query String
+   * @param {Object} config - تنظیمات اضافی Axios
+   * @returns {Promise<any>} - پاسخ API
+   */
+  async get(url, params = {}, config = {}) {
+    try {
+      const response = await this.axios.get(url, { 
+        params,
+        ...config
+      });
+      return response.data;
+    } catch (error) {
+      console.error(`[API Error] GET ${url}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * ارسال درخواست POST
+   * @param {string} url - آدرس API
+   * @param {Object} data - داده‌های ارسالی
+   * @param {Object} config - تنظیمات اضافی Axios
+   * @returns {Promise<any>} - پاسخ API
+   */
+  async post(url, data = {}, config = {}) {
+    try {
+      const response = await this.axios.post(url, data, config);
+      return response.data;
+    } catch (error) {
+      console.error(`[API Error] POST ${url}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * ارسال درخواست PUT
+   * @param {string} url - آدرس API
+   * @param {Object} data - داده‌های بروزرسانی
+   * @param {Object} config - تنظیمات اضافی Axios
+   * @returns {Promise<any>} - پاسخ API
+   */
+  async put(url, data = {}, config = {}) {
+    try {
+      const response = await this.axios.put(url, data, config);
+      return response.data;
+    } catch (error) {
+      console.error(`[API Error] PUT ${url}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * ارسال درخواست PATCH
+   * @param {string} url - آدرس API
+   * @param {Object} data - داده‌های بروزرسانی جزئی
+   * @param {Object} config - تنظیمات اضافی Axios
+   * @returns {Promise<any>} - پاسخ API
+   */
+  async patch(url, data = {}, config = {}) {
+    try {
+      const response = await this.axios.patch(url, data, config);
+      return response.data;
+    } catch (error) {
+      console.error(`[API Error] PATCH ${url}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * ارسال درخواست DELETE
+   * @param {string} url - آدرس API
+   * @param {Object} config - تنظیمات اضافی Axios
+   * @returns {Promise<any>} - پاسخ API
+   */
+  async delete(url, config = {}) {
+    try {
+      const response = await this.axios.delete(url, config);
+      return response.data;
+    } catch (error) {
+      console.error(`[API Error] DELETE ${url}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * آپلود فایل به سرور
+   * @param {string} url - آدرس API
+   * @param {FormData} formData - داده‌های فرم شامل فایل
+   * @param {Function} progressCallback - تابع برای دریافت پیشرفت آپلود
+   * @returns {Promise<any>} - پاسخ API
+   */
+  async upload(url, formData, progressCallback = null) {
+    try {
+      const config = {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      };
+      
+      if (progressCallback) {
+        config.onUploadProgress = (progressEvent) => {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          progressCallback(percentCompleted);
+        };
+      }
+      
+      const response = await this.axios.post(url, formData, config);
+      return response.data;
+    } catch (error) {
+      console.error(`[API Error] UPLOAD ${url}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * دانلود فایل از سرور
+   * @param {string} url - آدرس API
+   * @param {Object} params - پارامترهای Query String
+   * @param {Function} progressCallback - تابع برای دریافت پیشرفت دانلود
+   * @returns {Promise<any>} - پاسخ API
+   */
+  async download(url, params = {}, progressCallback = null) {
+    try {
+      const config = {
+        responseType: 'blob',
+        params
+      };
+      
+      if (progressCallback) {
+        config.onDownloadProgress = (progressEvent) => {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          progressCallback(percentCompleted);
+        };
+      }
+      
+      const response = await this.axios.get(url, config);
+      return response;
+    } catch (error) {
+      console.error(`[API Error] DOWNLOAD ${url}:`, error);
+      throw error;
+    }
+  }
+}
+
+/**
+ * کلاس سرویس EntityApiService برای عملیات CRUD استاندارد
+ * این کلاس برای کاهش تکرار کد در استورهای مختلف طراحی شده است
+ */
+export class EntityApiService {
+  /**
+   * سازنده کلاس
+   * @param {string} endpoint - نقطه پایانی API (مانند 'products', 'customers', ...)
+   * @param {string} cacheKey - کلید ذخیره‌سازی در کش
+   * @param {number} cacheDuration - مدت زمان اعتبار کش به دقیقه
+   */
+  constructor(endpoint, cacheKey = null, cacheDuration = 30) {
+    this.api = new ApiService();
+    this.endpoint = endpoint;
+    this.cacheKey = cacheKey || endpoint;
+    this.cacheDuration = cacheDuration;
   }
 
   /**
    * دریافت لیست آیتم‌ها
-   * @param {Object} params - پارامترهای پرس‌وجو
-   * @param {boolean} useCache - آیا از کش استفاده شود؟
-   * @param {number} cacheExpiration - مدت زمان انقضای کش به دقیقه
-   * @returns {Promise<Object>} - نتیجه درخواست
+   * @param {Object} params - پارامترهای درخواست
+   * @param {boolean} bypassCache - نادیده گرفتن کش
+   * @returns {Promise<Array>} - لیست آیتم‌ها
    */
-  async getList(params = {}, useCache = true, cacheExpiration = 5) {
-    try {
-      // بررسی کش در صورت فعال بودن
-      if (useCache) {
-        const cachedData = cacheService.get(this.baseUrl, params);
-        if (cachedData) {
-          return cachedData;
-        }
+  async fetchList(params = {}, bypassCache = false) {
+    const cacheKey = `${this.cacheKey}_list`;
+    
+    // بررسی کش
+    if (!bypassCache) {
+      const cachedData = cacheService.get(cacheKey);
+      if (cachedData) {
+        return cachedData;
       }
-
-      const response = await axiosInstance.get(this.baseUrl, { params });
-      const data = response.data;
-
-      // ذخیره در کش در صورت فعال بودن
-      if (useCache) {
-        cacheService.set(this.baseUrl, params, data, cacheExpiration);
-      }
-
-      return data;
-    } catch (error) {
-      console.error(`Error fetching list from ${this.baseUrl}:`, error);
-      throw error;
     }
+    
+    const data = await this.api.get(`/${this.endpoint}/`, params);
+    
+    // ذخیره در کش
+    cacheService.set(cacheKey, data, this.cacheDuration);
+    
+    return data;
   }
 
   /**
-   * دریافت جزئیات یک آیتم
+   * دریافت جزئیات یک آیتم با شناسه
    * @param {number|string} id - شناسه آیتم
-   * @param {boolean} useCache - آیا از کش استفاده شود؟
-   * @param {number} cacheExpiration - مدت زمان انقضای کش به دقیقه
-   * @returns {Promise<Object>} - نتیجه درخواست
+   * @param {Object} params - پارامترهای درخواست
+   * @param {boolean} bypassCache - نادیده گرفتن کش
+   * @returns {Promise<Object>} - جزئیات آیتم
    */
-  async getDetail(id, useCache = true, cacheExpiration = 10) {
-    try {
-      const url = `${this.baseUrl}${id}/`;
-
-      // بررسی کش در صورت فعال بودن
-      if (useCache) {
-        const cachedData = cacheService.get(url, null);
-        if (cachedData) {
-          return cachedData;
-        }
+  async fetchDetail(id, params = {}, bypassCache = false) {
+    const cacheKey = `${this.cacheKey}_${id}`;
+    
+    // بررسی کش
+    if (!bypassCache) {
+      const cachedData = cacheService.get(cacheKey);
+      if (cachedData) {
+        return cachedData;
       }
-
-      const response = await axiosInstance.get(url);
-      const data = response.data;
-
-      // ذخیره در کش در صورت فعال بودن
-      if (useCache) {
-        cacheService.set(url, null, data, cacheExpiration);
-      }
-
-      return data;
-    } catch (error) {
-      console.error(`Error fetching detail from ${this.baseUrl}${id}/:`, error);
-      throw error;
     }
+    
+    const data = await this.api.get(`/${this.endpoint}/${id}/`, params);
+    
+    // ذخیره در کش
+    cacheService.set(cacheKey, data, this.cacheDuration);
+    
+    return data;
   }
 
   /**
    * ایجاد آیتم جدید
-   * @param {Object} data - داده‌های آیتم جدید
-   * @returns {Promise<Object>} - نتیجه درخواست
+   * @param {Object} itemData - داده‌های آیتم جدید
+   * @returns {Promise<Object>} - آیتم ایجاد شده
    */
-  async create(data) {
-    try {
-      const response = await axiosInstance.post(this.baseUrl, data);
-      
-      // باطل کردن کش لیست پس از ایجاد آیتم جدید
-      cacheService.invalidateAll(this.baseUrl);
-      
-      return response.data;
-    } catch (error) {
-      console.error(`Error creating item at ${this.baseUrl}:`, error);
-      throw error;
-    }
+  async create(itemData) {
+    const result = await this.api.post(`/${this.endpoint}/`, itemData);
+    
+    // پاک کردن کش لیست
+    cacheService.remove(`${this.cacheKey}_list`);
+    
+    return result;
   }
 
   /**
-   * به‌روزرسانی آیتم
+   * بروزرسانی آیتم موجود
    * @param {number|string} id - شناسه آیتم
-   * @param {Object} data - داده‌های به‌روزرسانی
-   * @returns {Promise<Object>} - نتیجه درخواست
+   * @param {Object} itemData - داده‌های بروزرسانی
+   * @returns {Promise<Object>} - آیتم بروزرسانی شده
    */
-  async update(id, data) {
-    try {
-      const url = `${this.baseUrl}${id}/`;
-      const response = await axiosInstance.put(url, data);
-      
-      // باطل کردن کش‌ها پس از به‌روزرسانی
-      cacheService.invalidate(url, null);
-      cacheService.invalidateAll(this.baseUrl);
-      
-      return response.data;
-    } catch (error) {
-      console.error(`Error updating item at ${this.baseUrl}${id}/:`, error);
-      throw error;
-    }
+  async update(id, itemData) {
+    const result = await this.api.put(`/${this.endpoint}/${id}/`, itemData);
+    
+    // پاک کردن کش‌های مرتبط
+    cacheService.remove(`${this.cacheKey}_${id}`);
+    cacheService.remove(`${this.cacheKey}_list`);
+    
+    return result;
   }
 
   /**
-   * به‌روزرسانی جزئی آیتم
+   * بروزرسانی جزئی آیتم موجود
    * @param {number|string} id - شناسه آیتم
-   * @param {Object} data - داده‌های به‌روزرسانی جزئی
-   * @returns {Promise<Object>} - نتیجه درخواست
+   * @param {Object} itemData - داده‌های بروزرسانی جزئی
+   * @returns {Promise<Object>} - آیتم بروزرسانی شده
    */
-  async patch(id, data) {
-    try {
-      const url = `${this.baseUrl}${id}/`;
-      const response = await axiosInstance.patch(url, data);
-      
-      // باطل کردن کش‌ها پس از به‌روزرسانی
-      cacheService.invalidate(url, null);
-      cacheService.invalidateAll(this.baseUrl);
-      
-      return response.data;
-    } catch (error) {
-      console.error(`Error patching item at ${this.baseUrl}${id}/:`, error);
-      throw error;
-    }
+  async partialUpdate(id, itemData) {
+    const result = await this.api.patch(`/${this.endpoint}/${id}/`, itemData);
+    
+    // پاک کردن کش‌های مرتبط
+    cacheService.remove(`${this.cacheKey}_${id}`);
+    cacheService.remove(`${this.cacheKey}_list`);
+    
+    return result;
   }
 
   /**
    * حذف آیتم
    * @param {number|string} id - شناسه آیتم
-   * @returns {Promise<boolean>} - نتیجه درخواست
+   * @returns {Promise<any>} - نتیجه حذف
    */
   async delete(id) {
-    try {
-      const url = `${this.baseUrl}${id}/`;
-      await axiosInstance.delete(url);
-      
-      // باطل کردن کش‌ها پس از حذف
-      cacheService.invalidate(url, null);
-      cacheService.invalidateAll(this.baseUrl);
-      
-      return true;
-    } catch (error) {
-      console.error(`Error deleting item at ${this.baseUrl}${id}/:`, error);
-      throw error;
-    }
+    const result = await this.api.delete(`/${this.endpoint}/${id}/`);
+    
+    // پاک کردن کش‌های مرتبط
+    cacheService.remove(`${this.cacheKey}_${id}`);
+    cacheService.remove(`${this.cacheKey}_list`);
+    
+    return result;
   }
 
   /**
    * ارسال درخواست سفارشی
-   * @param {string} method - روش HTTP (GET, POST, PUT, DELETE)
-   * @param {string} url - آدرس نسبی API
-   * @param {Object} data - داده‌های درخواست (برای POST، PUT، PATCH)
-   * @param {Object} params - پارامترهای پرس‌وجو (برای GET)
-   * @param {boolean} useCache - آیا از کش استفاده شود؟ (فقط برای GET)
-   * @param {number} cacheExpiration - مدت زمان انقضای کش به دقیقه
-   * @returns {Promise<Object>} - نتیجه درخواست
+   * @param {string} method - متد HTTP (get, post, put, patch, delete)
+   * @param {string} url - آدرس API نسبی
+   * @param {Object} data - داده‌های درخواست
+   * @param {Object} config - تنظیمات درخواست
+   * @returns {Promise<any>} - نتیجه درخواست
    */
-  async request(method, url, data = null, params = null, useCache = false, cacheExpiration = 5) {
-    try {
-      const fullUrl = `${this.baseUrl}${url}`;
-      const config = { method, url: fullUrl };
-      
-      if (params) {
-        config.params = params;
-      }
-      
-      if (data) {
-        config.data = data;
-      }
-      
-      // بررسی کش برای درخواست‌های GET
-      if (method.toLowerCase() === 'get' && useCache) {
-        const cachedData = cacheService.get(fullUrl, params);
-        if (cachedData) {
-          return cachedData;
-        }
-      }
-      
-      const response = await axiosInstance.request(config);
-      const responseData = response.data;
-      
-      // ذخیره در کش برای درخواست‌های GET
-      if (method.toLowerCase() === 'get' && useCache) {
-        cacheService.set(fullUrl, params, responseData, cacheExpiration);
-      }
-      
-      // باطل کردن کش برای درخواست‌های غیر GET
-      if (method.toLowerCase() !== 'get') {
-        cacheService.invalidateAll(this.baseUrl);
-      }
-      
-      return responseData;
-    } catch (error) {
-      console.error(`Error in custom request to ${this.baseUrl}${url}:`, error);
-      throw error;
+  async request(method, url, data = {}, config = {}) {
+    let fullUrl = url.startsWith('/') ? url : `/${this.endpoint}/${url}`;
+    
+    switch (method.toLowerCase()) {
+      case 'get':
+        return this.api.get(fullUrl, data, config);
+      case 'post':
+        return this.api.post(fullUrl, data, config);
+      case 'put':
+        return this.api.put(fullUrl, data, config);
+      case 'patch':
+        return this.api.patch(fullUrl, data, config);
+      case 'delete':
+        return this.api.delete(fullUrl, config);
+      default:
+        throw new Error(`درخواست نامعتبر: ${method}`);
     }
   }
-  
+
   /**
-   * پاک کردن کش مربوط به این سرویس
+   * پاک کردن تمام کش‌های مرتبط با این سرویس
    */
   clearCache() {
-    cacheService.invalidateAll(this.baseUrl);
+    cacheService.removePattern(this.cacheKey);
   }
 }
 
-/**
- * ایجاد نمونه‌های سرویس API برای هر ماژول
- */
-export const productsService = new ApiService('/api/products/');
-export const categoriesService = new ApiService('/api/products/categories/');
-export const unitsService = new ApiService('/api/products/units/');
-export const inventoryService = new ApiService('/api/inventory/inventory/');
-export const warehousesService = new ApiService('/api/inventory/warehouses/');
-export const inventoryTransactionsService = new ApiService('/api/inventory/transactions/');
-export const salesService = new ApiService('/api/sales/sales/');
-export const customersService = new ApiService('/api/sales/customers/');
-export const purchasesService = new ApiService('/api/purchases/purchases/');
-export const suppliersService = new ApiService('/api/purchases/suppliers/');
-export const transactionsService = new ApiService('/api/accounting/transactions/');
-export const bankAccountsService = new ApiService('/api/accounting/bank-accounts/');
-export const duePaymentsService = new ApiService('/api/accounting/due-payments/'); 
+// سرویس‌های آماده برای استفاده در استورها
+export const productsService = new EntityApiService('products');
+export const categoriesService = new EntityApiService('categories');
+export const unitsService = new EntityApiService('units');
+export const warehousesService = new EntityApiService('warehouses');
+export const inventoryService = new EntityApiService('inventory');
+export const salesService = new EntityApiService('sales');
+export const customersService = new EntityApiService('customers');
+export const purchasesService = new EntityApiService('purchases');
+export const suppliersService = new EntityApiService('suppliers');
+export const accountingService = new EntityApiService('accounting');
+export const bankAccountsService = new EntityApiService('bankaccounts'); 

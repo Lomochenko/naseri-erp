@@ -35,47 +35,21 @@ const vuetify = createVuetify({
     defaultTheme: 'light',
     themes: {
       light: {
-        dark: false,
         colors: {
-          primary: '#9155FD',
-          secondary: '#8A8D93',
-          success: '#56CA00',
-          info: '#16B1FF',
-          warning: '#FFB400',
-          error: '#FF4C51',
-          'on-primary': '#FFFFFF',
-          'on-secondary': '#FFFFFF',
-          'on-success': '#FFFFFF',
-          'on-info': '#FFFFFF',
-          'on-warning': '#FFFFFF',
-          'on-error': '#FFFFFF',
-          background: '#F4F5FA',
-          'on-background': '#3A3541',
-          surface: '#FFFFFF',
-          'on-surface': '#3A3541',
-        },
-      },
-      dark: {
-        dark: true,
-        colors: {
-          primary: '#9155FD',
-          secondary: '#8A8D93',
-          success: '#56CA00',
-          info: '#16B1FF',
-          warning: '#FFB400',
-          error: '#FF4C51',
-          background: '#28243D',
-          'on-background': '#E7E3FC',
-          surface: '#312D4B',
-          'on-surface': '#E7E3FC',
+          primary: '#1976D2',
+          secondary: '#424242',
+          accent: '#82B1FF',
+          error: '#FF5252',
+          info: '#2196F3',
+          success: '#4CAF50',
+          warning: '#FB8C00',
         },
       },
     },
   },
   locale: {
     locale: 'fa',
-    fallback: 'fa',
-    messages: { fa },
+    messages: { fa }
   },
   rtl: true, // فعال‌سازی پشتیبانی از RTL
 })
@@ -87,9 +61,11 @@ const app = createApp(App)
   .use(router)
   .use(pinia);
 
-// راه‌اندازی احراز هویت
-const authStore = useAuthStore();
-authStore.initAuth().finally(() => {
-  // اجرای برنامه
-  app.mount('#app');
-});
+// ابتدا برنامه را اجرا کن
+app.mount('#app');
+
+// بررسی وضعیت احراز هویت بدون ایجاد تاخیر در اجرای برنامه
+const authStore = useAuthStore()
+authStore.initAuth().catch(error => {
+  console.log('خطا در بارگذاری وضعیت احراز هویت:', error)
+})

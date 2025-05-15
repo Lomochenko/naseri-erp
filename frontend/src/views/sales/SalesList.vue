@@ -1,303 +1,420 @@
 <template>
   <div>
-    <div class="d-flex justify-space-between align-center mb-6">
-      <h1 class="text-h4">مدیریت فروش</h1>
-      <v-btn color="primary" prepend-icon="mdi-plus">
-        ثبت فروش جدید
-      </v-btn>
-    </div>
-
-    <!-- Filters -->
     <v-card class="mb-6">
+      <v-card-title class="d-flex align-center justify-space-between flex-wrap">
+        <span class="text-h5">مدیریت فروش</span>
+        <v-btn 
+          color="primary" 
+          prepend-icon="mdi-cart-plus" 
+          variant="elevated"
+          to="/sales/new"
+        >
+          فروش جدید
+        </v-btn>
+      </v-card-title>
+
       <v-card-text>
         <v-row>
-          <v-col cols="12" sm="6" md="3">
+          <!-- فیلترهای جستجو -->
+          <v-col cols="12" md="3">
             <v-text-field
               v-model="filters.search"
-              label="جستجو"
+              label="جستجو در فاکتورها"
               variant="outlined"
               density="compact"
               prepend-inner-icon="mdi-magnify"
-              clearable
-              @input="getSales"
-              hint="شماره فاکتور، نام مشتری یا شماره تلفن"
+              hide-details
+              @update:model-value="applyFilters"
             ></v-text-field>
           </v-col>
-          <v-col cols="12" sm="6" md="3">
+
+          <v-col cols="12" md="3">
             <v-select
               v-model="filters.status"
-              label="وضعیت"
+              :items="statusOptions"
+              item-title="title"
+              item-value="value"
+              label="وضعیت فاکتور"
               variant="outlined"
               density="compact"
-              :items="statusOptions"
+              hide-details
               clearable
-              @update:model-value="getSales"
+              @update:model-value="applyFilters"
             ></v-select>
           </v-col>
-          <v-col cols="12" sm="6" md="3">
+
+          <v-col cols="12" md="3">
             <v-menu
-              v-model="menu1"
+              ref="menuFrom"
+              v-model="dateMenuFrom"
               :close-on-content-click="false"
               location="bottom"
+              min-width="auto"
+              transition="scale-transition"
             >
               <template v-slot:activator="{ props }">
                 <v-text-field
-                  v-model="filters.date_from_display"
+                  v-model="filters.date_from"
                   label="از تاریخ"
                   variant="outlined"
                   density="compact"
+                  hide-details
                   readonly
-                  v-bind="props"
                   prepend-inner-icon="mdi-calendar"
-                  clearable
-                  @click:clear="filters.date_from = null; filters.date_from_display = ''"
+                  v-bind="props"
                 ></v-text-field>
               </template>
-              <!-- Replace with a Persian date picker component -->
               <v-date-picker
                 v-model="filters.date_from"
-                @update:model-value="updateDateFromDisplay"
-                @cancel="menu1 = false"
+                @update:model-value="dateMenuFrom = false; applyFilters()"
               ></v-date-picker>
             </v-menu>
           </v-col>
-          <v-col cols="12" sm="6" md="3">
+
+          <v-col cols="12" md="3">
             <v-menu
-              v-model="menu2"
+              ref="menuTo"
+              v-model="dateMenuTo"
               :close-on-content-click="false"
               location="bottom"
+              min-width="auto"
+              transition="scale-transition"
             >
               <template v-slot:activator="{ props }">
                 <v-text-field
-                  v-model="filters.date_to_display"
+                  v-model="filters.date_to"
                   label="تا تاریخ"
                   variant="outlined"
                   density="compact"
+                  hide-details
                   readonly
-                  v-bind="props"
                   prepend-inner-icon="mdi-calendar"
-                  clearable
-                  @click:clear="filters.date_to = null; filters.date_to_display = ''"
+                  v-bind="props"
                 ></v-text-field>
               </template>
-              <!-- Replace with a Persian date picker component -->
               <v-date-picker
                 v-model="filters.date_to"
-                @update:model-value="updateDateToDisplay"
-                @cancel="menu2 = false"
+                @update:model-value="dateMenuTo = false; applyFilters()"
               ></v-date-picker>
             </v-menu>
           </v-col>
         </v-row>
-        <v-row>
-          <v-col cols="12" class="text-center">
-            <v-btn color="primary" variant="tonal" @click="getSales" class="mx-2">
-              اعمال فیلتر
-            </v-btn>
-            <v-btn color="error" variant="text" @click="resetFilters" class="mx-2">
-              حذف فیلتر‌ها
-            </v-btn>
-            <v-btn color="success" prepend-icon="mdi-file-excel" variant="text" class="mx-2">
-              خروجی اکسل
-            </v-btn>
-            <v-btn color="info" prepend-icon="mdi-printer" variant="text" class="mx-2">
-              چاپ لیست
+
+        <v-row class="mt-2">
+          <v-col cols="12" md="3">
+            <v-select
+              v-model="filters.customer"
+              :items="customers"
+              item-title="name"
+              item-value="id"
+              label="مشتری"
+              variant="outlined"
+              density="compact"
+              hide-details
+              clearable
+              return-object
+              @update:model-value="applyFilters"
+            ></v-select>
+          </v-col>
+
+          <v-col cols="12" md="6">
+            <v-slider
+              v-model="filters.amount_range"
+              label="محدوده مبلغ (تومان)"
+              min="0"
+              max="50000000"
+              step="1000000"
+              hide-details
+              density="compact"
+              thumb-label="always"
+              :format-value="formatPrice"
+            >
+              <template v-slot:prepend>
+                <v-text-field
+                  v-model="filters.amount_range[0]"
+                  type="number"
+                  style="width: 100px"
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                  @update:model-value="applyFilters"
+                ></v-text-field>
+              </template>
+              <template v-slot:append>
+                <v-text-field
+                  v-model="filters.amount_range[1]"
+                  type="number"
+                  style="width: 100px"
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                  @update:model-value="applyFilters"
+                ></v-text-field>
+              </template>
+            </v-slider>
+          </v-col>
+
+          <v-col cols="12" md="3" class="d-flex justify-end align-center">
+            <v-btn 
+              color="secondary" 
+              variant="text" 
+              prepend-icon="mdi-refresh"
+              @click="resetFilters"
+            >
+              بازنشانی فیلترها
             </v-btn>
           </v-col>
         </v-row>
       </v-card-text>
     </v-card>
 
-    <!-- Sales Table -->
-    <v-card>
+    <!-- جدول نمایش فروش‌ها -->
+    <v-card variant="outlined">
       <v-data-table
         :headers="headers"
         :items="sales"
         :loading="loading"
-        :items-per-page="10"
-        :items-per-page-options="[10, 20, 50]"
-        density="compact"
-        class="elevation-1"
+        :items-per-page="itemsPerPage"
+        :page="page"
+        :server-items-length="totalItems"
+        class="elevation-0 rtl-table"
+        hover
+        @update:options="handleOptions"
       >
-        <!-- Invoice number column -->
+        <!-- لودینگ -->
+        <template v-slot:loader>
+          <v-progress-linear indeterminate color="primary"></v-progress-linear>
+        </template>
+
+        <!-- شماره فاکتور -->
         <template v-slot:item.invoice_number="{ item }">
-          <div class="font-weight-bold">
-            <v-btn variant="text" color="primary" @click="viewSaleDetails(item)">
-              {{ item.invoice_number }}
-            </v-btn>
+          <div class="font-weight-medium">{{ item.invoice_number }}</div>
+          <div class="text-caption text-medium-emphasis">{{ formatDate(item.created_at) }}</div>
+        </template>
+
+        <!-- مشتری -->
+        <template v-slot:item.customer="{ item }">
+          <div>{{ item.customer?.name || 'فروش متفرقه' }}</div>
+          <div v-if="item.customer?.phone" class="text-caption text-medium-emphasis">{{ item.customer.phone }}</div>
+        </template>
+
+        <!-- تعداد اقلام -->
+        <template v-slot:item.items_count="{ item }">
+          <v-chip size="small" color="info" variant="flat">{{ item.items.length }} قلم</v-chip>
+        </template>
+
+        <!-- مبلغ کل -->
+        <template v-slot:item.total_amount="{ item }">
+          <div class="font-weight-medium">{{ formatPrice(item.total_amount) }}</div>
+          <div class="text-caption" :class="getPaymentClass(item)">
+            {{ getPaymentStatus(item) }}
           </div>
         </template>
 
-        <!-- Customer column -->
-        <template v-slot:item.customer.name="{ item }">
-          <div>{{ item.customer.name }}</div>
-          <div class="text-caption">{{ item.customer.phone_number }}</div>
-        </template>
-
-        <!-- Total amount column -->
-        <template v-slot:item.total_amount="{ item }">
-          <div class="font-weight-bold">{{ item.total_amount.toLocaleString() }} تومان</div>
-        </template>
-
-        <!-- Status column -->
+        <!-- وضعیت -->
         <template v-slot:item.status="{ item }">
-          <v-chip
-            :color="getStatusColor(item.status)"
-            size="small"
-          >
-            {{ getStatusLabel(item.status) }}
+          <v-chip :color="getStatusColor(item.status)" size="small" variant="flat">
+            {{ getStatusText(item.status) }}
           </v-chip>
         </template>
 
-        <!-- Actions column -->
+        <!-- نمایش دکمه‌های عملیات -->
         <template v-slot:item.actions="{ item }">
-          <v-tooltip text="مشاهده جزئیات">
-            <template v-slot:activator="{ props }">
-              <v-icon 
-                size="small" 
-                class="me-2"
-                v-bind="props"
-                @click="viewSaleDetails(item)"
-              >
-                mdi-eye
-              </v-icon>
-            </template>
-          </v-tooltip>
-          <v-tooltip text="چاپ فاکتور">
-            <template v-slot:activator="{ props }">
-              <v-icon 
-                size="small" 
-                class="me-2"
-                v-bind="props"
-                @click="printInvoice(item)"
-              >
-                mdi-printer
-              </v-icon>
-            </template>
-          </v-tooltip>
-          <v-tooltip text="ویرایش">
-            <template v-slot:activator="{ props }">
-              <v-icon 
-                size="small" 
-                class="me-2"
-                v-bind="props"
-                @click="editSale(item)"
-              >
-                mdi-pencil
-              </v-icon>
-            </template>
-          </v-tooltip>
-          <v-tooltip text="حذف فاکتور">
-            <template v-slot:activator="{ props }">
-              <v-icon 
-                size="small" 
-                color="error"
-                v-bind="props"
-                @click="confirmDelete(item)"
-              >
-                mdi-delete
-              </v-icon>
-            </template>
-          </v-tooltip>
+          <div class="d-flex justify-end">
+            <v-btn
+              icon="mdi-eye"
+              size="small"
+              variant="text"
+              color="info"
+              class="ml-1"
+              @click="viewSale(item)"
+            ></v-btn>
+            <v-btn
+              icon="mdi-receipt"
+              size="small"
+              variant="text"
+              color="primary"
+              class="ml-1"
+              @click="printInvoice(item)"
+            ></v-btn>
+            <v-btn
+              icon="mdi-delete"
+              size="small"
+              variant="text"
+              color="error"
+              @click="confirmDelete(item)"
+              v-if="canDelete(item)"
+            ></v-btn>
+          </div>
+        </template>
+
+        <!-- نمایش در حالت خالی بودن لیست -->
+        <template v-slot:no-data>
+          <div class="text-center pa-5">
+            <v-icon size="large" icon="mdi-cart-off" color="secondary" class="mb-3"></v-icon>
+            <div>فاکتور فروشی یافت نشد</div>
+            <v-btn 
+              variant="text" 
+              color="primary" 
+              class="mt-3" 
+              @click="loadSales"
+            >
+              تلاش مجدد
+            </v-btn>
+          </div>
         </template>
       </v-data-table>
     </v-card>
 
-    <!-- Sale Details Dialog -->
-    <v-dialog v-model="detailsDialog" max-width="900px">
-      <v-card>
-        <v-card-title class="text-h5">
-          جزئیات فاکتور {{ selectedSale?.invoice_number }}
-          <v-spacer></v-spacer>
-          <v-chip :color="getStatusColor(selectedSale?.status)" class="ma-2">
-            {{ getStatusLabel(selectedSale?.status) }}
+    <!-- دیالوگ جزئیات فروش -->
+    <v-dialog v-model="detailDialog" max-width="800px">
+      <v-card v-if="selectedSale">
+        <v-card-title class="text-h5 d-flex justify-space-between">
+          <span>جزئیات فاکتور {{ selectedSale.invoice_number }}</span>
+          <v-chip :color="getStatusColor(selectedSale.status)" size="small">
+            {{ getStatusText(selectedSale.status) }}
           </v-chip>
         </v-card-title>
+
         <v-card-text>
           <v-row>
-            <v-col cols="12" md="6">
-              <p><strong>مشتری:</strong> {{ selectedSale?.customer?.name }}</p>
-              <p><strong>شماره تماس:</strong> {{ selectedSale?.customer?.phone_number }}</p>
-              <p><strong>تاریخ:</strong> {{ selectedSale?.date }}</p>
+            <v-col cols="12" sm="6">
+              <v-list density="compact">
+                <v-list-item>
+                  <template v-slot:prepend>
+                    <v-icon icon="mdi-account"></v-icon>
+                  </template>
+                  <v-list-item-title>نام مشتری:</v-list-item-title>
+                  <v-list-item-subtitle>{{ selectedSale.customer?.name || 'فروش متفرقه' }}</v-list-item-subtitle>
+                </v-list-item>
+
+                <v-list-item v-if="selectedSale.customer?.phone">
+                  <template v-slot:prepend>
+                    <v-icon icon="mdi-phone"></v-icon>
+                  </template>
+                  <v-list-item-title>شماره تماس:</v-list-item-title>
+                  <v-list-item-subtitle>{{ selectedSale.customer.phone }}</v-list-item-subtitle>
+                </v-list-item>
+
+                <v-list-item>
+                  <template v-slot:prepend>
+                    <v-icon icon="mdi-calendar"></v-icon>
+                  </template>
+                  <v-list-item-title>تاریخ فاکتور:</v-list-item-title>
+                  <v-list-item-subtitle>{{ formatDate(selectedSale.created_at) }}</v-list-item-subtitle>
+                </v-list-item>
+              </v-list>
             </v-col>
-            <v-col cols="12" md="6">
-              <p><strong>فروشنده:</strong> {{ selectedSale?.created_by }}</p>
-              <p><strong>روش پرداخت:</strong> {{ getPaymentMethodLabel(selectedSale?.payment_method) }}</p>
-              <p><strong>توضیحات:</strong> {{ selectedSale?.notes || 'بدون توضیحات' }}</p>
+
+            <v-col cols="12" sm="6">
+              <v-list density="compact">
+                <v-list-item>
+                  <template v-slot:prepend>
+                    <v-icon icon="mdi-cash-multiple"></v-icon>
+                  </template>
+                  <v-list-item-title>مبلغ کل:</v-list-item-title>
+                  <v-list-item-subtitle>{{ formatPrice(selectedSale.total_amount) }}</v-list-item-subtitle>
+                </v-list-item>
+
+                <v-list-item>
+                  <template v-slot:prepend>
+                    <v-icon icon="mdi-cash-check"></v-icon>
+                  </template>
+                  <v-list-item-title>مبلغ پرداخت شده:</v-list-item-title>
+                  <v-list-item-subtitle>{{ formatPrice(selectedSale.paid_amount || 0) }}</v-list-item-subtitle>
+                </v-list-item>
+
+                <v-list-item v-if="selectedSale.total_amount > (selectedSale.paid_amount || 0)">
+                  <template v-slot:prepend>
+                    <v-icon icon="mdi-cash-remove"></v-icon>
+                  </template>
+                  <v-list-item-title>مانده حساب:</v-list-item-title>
+                  <v-list-item-subtitle class="text-error">
+                    {{ formatPrice(selectedSale.total_amount - (selectedSale.paid_amount || 0)) }}
+                  </v-list-item-subtitle>
+                </v-list-item>
+              </v-list>
             </v-col>
           </v-row>
 
-          <v-divider class="my-4"></v-divider>
-          
-          <h3 class="text-subtitle-1 mb-2">اقلام فاکتور</h3>
+          <v-divider class="my-3"></v-divider>
+
+          <h3 class="text-h6 mb-3">اقلام فاکتور</h3>
           <v-table>
             <thead>
               <tr>
-                <th>کد محصول</th>
+                <th>ردیف</th>
                 <th>نام محصول</th>
                 <th>تعداد</th>
                 <th>قیمت واحد</th>
-                <th>تخفیف</th>
-                <th>قیمت کل</th>
+                <th>مبلغ کل</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="item in selectedSale?.items" :key="item.id">
-                <td>{{ item.product.code }}</td>
-                <td>{{ item.product.name }}</td>
-                <td>{{ item.quantity }} {{ item.product.unit.name }}</td>
-                <td>{{ item.unit_price.toLocaleString() }}</td>
-                <td>{{ item.discount || 0 }}%</td>
-                <td>{{ item.total_price.toLocaleString() }}</td>
+              <tr v-for="(item, index) in selectedSale.items" :key="index">
+                <td>{{ index + 1 }}</td>
+                <td>
+                  <div>{{ item.product.name }}</div>
+                  <div class="text-caption">کد: {{ item.product.code }}</div>
+                </td>
+                <td>{{ item.quantity }} {{ item.product.unit_symbol }}</td>
+                <td>{{ formatPrice(item.unit_price) }}</td>
+                <td>{{ formatPrice(item.total_price) }}</td>
               </tr>
             </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="4" class="text-right font-weight-bold">جمع کل:</td>
+                <td class="font-weight-bold">{{ formatPrice(selectedSale.total_amount) }}</td>
+              </tr>
+            </tfoot>
           </v-table>
 
-          <v-divider class="my-4"></v-divider>
+          <v-divider class="my-3"></v-divider>
 
-          <v-row class="text-right">
-            <v-col cols="12" md="6" offset-md="6">
-              <div class="d-flex justify-space-between mb-2">
-                <span>جمع کل:</span>
-                <span>{{ selectedSale?.subtotal.toLocaleString() }} تومان</span>
-              </div>
-              <div class="d-flex justify-space-between mb-2">
-                <span>تخفیف:</span>
-                <span>{{ selectedSale?.discount.toLocaleString() }} تومان</span>
-              </div>
-              <div class="d-flex justify-space-between mb-2">
-                <span>مالیات ({{ selectedSale?.tax_percent }}%):</span>
-                <span>{{ selectedSale?.tax_amount.toLocaleString() }} تومان</span>
-              </div>
-              <v-divider class="my-2"></v-divider>
-              <div class="d-flex justify-space-between text-h6">
-                <span>مبلغ قابل پرداخت:</span>
-                <span>{{ selectedSale?.total_amount.toLocaleString() }} تومان</span>
-              </div>
-            </v-col>
-          </v-row>
+          <h3 class="text-h6 mb-3">توضیحات</h3>
+          <p v-if="selectedSale.notes">{{ selectedSale.notes }}</p>
+          <p v-else class="text-medium-emphasis">بدون توضیحات</p>
         </v-card-text>
+
         <v-card-actions>
-          <v-btn color="info" prepend-icon="mdi-printer" @click="printInvoice(selectedSale)">
+          <v-spacer></v-spacer>
+          <v-btn color="primary" variant="text" @click="detailDialog = false">
+            بستن
+          </v-btn>
+          <v-btn
+            color="info"
+            variant="elevated"
+            prepend-icon="mdi-receipt"
+            @click="printInvoice(selectedSale)"
+          >
             چاپ فاکتور
           </v-btn>
-          <v-spacer></v-spacer>
-          <v-btn color="primary" @click="detailsDialog = false">بستن</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
 
-    <!-- Delete Confirmation Dialog -->
-    <v-dialog v-model="deleteDialog" max-width="500px">
+    <!-- دیالوگ حذف فاکتور -->
+    <v-dialog v-model="deleteDialog" max-width="400px">
       <v-card>
         <v-card-title class="text-h5">حذف فاکتور</v-card-title>
         <v-card-text>
-          آیا از حذف این فاکتور اطمینان دارید؟ این عمل قابل بازگشت نیست.
+          آیا از حذف فاکتور <strong>{{ deleteItem?.invoice_number }}</strong> اطمینان دارید؟
+          <div class="text-caption text-medium-emphasis mt-2">
+            این عملیات غیرقابل بازگشت است و تمام اطلاعات مربوط به این فاکتور حذف خواهد شد.
+          </div>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="primary" variant="text" @click="deleteDialog = false">انصراف</v-btn>
-          <v-btn color="error" variant="elevated" @click="deleteSale">حذف</v-btn>
+          <v-btn color="secondary" variant="text" @click="deleteDialog = false">انصراف</v-btn>
+          <v-btn 
+            color="error" 
+            variant="elevated" 
+            @click="deleteSale" 
+            :loading="loading"
+          >
+            حذف
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -305,433 +422,294 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import axios from 'axios';
+import { ref, computed, onMounted } from 'vue';
+import { useSalesStore } from '../../store/sales';
+import { useCustomersStore } from '../../store/customers';
 
-// Table headers
+// استورها
+const salesStore = useSalesStore();
+const customersStore = useCustomersStore();
+
+// ثابت‌های نمایش
 const headers = [
-  { title: 'شماره فاکتور', key: 'invoice_number', sortable: true, align: 'start' },
-  { title: 'مشتری', key: 'customer.name', sortable: true, align: 'start' },
-  { title: 'تاریخ', key: 'date', sortable: true, align: 'center' },
-  { title: 'مبلغ کل', key: 'total_amount', sortable: true, align: 'end' },
-  { title: 'روش پرداخت', key: 'payment_method', sortable: true, align: 'center' },
-  { title: 'وضعیت', key: 'status', sortable: true, align: 'center' },
-  { title: 'عملیات', key: 'actions', sortable: false, align: 'center' }
+  { title: 'شماره فاکتور', key: 'invoice_number', align: 'start', sortable: true },
+  { title: 'مشتری', key: 'customer', align: 'start', sortable: false },
+  { title: 'تعداد اقلام', key: 'items_count', align: 'center', sortable: false },
+  { title: 'مبلغ کل (تومان)', key: 'total_amount', align: 'center', sortable: true },
+  { title: 'وضعیت', key: 'status', align: 'center', sortable: true },
+  { title: 'عملیات', key: 'actions', align: 'center', sortable: false },
 ];
 
-// Data
-const sales = ref([]);
-const loading = ref(false);
-const detailsDialog = ref(false);
+const statusOptions = [
+  { title: 'همه', value: null },
+  { title: 'در انتظار پرداخت', value: 'pending' },
+  { title: 'پرداخت شده', value: 'paid' },
+  { title: 'نیمه پرداخت', value: 'partially_paid' },
+  { title: 'تحویل شده', value: 'delivered' },
+  { title: 'لغو شده', value: 'cancelled' }
+];
+
+// متغیرهای واکنش‌پذیر
+const detailDialog = ref(false);
 const deleteDialog = ref(false);
 const selectedSale = ref(null);
-const menu1 = ref(false);
-const menu2 = ref(false);
+const deleteItem = ref(null);
+const dateMenuFrom = ref(false);
+const dateMenuTo = ref(false);
+const page = ref(1);
+const itemsPerPage = ref(10);
 
-// Filters
+// فیلترها
 const filters = ref({
   search: '',
   status: null,
-  date_from: null,
-  date_to: null,
-  date_from_display: '',
-  date_to_display: ''
+  customer: null,
+  date_from: '',
+  date_to: '',
+  amount_range: [0, 50000000]
 });
 
-// Status options
-const statusOptions = [
-  { title: 'پرداخت شده', value: 'PAID' },
-  { title: 'در انتظار پرداخت', value: 'PENDING' },
-  { title: 'لغو شده', value: 'CANCELLED' }
-];
+// دریافت داده‌ها از استور
+const loading = computed(() => salesStore.loading);
+const sales = computed(() => salesStore.sales);
+const customers = computed(() => customersStore.customers);
+const totalItems = computed(() => salesStore.totalItems);
 
-// Mock data - Replace with API call
-const mockSales = [
-  { 
-    id: 1, 
-    invoice_number: 'INV-1001', 
-    customer: { 
-      id: 1, 
-      name: 'شرکت ساختمانی البرز', 
-      phone_number: '09121234567' 
-    }, 
-    date: '۱۴۰۳/۰۲/۲۵', 
-    subtotal: 4500000,
-    discount: 0,
-    tax_percent: 9,
-    tax_amount: 405000,
-    total_amount: 4905000, 
-    payment_method: 'CASH', 
-    status: 'PAID',
-    notes: 'تحویل درب محل انجام شده',
-    created_by: 'علی محمدی',
-    items: [
-      {
-        id: 1,
-        product: {
-          id: 1,
-          code: 'HDL-G102',
-          name: 'دستگیره کابینت مدل G102',
-          unit: { id: 1, name: 'عدد' }
-        },
-        quantity: 20,
-        unit_price: 125000,
-        discount: 0,
-        total_price: 2500000
-      },
-      {
-        id: 2,
-        product: {
-          id: 3,
-          code: 'RIL-T050',
-          name: 'ریل کشو تاندم ۵۰ سانتی',
-          unit: { id: 3, name: 'جفت' }
-        },
-        quantity: 5,
-        unit_price: 320000,
-        discount: 0,
-        total_price: 1600000
-      },
-      {
-        id: 3,
-        product: {
-          id: 5,
-          code: 'LCK-K85',
-          name: 'قفل درب سوئیچی',
-          unit: { id: 1, name: 'عدد' }
-        },
-        quantity: 4,
-        unit_price: 100000,
-        discount: 0,
-        total_price: 400000
-      }
-    ]
-  },
-  { 
-    id: 2, 
-    invoice_number: 'INV-1002', 
-    customer: { 
-      id: 2, 
-      name: 'نجاری مهرگان', 
-      phone_number: '09131234567' 
-    }, 
-    date: '۱۴۰۳/۰۲/۲۴', 
-    subtotal: 2800000,
-    discount: 200000,
-    tax_percent: 9,
-    tax_amount: 234000,
-    total_amount: 2834000, 
-    payment_method: 'CARD', 
-    status: 'PAID',
-    notes: '',
-    created_by: 'رضا رضایی',
-    items: [
-      {
-        id: 4,
-        product: {
-          id: 2,
-          code: 'HNG-S220',
-          name: 'لولا آرام بند',
-          unit: { id: 1, name: 'عدد' }
-        },
-        quantity: 30,
-        unit_price: 85000,
-        discount: 5,
-        total_price: 2422500
-      },
-      {
-        id: 5,
-        product: {
-          id: 4,
-          code: 'LEG-S120',
-          name: 'پایه کابینت استیل',
-          unit: { id: 1, name: 'عدد' }
-        },
-        quantity: 10,
-        unit_price: 45000,
-        discount: 10,
-        total_price: 405000
-      }
-    ]
-  },
-  { 
-    id: 3, 
-    invoice_number: 'INV-1003', 
-    customer: { 
-      id: 3, 
-      name: 'فروشگاه لوازم خانگی پارس', 
-      phone_number: '09141234567' 
-    }, 
-    date: '۱۴۰۳/۰۲/۲۴', 
-    subtotal: 1350000,
-    discount: 50000,
-    tax_percent: 9,
-    tax_amount: 117000,
-    total_amount: 1417000, 
-    payment_method: 'TRANSFER', 
-    status: 'PENDING',
-    notes: 'ارسال فاکتور رسمی',
-    created_by: 'علی محمدی',
-    items: [
-      {
-        id: 6,
-        product: {
-          id: 1,
-          code: 'HDL-G102',
-          name: 'دستگیره کابینت مدل G102',
-          unit: { id: 1, name: 'عدد' }
-        },
-        quantity: 10,
-        unit_price: 125000,
-        discount: 0,
-        total_price: 1250000
-      },
-      {
-        id: 7,
-        product: {
-          id: 4,
-          code: 'LEG-S120',
-          name: 'پایه کابینت استیل',
-          unit: { id: 1, name: 'عدد' }
-        },
-        quantity: 5,
-        unit_price: 40000,
-        discount: 20,
-        total_price: 160000
-      }
-    ]
-  },
-  { 
-    id: 4, 
-    invoice_number: 'INV-1004', 
-    customer: { 
-      id: 4, 
-      name: 'کابینت سازی نوین', 
-      phone_number: '09151234567' 
-    }, 
-    date: '۱۴۰۳/۰۲/۲۳', 
-    subtotal: 5800000,
-    discount: 300000,
-    tax_percent: 9,
-    tax_amount: 495000,
-    total_amount: 5995000, 
-    payment_method: 'CHEQUE', 
-    status: 'PAID',
-    notes: 'چک به تاریخ ۱۴۰۳/۰۳/۲۵',
-    created_by: 'رضا رضایی',
-    items: [
-      {
-        id: 8,
-        product: {
-          id: 3,
-          code: 'RIL-T050',
-          name: 'ریل کشو تاندم ۵۰ سانتی',
-          unit: { id: 3, name: 'جفت' }
-        },
-        quantity: 15,
-        unit_price: 320000,
-        discount: 5,
-        total_price: 4560000
-      },
-      {
-        id: 9,
-        product: {
-          id: 2,
-          code: 'HNG-S220',
-          name: 'لولا آرام بند',
-          unit: { id: 1, name: 'عدد' }
-        },
-        quantity: 15,
-        unit_price: 85000,
-        discount: 0,
-        total_price: 1275000
-      }
-    ]
-  },
-  { 
-    id: 5, 
-    invoice_number: 'INV-1005', 
-    customer: { 
-      id: 5, 
-      name: 'تعاونی مسکن فرهنگیان', 
-      phone_number: '09171234567' 
-    }, 
-    date: '۱۴۰۳/۰۲/۲۳', 
-    subtotal: 3400000,
-    discount: 0,
-    tax_percent: 9,
-    tax_amount: 306000,
-    total_amount: 3706000, 
-    payment_method: 'CASH', 
-    status: 'CANCELLED',
-    notes: 'لغو به دلیل تغییر سفارش',
-    created_by: 'علی محمدی',
-    items: [
-      {
-        id: 10,
-        product: {
-          id: 1,
-          code: 'HDL-G102',
-          name: 'دستگیره کابینت مدل G102',
-          unit: { id: 1, name: 'عدد' }
-        },
-        quantity: 20,
-        unit_price: 125000,
-        discount: 0,
-        total_price: 2500000
-      },
-      {
-        id: 11,
-        product: {
-          id: 5,
-          code: 'LCK-K85',
-          name: 'قفل درب سوئیچی',
-          unit: { id: 1, name: 'عدد' }
-        },
-        quantity: 6,
-        unit_price: 150000,
-        discount: 0,
-        total_price: 900000
-      }
-    ]
-  }
-];
+// فرمت‌کننده قیمت
+const formatPrice = (price) => {
+  return new Intl.NumberFormat('fa-IR').format(price);
+};
 
-// Methods
-const getSales = async () => {
-  loading.value = true;
-  
-  try {
-    // Replace with actual API call
-    // const response = await axios.get('http://localhost:8000/api/sales/sales/', { 
-    //   params: {
-    //     search: filters.value.search,
-    //     status: filters.value.status,
-    //     date_from: filters.value.date_from,
-    //     date_to: filters.value.date_to
-    //   }
-    // });
-    // sales.value = response.data.results;
-    
-    // Using mock data for now
-    setTimeout(() => {
-      // Filter by search query if provided
-      let result = [...mockSales];
-      
-      if (filters.value.search) {
-        const query = filters.value.search.toLowerCase();
-        result = result.filter(item => 
-          item.invoice_number.toLowerCase().includes(query) || 
-          item.customer.name.toLowerCase().includes(query) ||
-          item.customer.phone_number.includes(query)
-        );
-      }
-      
-      // Filter by status if selected
-      if (filters.value.status) {
-        result = result.filter(item => item.status === filters.value.status);
-      }
-      
-      // Date filters would be handled on the server side in a real implementation
-      
-      sales.value = result;
-      loading.value = false;
-    }, 500);
-  } catch (error) {
-    console.error('Error fetching sales:', error);
+// فرمت‌کننده تاریخ
+const formatDate = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return new Intl.DateTimeFormat('fa-IR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  }).format(date);
+};
+
+// وضعیت فاکتور
+const getStatusText = (status) => {
+  switch (status) {
+    case 'pending': return 'در انتظار پرداخت';
+    case 'paid': return 'پرداخت شده';
+    case 'partially_paid': return 'نیمه پرداخت';
+    case 'delivered': return 'تحویل شده';
+    case 'cancelled': return 'لغو شده';
+    default: return 'نامشخص';
   }
+};
+
+const getStatusColor = (status) => {
+  switch (status) {
+    case 'pending': return 'warning';
+    case 'paid': return 'success';
+    case 'partially_paid': return 'info';
+    case 'delivered': return 'primary';
+    case 'cancelled': return 'error';
+    default: return 'grey';
+  }
+};
+
+// وضعیت پرداخت
+const getPaymentStatus = (sale) => {
+  if (!sale.paid_amount) return 'پرداخت نشده';
+  if (sale.paid_amount >= sale.total_amount) return 'پرداخت کامل';
+  return `پرداخت ${Math.round((sale.paid_amount / sale.total_amount) * 100)}%`;
+};
+
+const getPaymentClass = (sale) => {
+  if (!sale.paid_amount) return 'text-error';
+  if (sale.paid_amount >= sale.total_amount) return 'text-success';
+  return 'text-warning';
+};
+
+// آیا این فاکتور قابل حذف است؟
+const canDelete = (sale) => {
+  // فقط فاکتورهای در انتظار پرداخت یا لغو شده قابل حذف هستند
+  return ['pending', 'cancelled'].includes(sale.status);
+};
+
+// مدیریت فیلترها
+const applyFilters = () => {
+  page.value = 1;
+  loadSales();
 };
 
 const resetFilters = () => {
   filters.value = {
     search: '',
     status: null,
-    date_from: null,
-    date_to: null,
-    date_from_display: '',
-    date_to_display: ''
+    customer: null,
+    date_from: '',
+    date_to: '',
+    amount_range: [0, 50000000]
   };
-  getSales();
+  page.value = 1;
+  loadSales();
 };
 
-const updateDateFromDisplay = (date) => {
-  // Convert Gregorian date to Persian date (in a real app you would use a Persian calendar library)
-  filters.value.date_from_display = date; // This would be converted to Persian format
-  menu1.value = false;
+// بارگذاری فروش‌ها
+const loadSales = async () => {
+  // تبدیل فیلترها به پارامترهای API
+  const apiParams = {
+    search: filters.value.search,
+    status: filters.value.status,
+    customer_id: filters.value.customer?.id,
+    date_from: filters.value.date_from,
+    date_to: filters.value.date_to,
+    amount_min: filters.value.amount_range[0],
+    amount_max: filters.value.amount_range[1],
+    page: page.value,
+    page_size: itemsPerPage.value
+  };
+  
+  await salesStore.fetchSales(apiParams);
 };
 
-const updateDateToDisplay = (date) => {
-  // Convert Gregorian date to Persian date (in a real app you would use a Persian calendar library)
-  filters.value.date_to_display = date; // This would be converted to Persian format
-  menu2.value = false;
-};
-
-const getStatusColor = (status) => {
-  switch(status) {
-    case 'PAID': return 'success';
-    case 'PENDING': return 'warning';
-    case 'CANCELLED': return 'error';
-    default: return 'grey';
+// مدیریت گزینه‌های جدول
+const handleOptions = (options) => {
+  page.value = options.page;
+  itemsPerPage.value = options.itemsPerPage;
+  
+  // تنظیم مرتب‌سازی
+  const sortBy = options.sortBy.length > 0 ? options.sortBy[0] : null;
+  
+  if (sortBy) {
+    const ordering = sortBy.order === 'desc' ? `-${sortBy.key}` : sortBy.key;
+    salesStore.setSorting(ordering);
   }
+  
+  loadSales();
 };
 
-const getStatusLabel = (status) => {
-  switch(status) {
-    case 'PAID': return 'پرداخت شده';
-    case 'PENDING': return 'در انتظار پرداخت';
-    case 'CANCELLED': return 'لغو شده';
-    default: return 'نامشخص';
-  }
+// مدیریت فروش‌ها
+const viewSale = (sale) => {
+  selectedSale.value = { ...sale };
+  detailDialog.value = true;
 };
 
-const getPaymentMethodLabel = (method) => {
-  switch(method) {
-    case 'CASH': return 'نقدی';
-    case 'CARD': return 'کارت بانکی';
-    case 'TRANSFER': return 'انتقال بانکی';
-    case 'CHEQUE': return 'چک';
-    default: return 'نامشخص';
-  }
-};
-
-const viewSaleDetails = (sale) => {
-  selectedSale.value = sale;
-  detailsDialog.value = true;
-};
-
-const editSale = (sale) => {
-  // Navigate to edit sale page or open edit dialog
-  console.log('Edit sale:', sale);
+const printInvoice = (sale) => {
+  // در نسخه واقعی، اینجا کد پرینت فاکتور قرار می‌گیرد
+  console.log('Printing invoice for sale:', sale.invoice_number);
+  
+  // نمونه ساده: ایجاد صفحه چاپ
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(`
+    <html dir="rtl">
+      <head>
+        <title>فاکتور فروش ${sale.invoice_number}</title>
+        <style>
+          body { font-family: 'Vazirmatn', Tahoma, sans-serif; }
+          .invoice-header { text-align: center; margin-bottom: 20px; }
+          .invoice-title { font-size: 24px; }
+          .invoice-meta { display: flex; justify-content: space-between; margin-bottom: 20px; }
+          table { width: 100%; border-collapse: collapse; }
+          th, td { border: 1px solid #ddd; padding: 8px; text-align: right; }
+          th { background-color: #f2f2f2; }
+          .total-row { font-weight: bold; }
+          .footer { margin-top: 40px; text-align: center; color: #666; }
+        </style>
+      </head>
+      <body>
+        <div class="invoice-header">
+          <h1 class="invoice-title">فاکتور فروش</h1>
+          <p>فروشگاه سخت‌افزار ناصری</p>
+        </div>
+        
+        <div class="invoice-meta">
+          <div>
+            <p><strong>شماره فاکتور:</strong> ${sale.invoice_number}</p>
+            <p><strong>تاریخ:</strong> ${formatDate(sale.created_at)}</p>
+          </div>
+          <div>
+            <p><strong>مشتری:</strong> ${sale.customer?.name || 'فروش متفرقه'}</p>
+            <p><strong>شماره تماس:</strong> ${sale.customer?.phone || '-'}</p>
+          </div>
+        </div>
+        
+        <table>
+          <thead>
+            <tr>
+              <th>ردیف</th>
+              <th>کد محصول</th>
+              <th>نام محصول</th>
+              <th>تعداد</th>
+              <th>قیمت واحد (تومان)</th>
+              <th>جمع (تومان)</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${sale.items.map((item, index) => `
+              <tr>
+                <td>${index + 1}</td>
+                <td>${item.product.code}</td>
+                <td>${item.product.name}</td>
+                <td>${item.quantity} ${item.product.unit_symbol}</td>
+                <td>${formatPrice(item.unit_price)}</td>
+                <td>${formatPrice(item.total_price)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+          <tfoot>
+            <tr class="total-row">
+              <td colspan="5">مبلغ کل:</td>
+              <td>${formatPrice(sale.total_amount)}</td>
+            </tr>
+            <tr>
+              <td colspan="5">مبلغ پرداخت شده:</td>
+              <td>${formatPrice(sale.paid_amount || 0)}</td>
+            </tr>
+            <tr>
+              <td colspan="5">مانده:</td>
+              <td>${formatPrice(sale.total_amount - (sale.paid_amount || 0))}</td>
+            </tr>
+          </tfoot>
+        </table>
+        
+        <div class="footer">
+          <p>با تشکر از خرید شما</p>
+          <p>آدرس: تهران، خیابان حافظ، پلاک 123</p>
+          <p>تلفن: 021-12345678</p>
+        </div>
+        
+        <script>
+          window.onload = function() { window.print(); }
+        </script>
+      </body>
+    </html>
+  `);
+  printWindow.document.close();
 };
 
 const confirmDelete = (sale) => {
-  selectedSale.value = sale;
+  deleteItem.value = sale;
   deleteDialog.value = true;
 };
 
 const deleteSale = async () => {
-  try {
-    // Replace with actual API call
-    // await axios.delete(`http://localhost:8000/api/sales/sales/${selectedSale.value.id}/`);
-    
-    // Using mock deletion for now
-    sales.value = sales.value.filter(s => s.id !== selectedSale.value.id);
+  if (await salesStore.deleteSale(deleteItem.value.id)) {
     deleteDialog.value = false;
-    // Show success message
-  } catch (error) {
-    console.error('Error deleting sale:', error);
-    // Show error message
+    deleteItem.value = null;
   }
 };
 
-const printInvoice = (sale) => {
-  // In a real application, this would open a print dialog or generate a PDF
-  console.log('Print invoice for sale:', sale);
-  alert('چاپ فاکتور: ' + sale.invoice_number);
-};
-
-// Lifecycle hooks
-onMounted(() => {
-  getSales();
+// دریافت داده‌ها در زمان بارگذاری
+onMounted(async () => {
+  // دریافت لیست مشتریان برای فیلتر
+  if (customers.value.length === 0) {
+    await customersStore.fetchCustomers();
+  }
+  
+  await loadSales();
 });
-</script> 
+</script>
+
+<style scoped>
+.rtl-table :deep(th) {
+  text-align: right;
+}
+</style> 

@@ -8,6 +8,12 @@ const Dashboard = () => import('../views/Dashboard.vue');
 const ProductsList = () => import('../views/products/ProductsList.vue');
 const AccountingDashboard = () => import('../views/accounting/AccountingDashboard.vue');
 const InventoryList = () => import('../views/inventory/InventoryList.vue');
+
+// کامپوننت‌های مدیریت فروش
+const SalesList = () => import('../views/sales/SalesList.vue');
+const NewSale = () => import('../views/sales/NewSale.vue');
+const SaleDetail = () => import('../views/sales/SaleDetail.vue');
+
 const NotFound = () => import('../views/errors/NotFound.vue');
 const Forbidden = () => import('../views/errors/Forbidden.vue');
 
@@ -58,6 +64,37 @@ const routes = [
       title: 'مدیریت موجودی',
       requiresAuth: true,
       permissions: [PERMISSIONS.INVENTORY_VIEW]
+    }
+  },
+  // مسیرهای مدیریت فروش
+  {
+    path: '/sales',
+    name: 'sales',
+    component: SalesList,
+    meta: { 
+      title: 'مدیریت فروش',
+      requiresAuth: true,
+      permissions: [PERMISSIONS.SALE_VIEW]
+    }
+  },
+  {
+    path: '/sales/new',
+    name: 'new-sale',
+    component: NewSale,
+    meta: { 
+      title: 'ثبت فروش جدید',
+      requiresAuth: true,
+      permissions: [PERMISSIONS.SALE_CREATE]
+    }
+  },
+  {
+    path: '/sales/:id',
+    name: 'sale-detail',
+    component: SaleDetail,
+    meta: { 
+      title: 'جزئیات فروش',
+      requiresAuth: true,
+      permissions: [PERMISSIONS.SALE_VIEW]
     }
   },
   {
