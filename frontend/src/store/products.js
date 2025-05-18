@@ -97,14 +97,64 @@ export const useProductsStore = defineStore('products', {
         }
         
         console.log('Fetching products with params:', params);
-        const response = await productsService.getList(params);
+        console.log('API URL:', productsService.endpoint);
+        console.log('Headers:', {
+          Authorization: localStorage.getItem('naseri_auth_token') ? 
+            `Token ${localStorage.getItem('naseri_auth_token')}` : 'No token'
+        });
         
-        this.products = response.results;
-        this.totalItems = response.count;
-        return this.products;
+        try {
+          const response = await productsService.getList(params);
+          console.log('Products API response:', response);
+          
+          // بررسی ساختار پاسخ API برای دیباگ
+          console.log('Products response structure check:', {
+            responseType: typeof response,
+            hasResults: !!(response && response.results),
+            hasCount: !!(response && response.count !== undefined),
+            isArray: Array.isArray(response),
+            keys: response ? Object.keys(response) : []
+          });
+          
+          // مدیریت انواع مختلف پاسخ API
+          if (response && response.results) {
+            // ساختار پاسخ استاندارد Django REST framework
+            this.products = response.results;
+            this.totalItems = response.count || response.results.length;
+          } else if (Array.isArray(response)) {
+            // پاسخ به صورت آرایه
+            this.products = response;
+            this.totalItems = response.length;
+          } else if (response && typeof response === 'object') {
+            // اگر یک آبجکت ساده بود، تلاش کنیم آن را پردازش کنیم
+            if (Array.isArray(response.data)) {
+              this.products = response.data;
+              this.totalItems = response.total || response.data.length;
+            } else {
+              this.products = [response];
+              this.totalItems = 1;
+            }
+          } else {
+            // نمی‌توان داده‌ها را پردازش کرد
+            this.products = [];
+            this.totalItems = 0;
+            console.warn('Response does not contain expected results structure:', response);
+          }
+          
+          return this.products;
+        } catch (apiError) {
+          console.error('API Error details:', {
+            message: apiError.message,
+            response: apiError.response?.data,
+            status: apiError.response?.status
+          });
+          throw apiError;
+        }
       } catch (error) {
-        this.error = error.response?.data?.detail || 'خطا در دریافت لیست محصولات';
         console.error('Error fetching products:', error);
+        this.error = error.response?.data?.detail || error.message || 'خطا در دریافت لیست محصولات';
+        this.products = [];
+        this.totalItems = 0;
         return [];
       } finally {
         this.loading = false;
@@ -121,7 +171,29 @@ export const useProductsStore = defineStore('products', {
           ordering: 'name',
           page_size: 100 // تعداد بیشتری دسته‌بندی دریافت می‌کنیم
         });
-        this.categories = response.results;
+        
+        // بررسی ساختار پاسخ API برای دیباگ
+        console.log('Categories response structure:', {
+          responseType: typeof response,
+          hasResults: !!(response && response.results),
+          isArray: Array.isArray(response),
+          keys: response ? Object.keys(response) : []
+        });
+        
+        if (response && response.results) {
+          this.categories = response.results;
+        } else if (Array.isArray(response)) {
+          this.categories = response;
+        } else if (response && typeof response === 'object') {
+          if (Array.isArray(response.data)) {
+            this.categories = response.data;
+          } else {
+            this.categories = [response];
+          }
+        } else {
+          this.categories = [];
+        }
+        
         return this.categories;
       } catch (error) {
         this.error = error.response?.data?.detail || 'خطا در دریافت دسته‌بندی‌ها';
@@ -142,7 +214,29 @@ export const useProductsStore = defineStore('products', {
           ordering: 'name',
           page_size: 100 // تعداد بیشتری واحد دریافت می‌کنیم
         });
-        this.units = response.results;
+        
+        // بررسی ساختار پاسخ API برای دیباگ
+        console.log('Units response structure:', {
+          responseType: typeof response,
+          hasResults: !!(response && response.results),
+          isArray: Array.isArray(response),
+          keys: response ? Object.keys(response) : []
+        });
+        
+        if (response && response.results) {
+          this.units = response.results;
+        } else if (Array.isArray(response)) {
+          this.units = response;
+        } else if (response && typeof response === 'object') {
+          if (Array.isArray(response.data)) {
+            this.units = response.data;
+          } else {
+            this.units = [response];
+          }
+        } else {
+          this.units = [];
+        }
+        
         return this.units;
       } catch (error) {
         this.error = error.response?.data?.detail || 'خطا در دریافت واحدها';
@@ -187,6 +281,7 @@ export const useProductsStore = defineStore('products', {
       try {
         console.log('Adding new product:', productData);
         const response = await productsService.create(productData);
+        console.log('Add product response:', response);
         
         // بروزرسانی لیست محصولات
         await this.fetchProducts();
@@ -212,6 +307,7 @@ export const useProductsStore = defineStore('products', {
       try {
         console.log('Updating product:', productId, productData);
         const response = await productsService.update(productId, productData);
+        console.log('Update product response:', response);
         
         // بروزرسانی لیست محصولات
         await this.fetchProducts();
@@ -235,10 +331,15 @@ export const useProductsStore = defineStore('products', {
       this.error = null;
       
       try {
+        console.log('Deleting product:', productId);
         await productsService.delete(productId);
         
-        // حذف محصول از آرایه محصولات
-        this.products = this.products.filter(p => p.id !== productId);
+        // بروزرسانی لیست محصولات
+        const index = this.products.findIndex(p => p.id === productId);
+        if (index !== -1) {
+          this.products.splice(index, 1);
+          this.totalItems--;
+        }
         
         return true;
       } catch (error) {
@@ -295,6 +396,106 @@ export const useProductsStore = defineStore('products', {
         this.error = errorMsg;
         console.error('Error updating category:', error);
         return null;
+      } finally {
+        this.loading = false;
+      }
+    },
+    
+    // حذف دسته‌بندی
+    async deleteCategory(categoryId) {
+      this.loading = true;
+      this.error = null;
+      
+      try {
+        console.log('Deleting category:', categoryId);
+        await categoriesService.delete(categoryId);
+        
+        // بروزرسانی لیست دسته‌بندی‌ها
+        await this.fetchCategories();
+        
+        return true;
+      } catch (error) {
+        const errorMsg = error.response?.data?.detail || 
+                        Object.values(error.response?.data || {}).flat().join(', ') ||
+                        'خطا در حذف دسته‌بندی';
+        this.error = errorMsg;
+        console.error('Error deleting category:', error);
+        return false;
+      } finally {
+        this.loading = false;
+      }
+    },
+    
+    // افزودن واحد جدید
+    async addUnit(unitData) {
+      this.loading = true;
+      this.error = null;
+      
+      try {
+        console.log('Adding new unit:', unitData);
+        const response = await unitsService.create(unitData);
+        
+        // بروزرسانی لیست واحدها
+        await this.fetchUnits();
+        
+        return response;
+      } catch (error) {
+        const errorMsg = error.response?.data?.detail || 
+                        Object.values(error.response?.data || {}).flat().join(', ') ||
+                        'خطا در افزودن واحد';
+        this.error = errorMsg;
+        console.error('Error adding unit:', error);
+        return null;
+      } finally {
+        this.loading = false;
+      }
+    },
+    
+    // ویرایش واحد
+    async updateUnit(unitId, unitData) {
+      this.loading = true;
+      this.error = null;
+      
+      try {
+        console.log('Updating unit:', unitId, unitData);
+        const response = await unitsService.update(unitId, unitData);
+        
+        // بروزرسانی لیست واحدها
+        await this.fetchUnits();
+        
+        return response;
+      } catch (error) {
+        const errorMsg = error.response?.data?.detail || 
+                        Object.values(error.response?.data || {}).flat().join(', ') ||
+                        'خطا در ویرایش واحد';
+        this.error = errorMsg;
+        console.error('Error updating unit:', error);
+        return null;
+      } finally {
+        this.loading = false;
+      }
+    },
+    
+    // حذف واحد
+    async deleteUnit(unitId) {
+      this.loading = true;
+      this.error = null;
+      
+      try {
+        console.log('Deleting unit:', unitId);
+        await unitsService.delete(unitId);
+        
+        // بروزرسانی لیست واحدها
+        await this.fetchUnits();
+        
+        return true;
+      } catch (error) {
+        const errorMsg = error.response?.data?.detail || 
+                        Object.values(error.response?.data || {}).flat().join(', ') ||
+                        'خطا در حذف واحد';
+        this.error = errorMsg;
+        console.error('Error deleting unit:', error);
+        return false;
       } finally {
         this.loading = false;
       }

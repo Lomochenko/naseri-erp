@@ -3,14 +3,34 @@
     <v-card class="mb-6">
       <v-card-title class="d-flex align-center justify-space-between">
         <span class="text-h5">مدیریت محصولات</span>
-        <v-btn 
-          color="primary" 
-          prepend-icon="mdi-plus" 
-          variant="elevated"
-          @click="addNewProduct"
-        >
-          محصول جدید
-        </v-btn>
+        <div>
+          <v-btn
+            color="secondary"
+            variant="text"
+            class="ml-2"
+            prepend-icon="mdi-tag-multiple"
+            :to="{ name: 'categories' }"
+          >
+            مدیریت دسته‌بندی‌ها
+          </v-btn>
+          <v-btn
+            color="secondary"
+            variant="text"
+            class="ml-2"
+            prepend-icon="mdi-scale"
+            :to="{ name: 'units' }"
+          >
+            مدیریت واحدها
+          </v-btn>
+          <v-btn 
+            color="primary" 
+            prepend-icon="mdi-plus" 
+            variant="elevated"
+            @click="addNewProduct"
+          >
+            محصول جدید
+          </v-btn>
+        </div>
       </v-card-title>
 
       <v-card-text>
@@ -96,19 +116,6 @@
           <v-progress-linear indeterminate color="primary"></v-progress-linear>
         </template>
 
-        <!-- نمایش تصویر محصول -->
-        <template v-slot:item.image="{ item }">
-          <div class="d-flex align-center">
-            <v-avatar size="50" rounded class="mr-3" variant="outlined">
-              <v-img 
-                :src="item.image || '/images/no-image.png'" 
-                cover
-                :alt="item.name"
-              ></v-img>
-            </v-avatar>
-          </div>
-        </template>
-
         <!-- نمایش نام محصول و کد -->
         <template v-slot:item.name="{ item }">
           <div>
@@ -120,13 +127,13 @@
         <!-- نمایش دسته‌بندی -->
         <template v-slot:item.category="{ item }">
           <v-chip
-            v-if="item.category"
+            v-if="item.category_name"
             size="small"
             color="secondary"
             text-color="white"
             variant="flat"
           >
-            {{ item.category.name }}
+            {{ item.category_name }}
           </v-chip>
           <span v-else class="text-disabled">-</span>
         </template>
@@ -143,11 +150,11 @@
         <template v-slot:item.stock="{ item }">
           <div class="d-flex align-center">
             <v-chip
-              :color="getStockColor(item.stock, item.min_stock)"
+              :color="getStockColor(item.current_stock, item.min_stock)"
               size="small"
               variant="flat"
             >
-              {{ getStockLabel(item.stock, item.min_stock) }}
+              {{ getStockLabel(item.current_stock, item.min_stock) }}
             </v-chip>
           </div>
         </template>
@@ -217,23 +224,9 @@
       @product-saved="onProductSaved"
     />
 
-    <!-- دیالوگ جزئیات محصول -->
-    <v-dialog v-model="detailDialog" max-width="600px">
+    <!-- دیالوگ نمایش جزئیات محصول -->
+    <v-dialog v-model="detailDialog" max-width="500">
       <v-card v-if="selectedProduct">
-        <v-img
-          v-if="selectedProduct.image"
-          :src="selectedProduct.image"
-          height="200"
-          cover
-          class="text-white"
-        >
-          <template v-slot:placeholder>
-            <v-row class="fill-height ma-0" align="center" justify="center">
-              <v-progress-circular indeterminate color="primary"></v-progress-circular>
-            </v-row>
-          </template>
-        </v-img>
-
         <v-card-title class="text-h5">{{ selectedProduct.name }}</v-card-title>
 
         <v-card-text>
@@ -246,14 +239,6 @@
               <v-list-item-subtitle>{{ selectedProduct.code }}</v-list-item-subtitle>
             </v-list-item>
 
-            <v-list-item v-if="selectedProduct.barcode">
-              <template v-slot:prepend>
-                <v-icon icon="mdi-barcode-scan"></v-icon>
-              </template>
-              <v-list-item-title>بارکد:</v-list-item-title>
-              <v-list-item-subtitle>{{ selectedProduct.barcode }}</v-list-item-subtitle>
-            </v-list-item>
-
             <v-list-item v-if="selectedProduct.category">
               <template v-slot:prepend>
                 <v-icon icon="mdi-tag"></v-icon>
@@ -262,50 +247,51 @@
               <v-list-item-subtitle>{{ selectedProduct.category.name }}</v-list-item-subtitle>
             </v-list-item>
 
-            <v-list-item>
+            <v-list-item v-if="selectedProduct.unit">
               <template v-slot:prepend>
-                <v-icon icon="mdi-tape-measure"></v-icon>
+                <v-icon icon="mdi-scale"></v-icon>
               </template>
               <v-list-item-title>واحد:</v-list-item-title>
-              <v-list-item-subtitle>{{ selectedProduct.unit?.name }} ({{ selectedProduct.unit?.symbol }})</v-list-item-subtitle>
+              <v-list-item-subtitle>{{ selectedProduct.unit.name }} ({{ selectedProduct.unit.symbol }})</v-list-item-subtitle>
             </v-list-item>
 
             <v-list-item>
               <template v-slot:prepend>
-                <v-icon icon="mdi-cash"></v-icon>
-              </template>
-              <v-list-item-title>قیمت فروش:</v-list-item-title>
-              <v-list-item-subtitle>{{ formatPrice(selectedProduct.selling_price) }}</v-list-item-subtitle>
-            </v-list-item>
-
-            <v-list-item>
-              <template v-slot:prepend>
-                <v-icon icon="mdi-shopping"></v-icon>
+                <v-icon icon="mdi-currency-usd"></v-icon>
               </template>
               <v-list-item-title>قیمت خرید:</v-list-item-title>
-              <v-list-item-subtitle>{{ formatPrice(selectedProduct.purchase_price) }}</v-list-item-subtitle>
+              <v-list-item-subtitle>{{ formatPrice(selectedProduct.purchase_price) }} تومان</v-list-item-subtitle>
             </v-list-item>
 
             <v-list-item>
               <template v-slot:prepend>
-                <v-icon icon="mdi-package-variant"></v-icon>
+                <v-icon icon="mdi-sale"></v-icon>
+              </template>
+              <v-list-item-title>قیمت فروش:</v-list-item-title>
+              <v-list-item-subtitle>{{ formatPrice(selectedProduct.selling_price) }} تومان</v-list-item-subtitle>
+            </v-list-item>
+
+            <v-list-item>
+              <template v-slot:prepend>
+                <v-icon :color="getStockColor(selectedProduct.current_stock, selectedProduct.min_stock)" icon="mdi-package-variant"></v-icon>
               </template>
               <v-list-item-title>موجودی:</v-list-item-title>
               <v-list-item-subtitle>
+                {{ selectedProduct.current_stock }}
                 <v-chip
-                  :color="getStockColor(selectedProduct.stock, selectedProduct.min_stock)"
-                  size="small"
-                  variant="flat"
+                  v-if="selectedProduct.current_stock <= selectedProduct.min_stock"
+                  :color="getStockColor(selectedProduct.current_stock, selectedProduct.min_stock)"
+                  size="x-small"
+                  class="mr-2"
                 >
-                  {{ selectedProduct.stock }} {{ selectedProduct.unit?.symbol }}
+                  {{ selectedProduct.current_stock <= 0 ? 'اتمام موجودی' : 'موجودی کم' }}
                 </v-chip>
-                (حداقل موجودی: {{ selectedProduct.min_stock }} {{ selectedProduct.unit?.symbol }})
               </v-list-item-subtitle>
             </v-list-item>
 
             <v-list-item v-if="selectedProduct.description">
               <template v-slot:prepend>
-                <v-icon icon="mdi-text-box"></v-icon>
+                <v-icon icon="mdi-text"></v-icon>
               </template>
               <v-list-item-title>توضیحات:</v-list-item-title>
               <v-list-item-subtitle>{{ selectedProduct.description }}</v-list-item-subtitle>
@@ -315,17 +301,7 @@
 
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="primary" variant="text" @click="detailDialog = false">
-            بستن
-          </v-btn>
-          <v-btn
-            color="warning"
-            variant="elevated"
-            prepend-icon="mdi-pencil"
-            @click="editSelectedProduct"
-          >
-            ویرایش
-          </v-btn>
+          <v-btn color="primary" variant="text" @click="detailDialog = false">بستن</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -367,11 +343,10 @@ const productsStore = useProductsStore();
 
 // ثابت‌های نمایش
 const headers = [
-  { title: 'تصویر', key: 'image', align: 'center', sortable: false },
   { title: 'نام محصول', key: 'name', align: 'start', sortable: true },
-  { title: 'دسته‌بندی', key: 'category', align: 'center', sortable: false },
+  { title: 'دسته‌بندی', key: 'category_name', align: 'center', sortable: true },
   { title: 'قیمت فروش (تومان)', key: 'selling_price', align: 'center', sortable: true },
-  { title: 'موجودی', key: 'stock', align: 'center', sortable: true },
+  { title: 'موجودی', key: 'current_stock', align: 'center', sortable: true },
   { title: 'وضعیت', key: 'is_active', align: 'center', sortable: true },
   { title: 'عملیات', key: 'actions', align: 'center', sortable: false },
 ];
@@ -426,7 +401,13 @@ const resetFilters = () => {
 
 // بارگذاری محصولات
 const loadProducts = async () => {
-  await productsStore.fetchProducts();
+  console.log('نصب اولیه: بارگذاری محصولات');
+  try {
+    await productsStore.fetchProducts();
+    console.log('نصب اولیه: محصولات با موفقیت بارگذاری شدند', products.value);
+  } catch (error) {
+    console.error('نصب اولیه: خطا در بارگذاری محصولات', error);
+  }
 };
 
 // مدیریت گزینه‌های جدول
@@ -489,11 +470,20 @@ const onProductSaved = () => {
 
 // دریافت داده‌ها در زمان بارگذاری
 onMounted(async () => {
-  if (categories.value.length === 0) {
-    await productsStore.fetchCategories();
-  }
+  console.log('نصب اولیه: کامپوننت محصولات نصب شد');
   
-  await loadProducts();
+  try {
+    if (categories.value.length === 0) {
+      console.log('نصب اولیه: بارگذاری دسته‌بندی‌ها');
+      await productsStore.fetchCategories();
+      console.log('نصب اولیه: دسته‌بندی‌ها بارگذاری شدند', categories.value);
+    }
+    
+    console.log('نصب اولیه: فراخوانی loadProducts');
+    await loadProducts();
+  } catch (error) {
+    console.error('نصب اولیه: خطا در onMounted', error);
+  }
 });
 </script>
 

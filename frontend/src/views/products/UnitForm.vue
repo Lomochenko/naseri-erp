@@ -2,33 +2,33 @@
   <v-dialog v-model="dialogVisible" max-width="500px" persistent>
     <v-card>
       <v-card-title class="text-h5">
-        {{ isEdit ? 'ویرایش دسته‌بندی' : 'افزودن دسته‌بندی جدید' }}
+        {{ isEdit ? 'ویرایش واحد' : 'افزودن واحد جدید' }}
       </v-card-title>
 
       <v-card-text>
-        <v-form ref="form" @submit.prevent="saveCategory">
+        <v-form ref="form" @submit.prevent="saveUnit">
           <v-container>
             <v-row>
               <v-col cols="12">
                 <v-text-field
-                  v-model="category.name"
-                  label="نام دسته‌بندی"
+                  v-model="unit.name"
+                  label="نام واحد"
                   variant="outlined"
                   density="compact"
-                  :rules="[v => !!v || 'نام دسته‌بندی الزامی است']"
+                  :rules="[v => !!v || 'نام واحد الزامی است']"
                   required
                 ></v-text-field>
               </v-col>
 
               <v-col cols="12">
-                <v-textarea
-                  v-model="category.description"
-                  label="توضیحات دسته‌بندی"
+                <v-text-field
+                  v-model="unit.symbol"
+                  label="نماد واحد"
                   variant="outlined"
                   density="compact"
-                  auto-grow
-                  rows="3"
-                ></v-textarea>
+                  :rules="[v => !!v || 'نماد واحد الزامی است']"
+                  required
+                ></v-text-field>
               </v-col>
             </v-row>
           </v-container>
@@ -41,7 +41,7 @@
         <v-btn 
           color="primary" 
           variant="elevated" 
-          @click="saveCategory"
+          @click="saveUnit"
           :loading="loading"
         >
           {{ isEdit ? 'ویرایش' : 'افزودن' }}
@@ -61,23 +61,23 @@ const props = defineProps({
     type: Boolean,
     default: false
   },
-  editedCategory: {
+  editedUnit: {
     type: Object,
     default: () => null
   }
 });
 
 // تعریف ایونت‌ها
-const emit = defineEmits(['update:modelValue', 'category-added', 'category-updated']);
+const emit = defineEmits(['update:modelValue', 'unit-saved']);
 
 // استور محصولات
 const productsStore = useProductsStore();
 
 // متغیرهای واکنش‌پذیر
 const form = ref(null);
-const category = ref({
+const unit = ref({
   name: '',
-  description: ''
+  symbol: ''
 });
 
 // وضعیت دیالوگ و ویرایش
@@ -86,34 +86,26 @@ const dialogVisible = computed({
   set: (value) => emit('update:modelValue', value)
 });
 
-const isEdit = computed(() => !!props.editedCategory);
+const isEdit = computed(() => !!props.editedUnit);
 const loading = computed(() => productsStore.loading);
 
-// ذخیره دسته‌بندی
-const saveCategory = async () => {
+// ذخیره واحد
+const saveUnit = async () => {
   const { valid } = await form.value.validate();
   
   if (!valid) return;
   
-  const categoryData = {
-    name: category.value.name,
-    description: category.value.description || ''
-  };
-  
   let result;
   if (isEdit.value) {
-    result = await productsStore.updateCategory(props.editedCategory.id, categoryData);
-    if (result) {
-      emit('category-updated', result);
-    }
+    // ویرایش واحد موجود
+    result = await productsStore.updateUnit(props.editedUnit.id, unit.value);
   } else {
-    result = await productsStore.addCategory(categoryData);
-    if (result) {
-      emit('category-added', result);
-    }
+    // افزودن واحد جدید
+    result = await productsStore.addUnit(unit.value);
   }
   
   if (result) {
+    emit('unit-saved', result);
     close();
   }
 };
@@ -126,9 +118,9 @@ const close = () => {
 
 // بازنشانی فرم
 const resetForm = () => {
-  category.value = {
+  unit.value = {
     name: '',
-    description: ''
+    symbol: ''
   };
   if (form.value) {
     form.value.resetValidation();
@@ -136,14 +128,13 @@ const resetForm = () => {
 };
 
 // پر کردن فرم در حالت ویرایش
-watch(() => props.editedCategory, (newCategory) => {
-  if (newCategory) {
-    category.value = { ...newCategory };
+watch(() => props.editedUnit, (newUnit) => {
+  if (newUnit) {
+    unit.value = { ...newUnit };
   } else {
     resetForm();
   }
 }, { immediate: true });
-
 </script>
 
 <style scoped>
