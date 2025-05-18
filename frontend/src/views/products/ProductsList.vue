@@ -10,6 +10,7 @@
             class="ml-2"
             prepend-icon="mdi-tag-multiple"
             :to="{ name: 'categories' }"
+            @click.native.prevent="navigateTo('categories')"
           >
             مدیریت دسته‌بندی‌ها
           </v-btn>
@@ -19,6 +20,7 @@
             class="ml-2"
             prepend-icon="mdi-scale"
             :to="{ name: 'units' }"
+            @click.native.prevent="navigateTo('units')"
           >
             مدیریت واحدها
           </v-btn>
@@ -337,9 +339,11 @@
 import { ref, computed, onMounted } from 'vue';
 import { useProductsStore } from '../../store/products';
 import ProductForm from './ProductForm.vue';
+import { useRouter } from 'vue-router';
 
 // استور محصولات
 const productsStore = useProductsStore();
+const router = useRouter();
 
 // ثابت‌های نمایش
 const headers = [
@@ -388,11 +392,32 @@ const getStockLabel = (stock, minStock) => {
 
 // مدیریت فیلترها
 const updateFilters = () => {
-  productsStore.updateFilters({
+  console.log('Updating filters:', {
     search: filters.value.search,
-    category: filters.value.category?.id,
+    category: filters.value.category,
+    categoryId: filters.value.category?.id || filters.value.category,
     status: filters.value.status
   });
+  
+  const updatedFilters = {
+    search: filters.value.search,
+    status: filters.value.status
+  };
+  
+  // اگر دسته‌بندی انتخاب شده، آن را اضافه کن
+  if (filters.value.category) {
+    if (typeof filters.value.category === 'object') {
+      updatedFilters.category = filters.value.category;
+    } else {
+      // اگر دسته‌بندی به صورت آیدی است، آبجکت کامل را پیدا کن
+      const categoryObj = categories.value.find(c => c.id === filters.value.category);
+      updatedFilters.category = categoryObj || { id: filters.value.category };
+    }
+  } else {
+    updatedFilters.category = null;
+  }
+  
+  productsStore.updateFilters(updatedFilters);
 };
 
 const resetFilters = () => {
@@ -464,8 +489,21 @@ const deleteProduct = async () => {
   }
 };
 
-const onProductSaved = () => {
+const onProductSaved = (savedProduct) => {
+  console.log('Product saved event received:', savedProduct);
+  // مطمئن شویم که پنجره محصول بسته شود
+  productDialog.value = false;
+  // بارگذاری مجدد لیست محصولات
   loadProducts();
+};
+
+// مدیریت رویدادها
+const navigateTo = (routeName) => {
+  console.log(`Navigating to ${routeName}...`);
+  // جلوگیری از مشکلات async با استفاده از setTimeout
+  setTimeout(() => {
+    router.push({ name: routeName });
+  }, 100);
 };
 
 // دریافت داده‌ها در زمان بارگذاری

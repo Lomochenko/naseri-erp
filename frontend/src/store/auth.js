@@ -12,7 +12,8 @@ export const useAuthStore = defineStore('auth', {
     token: localStorage.getItem(TOKEN_KEY) || null,
     user: JSON.parse(localStorage.getItem(USER_KEY) || 'null'),
     loading: false,
-    error: null
+    error: null,
+    initialized: false
   }),
   
   getters: {
@@ -64,9 +65,9 @@ export const useAuthStore = defineStore('auth', {
         const response = await axiosInstance.post('/api/users/login/', credentials);
         console.log('Login response:', response);
         
-        if (response.data.token && response.data.user) {
-          this.setAuthData(response.data.token, response.data.user);
-          return response.data.user;
+        if (response.token && response.user) {
+          this.setAuthData(response.token, response.user);
+          return response.user;
         } else {
           throw new Error('Token or user data missing in response');
         }
@@ -110,12 +111,14 @@ export const useAuthStore = defineStore('auth', {
       this.error = null;
       
       try {
+        console.log('Fetching profile...');
         const response = await axiosInstance.get('/api/users/profile/');
-        this.setUser(response.data);
-        return response.data;
+        console.log('Profile response:', response);
+        this.setUser(response);
+        return response;
       } catch (error) {
-        this.error = error.response?.data?.detail || 'خطا در دریافت پروفایل';
         console.error('Fetch profile error:', error);
+        this.error = error.response?.detail || 'خطا در دریافت پروفایل';
         
         // اگر خطای 401 (غیرمجاز) دریافت شد، کاربر خارج شود
         if (error.response?.status === 401) {
@@ -194,19 +197,37 @@ export const useAuthStore = defineStore('auth', {
     },
     
     // بررسی وضعیت احراز هویت در هنگام شروع برنامه
-    initAuth() {
-      // اگر توکن وجود دارد، هدر را تنظیم کن
-      if (this.token) {
-        axiosInstance.defaults.headers.common['Authorization'] = `Token ${this.token}`;
-        
-        // تنظیم نقش‌های کاربر
-        this.setUserRoles(this.user);
-        
-        // دریافت اطلاعات پروفایل برای اطمینان از معتبر بودن توکن
-        return this.fetchProfile();
+    async initAuth() {
+      console.log("Initializing auth state...");
+      
+      try {
+        // اگر توکن وجود دارد، هدر را تنظیم کن
+        if (this.token) {
+          axiosInstance.defaults.headers.common['Authorization'] = `Token ${this.token}`;
+          
+          // تنظیم نقش‌های کاربر
+          this.setUserRoles(this.user);
+          
+          console.log("Token exists, checking validity...");
+          try {
+            // دریافت اطلاعات پروفایل برای اطمینان از معتبر بودن توکن
+            const profile = await this.fetchProfile();
+            console.log("Profile fetched successfully:", profile);
+          } catch (error) {
+            console.error("Failed to fetch profile:", error);
+            // در صورت خطا، داده‌های احراز هویت را پاک کن
+            this.clearAuthData();
+          }
+        } else {
+          console.log("No token found");
+        }
+      } finally {
+        // مهم نیست چه اتفاقی افتاده، وضعیت مقداردهی اولیه را به true تغییر بده
+        this.initialized = true;
+        console.log("Auth initialization completed");
       }
       
-      return Promise.resolve(null);
+      return this.isLoggedIn;
     }
   }
 }); 

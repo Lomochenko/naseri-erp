@@ -33,7 +33,6 @@ class Unit(models.Model):
 class Product(models.Model):
     """Product model."""
     code = models.CharField(_('product code'), max_length=50, unique=True)
-    barcode = models.CharField(_('barcode'), max_length=100, blank=True, null=True)
     name = models.CharField(_('name'), max_length=255)
     description = models.TextField(_('description'), blank=True)
     category = models.ForeignKey(Category, verbose_name=_('category'),
@@ -49,7 +48,6 @@ class Product(models.Model):
     min_stock = models.DecimalField(_('minimum stock'), max_digits=10, decimal_places=2,
                                    default=0, validators=[MinValueValidator(0)])
     is_active = models.BooleanField(_('active'), default=True)
-    image = models.ImageField(_('image'), upload_to='products/', blank=True, null=True)
     created_at = models.DateTimeField(_('created at'), auto_now_add=True)
     updated_at = models.DateTimeField(_('updated at'), auto_now=True)
 

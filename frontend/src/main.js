@@ -61,11 +61,11 @@ const app = createApp(App)
   .use(router)
   .use(pinia);
 
-// ابتدا برنامه را اجرا کن
+// اجرای برنامه و شروع به کار
 app.mount('#app');
 
-// بررسی وضعیت احراز هویت بدون ایجاد تاخیر در اجرای برنامه
-const authStore = useAuthStore()
+// راه‌اندازی استور auth بدون منتظر ماندن برای تکمیل آن
+const authStore = useAuthStore();
 authStore.initAuth().catch(error => {
-  console.log('خطا در بارگذاری وضعیت احراز هویت:', error)
-})
+  console.error('خطا در مقداردهی اولیه احراز هویت:', error);
+});

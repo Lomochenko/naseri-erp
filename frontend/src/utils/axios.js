@@ -1,109 +1,141 @@
 import axios from 'axios';
 
-// تنظیم URL پایه برای تمام درخواست‌ها
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+// دریافت آدرس API از متغیرهای محیطی
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
-// نام کلید توکن در localStorage
-const TOKEN_KEY = 'naseri_auth_token';
+// کلید توکن احرازهویت در localStorage
+export const TOKEN_KEY = 'naseri_auth_token';
 
-const axiosInstance = axios.create({
-  baseURL: API_URL,
-  timeout: 30000, // 30 seconds timeout
+// تنظیمات retry برای درخواست‌های ناموفق
+const MAX_RETRIES = 2;
+const RETRY_DELAY = 1000; // milliseconds
+
+// ایجاد نمونه axios با تنظیمات پایه
+const api = axios.create({
+  baseURL: BASE_URL,
+  timeout: 60000, // افزایش timeout به 60 ثانیه
   headers: {
     'Content-Type': 'application/json',
-    'Accept': 'application/json',
+    'Accept': 'application/json'
   }
 });
 
-// افزودن توکن احراز هویت به هدر درخواست‌ها
-axiosInstance.interceptors.request.use(
-  (config) => {
+// افزودن رهگیر برای درخواست‌ها
+api.interceptors.request.use(
+  config => {
+    // افزودن توکن به هدرها در صورت وجود
     const token = localStorage.getItem(TOKEN_KEY);
     if (token) {
-      config.headers.Authorization = `Token ${token}`;
+      config.headers['Authorization'] = `Token ${token}`;
     }
     
-    // برای دیباگ‌کردن
-    console.log('Request Config:', {
-      url: config.url,
-      method: config.method,
-      headers: config.headers,
+    // اضافه کردن شمارنده retry به درخواست
+    config.retryCount = config.retryCount || 0;
+    
+    // لاگ درخواست برای دیباگ
+    console.log('API Request:', {
+      method: config.method?.toUpperCase(),
+      url: config.baseURL + (config.url || ''),
       data: config.data,
-      params: config.params
+      params: config.params,
+      headers: config.headers,
+      retryCount: config.retryCount
     });
     
     return config;
   },
-  (error) => {
-    console.error('Request Error:', error);
+  error => {
+    console.error('API Request Error:', error);
     return Promise.reject(error);
   }
 );
 
-// مدیریت پاسخ‌های خطا
-axiosInstance.interceptors.response.use(
-  (response) => {
-    // برای دیباگ‌کردن
-    console.log('Response Data:', {
+// افزودن رهگیر برای پاسخ‌ها
+api.interceptors.response.use(
+  response => {
+    // لاگ پاسخ برای دیباگ
+    console.log('API Response:', {
       status: response.status,
-      data: response.data,
-      headers: response.headers
+      url: response.config.url,
+      data: response.data
     });
     
-    return response;
+    // آزمایشی: بررسی ساختار پاسخ برای دیباگ
+    console.log('Response structure:', {
+      hasData: !!response.data,
+      hasResults: !!(response.data && response.data.results),
+      resultType: response.data ? typeof response.data : 'undefined',
+      keys: response.data ? Object.keys(response.data) : []
+    });
+    
+    return response.data;
   },
-  (error) => {
-    // برای دیباگ‌کردن
-    console.error('Response Error:', {
+  async error => {
+    // لاگ خطا برای دیباگ
+    console.error('API Response Error:', {
       message: error.message,
-      response: error.response ? {
-        status: error.response.status,
-        data: error.response.data,
-        headers: error.response.headers
-      } : 'No Response',
-      request: error.request ? 'Request was made but no response' : 'No Request'
+      response: error.response?.data,
+      status: error.response?.status,
+      url: error.config?.url
     });
     
+    // منطق retry برای خطاهای شبکه و خطاهای 5xx
+    const config = error.config;
+    
+    // اگر درخواست هنوز به حداکثر تعداد retry نرسیده و خطا مربوط به شبکه یا سرور است
+    if (
+      config && 
+      config.retryCount < MAX_RETRIES && 
+      (error.code === 'ECONNABORTED' || error.code === 'ERR_NETWORK' || 
+       (error.response && error.response.status >= 500))
+    ) {
+      config.retryCount += 1;
+      
+      console.log(`Retrying request (${config.retryCount}/${MAX_RETRIES})...`);
+      
+      // تاخیر قبل از retry
+      await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+      
+      // تلاش مجدد درخواست
+      return api(config);
+    }
+    
+    // بررسی خطاهای خاص
     if (error.response) {
-      // خطاهای سرور (400+)
-      const { status } = error.response;
-      
-      if (status === 401) {
-        // احراز هویت نشده (توکن منقضی شده یا نامعتبر)
-        localStorage.removeItem(TOKEN_KEY);
-        localStorage.removeItem('naseri_user');
-        if (window.location.pathname !== '/login') {
-          window.location.href = '/login';
-        }
-      }
-      
-      if (status === 403) {
-        // دسترسی غیرمجاز
-        console.error('دسترسی غیرمجاز');
-        if (window.location.pathname !== '/forbidden') {
-          window.location.href = '/forbidden';
-        }
-      }
-      
-      if (status === 404) {
-        // منبع یافت نشد
-        console.error('منبع مورد نظر یافت نشد');
-      }
-      
-      if (status === 500) {
-        // خطای سرور
-        console.error('خطای سرور رخ داده است');
+      switch (error.response.status) {
+        case 401: // خطای احراز هویت
+          console.log('Authentication error. Redirecting to login...');
+          // حذف توکن در صورت نامعتبر بودن
+          localStorage.removeItem(TOKEN_KEY);
+          
+          // انتقال به صفحه ورود اگر در آن صفحه نیستیم
+          if (window.location.pathname !== '/login') {
+            window.location.href = '/login';
+          }
+          break;
+          
+        case 403: // خطای دسترسی
+          console.error('Access forbidden');
+          break;
+          
+        case 404: // خطای عدم وجود
+          console.error('Resource not found');
+          break;
+          
+        case 500: // خطای سرور
+          console.error('Server error');
+          break;
+          
+        default:
+          console.error(`Error with status code: ${error.response.status}`);
       }
     } else if (error.request) {
-      // درخواست انجام شده اما پاسخی دریافت نشده است
-      console.error('خطا در ارتباط با سرور');
-    } else {
-      // خطا در تنظیم درخواست
-      console.error('خطا در تنظیم درخواست:', error.message);
+      // درخواست ارسال شده اما پاسخی دریافت نشده
+      console.error('No response received from server', error.request);
     }
     
     return Promise.reject(error);
   }
 );
 
-export default axiosInstance; 
+export default api; 

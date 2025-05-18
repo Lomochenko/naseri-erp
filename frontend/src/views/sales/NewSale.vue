@@ -365,12 +365,6 @@
             :loading="productsLoading"
             :items-per-page="5"
           >
-            <template v-slot:item.image="{ item }">
-              <v-avatar size="40" rounded>
-                <v-img :src="item.image || '/images/no-image.png'" :alt="item.name"></v-img>
-              </v-avatar>
-            </template>
-
             <template v-slot:item.name="{ item }">
               <div>{{ item.name }}</div>
               <div class="text-caption">کد: {{ item.code }}</div>
@@ -534,7 +528,6 @@ const paymentMethods = [
 
 // هدرهای جدول محصولات
 const productHeaders = [
-  { title: 'تصویر', key: 'image', align: 'center', sortable: false },
   { title: 'نام محصول', key: 'name', align: 'start', sortable: true },
   { title: 'قیمت فروش', key: 'selling_price', align: 'center', sortable: true },
   { title: 'موجودی', key: 'current_stock', align: 'center', sortable: true },

@@ -46,7 +46,7 @@
     <v-card>
       <v-data-table
         :headers="headers"
-        :items="categories"
+        :items="safeCategories"
         :loading="loading"
         :items-per-page="itemsPerPage"
         :page="page"
@@ -62,19 +62,19 @@
 
         <!-- نمایش نام دسته‌بندی -->
         <template v-slot:item.name="{ item }">
-          <div class="font-weight-medium">{{ item.name }}</div>
+          <div class="font-weight-medium">{{ item.raw ? item.raw.name : item.name }}</div>
         </template>
 
         <!-- نمایش توضیحات -->
         <template v-slot:item.description="{ item }">
           <div class="text-truncate" style="max-width: 300px;">
-            {{ item.description || 'بدون توضیحات' }}
+            {{ (item.raw ? item.raw.description : item.description) || 'بدون توضیحات' }}
           </div>
         </template>
 
         <!-- نمایش تاریخ ایجاد -->
         <template v-slot:item.created_at="{ item }">
-          <div>{{ formatDate(item.created_at) }}</div>
+          <div>{{ formatDate(item.raw ? item.raw.created_at : item.created_at) }}</div>
         </template>
 
         <!-- نمایش دکمه‌های عملیات -->
@@ -86,14 +86,14 @@
               variant="text"
               color="warning"
               class="ml-1"
-              @click="editCategory(item)"
+              @click="editCategory(item.raw || item)"
             ></v-btn>
             <v-btn
               icon="mdi-delete"
               size="small"
               variant="text"
               color="error"
-              @click="confirmDelete(item)"
+              @click="confirmDelete(item.raw || item)"
             ></v-btn>
           </div>
         </template>
@@ -179,24 +179,76 @@ const totalItems = ref(0);
 
 // دریافت داده‌ها از استور
 const loading = computed(() => productsStore.loading);
-const categories = computed(() => productsStore.categories);
+const categories = computed(() => productsStore.categories || []);
+
+// ایجاد آرایه ایمن از دسته‌بندی‌ها برای استفاده در جدول
+const safeCategories = computed(() => {
+  const cats = categories.value;
+  // اطمینان از اینکه آرایه معتبر داریم
+  if (!Array.isArray(cats)) {
+    console.warn('Categories is not an array, returning empty array');
+    return [];
+  }
+  
+  // اطمینان از اینکه هر آیتم حداقل دارای id و name است
+  return cats.map(cat => {
+    if (!cat) return { id: 'unknown', name: 'دسته‌بندی نامشخص', description: '', created_at: new Date() };
+    
+    return {
+      id: cat.id || 'unknown',
+      name: cat.name || 'بدون نام',
+      description: cat.description || '',
+      created_at: cat.created_at || new Date()
+    };
+  });
+});
 
 // فرمت‌کننده تاریخ
 const formatDate = (dateStr) => {
-  if (!dateStr) return '';
-  const date = new Date(dateStr);
-  return new Intl.DateTimeFormat('fa-IR').format(date);
+  if (!dateStr) return 'بدون تاریخ';
+  try {
+    // بررسی اولیه مقدار تاریخ
+    if (dateStr === 'Invalid Date' || dateStr === 'undefined' || dateStr === 'null') {
+      return 'تاریخ نامعتبر';
+    }
+    
+    // تبدیل به تاریخ
+    const date = new Date(dateStr);
+    
+    // بررسی معتبر بودن تاریخ
+    if (isNaN(date.getTime())) {
+      return 'تاریخ نامعتبر';
+    }
+    
+    // فرمت کردن تاریخ
+    return new Intl.DateTimeFormat('fa-IR').format(date);
+  } catch (error) {
+    console.error('خطا در تبدیل تاریخ:', error, 'مقدار:', dateStr);
+    return 'تاریخ نامعتبر';
+  }
 };
 
 // بارگذاری دسته‌بندی‌ها
 const fetchCategories = async () => {
   try {
     console.log('Trying to fetch categories...');
-    await productsStore.fetchCategories();
+    // تاخیر کوتاه برای اطمینان از اینکه کامپوننت کاملاً mount شده است
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    // ارسال مقدار جستجو به تابع fetchCategories در استور
+    await productsStore.fetchCategories(search.value);
+    
     console.log('Categories fetched:', productsStore.categories);
-    totalItems.value = productsStore.categories.length;
+    
+    // اطمینان از اینکه مقدار totalItems معتبر است
+    if (productsStore.categories && Array.isArray(productsStore.categories)) {
+      totalItems.value = productsStore.categories.length;
+    } else {
+      totalItems.value = 0;
+    }
   } catch (error) {
     console.error('خطا در بارگذاری دسته‌بندی‌ها:', error);
+    totalItems.value = 0;
   }
 };
 
@@ -225,10 +277,15 @@ const confirmDelete = (item) => {
 };
 
 const deleteCategory = async () => {
-  if (await productsStore.deleteCategory(deleteItem.value.id)) {
-    deleteDialog.value = false;
-    deleteItem.value = null;
-    fetchCategories();
+  try {
+    if (deleteItem.value && deleteItem.value.id) {
+      await productsStore.deleteCategory(deleteItem.value.id);
+      deleteDialog.value = false;
+      deleteItem.value = null;
+      await fetchCategories();
+    }
+  } catch (error) {
+    console.error('خطا در حذف دسته‌بندی:', error);
   }
 };
 
@@ -238,7 +295,11 @@ const onCategorySaved = () => {
 
 // دریافت داده‌ها در زمان بارگذاری
 onMounted(() => {
-  fetchCategories();
+  console.log('CategoriesList component mounted');
+  // تاخیر بیشتر برای اطمینان از اینکه کامپوننت کاملاً آماده است
+  setTimeout(() => {
+    fetchCategories();
+  }, 500);
 });
 </script>
 

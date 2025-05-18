@@ -17,12 +17,12 @@ class UnitAdmin(admin.ModelAdmin):
 class ProductAdmin(admin.ModelAdmin):
     list_display = ('code', 'name', 'category', 'unit', 'purchase_price', 'selling_price', 'is_active')
     list_filter = ('category', 'is_active')
-    search_fields = ('code', 'name', 'description', 'barcode')
+    search_fields = ('code', 'name', 'description')
     ordering = ('name',)
     readonly_fields = ('created_at', 'updated_at')
     fieldsets = (
         ('اطلاعات اصلی', {
-            'fields': ('code', 'barcode', 'name', 'description', 'image')
+            'fields': ('code', 'name', 'description')
         }),
         ('دسته‌بندی و واحد', {
             'fields': ('category', 'unit')

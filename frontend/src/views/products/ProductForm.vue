@@ -22,12 +22,26 @@
               </v-col>
 
               <v-col cols="12" md="6">
-                <v-text-field
-                  v-model="product.barcode"
-                  label="بارکد محصول"
+                <v-select
+                  v-model="product.category"
+                  :items="categories"
+                  item-title="name"
+                  item-value="id"
+                  return-object
+                  label="دسته‌بندی"
                   variant="outlined"
                   density="compact"
-                ></v-text-field>
+                >
+                  <template v-slot:append>
+                    <v-btn
+                      icon="mdi-plus"
+                      size="small"
+                      variant="text"
+                      class="mr-n2"
+                      @click.stop="openCategoryDialog"
+                    ></v-btn>
+                  </template>
+                </v-select>
               </v-col>
 
               <v-col cols="12">
@@ -43,46 +57,15 @@
 
               <v-col cols="12" md="6">
                 <v-select
-                  v-model="product.category"
-                  :items="categories"
-                  item-title="name"
-                  item-value="id"
-                  label="دسته‌بندی"
-                  variant="outlined"
-                  density="compact"
-                  :rules="[v => !!v || 'انتخاب دسته‌بندی الزامی است']"
-                  required
-                  return-object
-                >
-                  <template v-slot:append>
-                    <v-btn 
-                      icon="mdi-plus" 
-                      size="small" 
-                      variant="text" 
-                      color="primary"
-                      @click.stop="openCategoryDialog"
-                    ></v-btn>
-                  </template>
-                </v-select>
-              </v-col>
-
-              <v-col cols="12" md="6">
-                <v-select
                   v-model="product.unit"
                   :items="units"
                   item-title="name"
                   item-value="id"
+                  return-object
                   label="واحد اندازه‌گیری"
                   variant="outlined"
                   density="compact"
-                  :rules="[v => !!v || 'انتخاب واحد الزامی است']"
-                  required
-                  return-object
-                >
-                  <template v-slot:item="{ item, props }">
-                    <v-list-item v-bind="props" :title="`${item.name} (${item.symbol})`"></v-list-item>
-                  </template>
-                </v-select>
+                ></v-select>
               </v-col>
 
               <!-- اطلاعات قیمت و موجودی -->
@@ -147,39 +130,6 @@
                   rows="3"
                 ></v-textarea>
               </v-col>
-
-              <!-- آپلود تصویر محصول -->
-              <v-col cols="12">
-                <v-file-input
-                  v-model="productImage"
-                  label="تصویر محصول"
-                  variant="outlined"
-                  density="compact"
-                  accept="image/*"
-                  prepend-icon="mdi-camera"
-                  truncate-length="20"
-                  :show-size="1000"
-                  @change="previewImage"
-                >
-                  <template v-slot:selection="{ fileNames }">
-                    <template v-for="(fileName, index) in fileNames" :key="index">
-                      <v-chip size="small" class="me-2" variant="outlined">
-                        {{ fileName }}
-                      </v-chip>
-                    </template>
-                  </template>
-                </v-file-input>
-              </v-col>
-
-              <!-- پیش‌نمایش تصویر -->
-              <v-col v-if="imageSrc || product.image" cols="12" class="text-center">
-                <v-img 
-                  :src="imageSrc || product.image" 
-                  max-height="200" 
-                  max-width="200"
-                  class="mx-auto"
-                ></v-img>
-              </v-col>
             </v-row>
           </v-container>
         </v-form>
@@ -232,11 +182,8 @@ const productsStore = useProductsStore();
 
 // متغیرهای واکنش‌پذیر
 const form = ref(null);
-const productImage = ref(null);
-const imageSrc = ref(null);
 const product = ref({
   code: '',
-  barcode: '',
   name: '',
   description: '',
   category: null,
@@ -244,8 +191,7 @@ const product = ref({
   purchase_price: 0,
   selling_price: 0,
   min_stock: 0,
-  is_active: true,
-  image: null
+  is_active: true
 });
 const categoryDialog = ref(false);
 
@@ -260,16 +206,6 @@ const loading = computed(() => productsStore.loading);
 const categories = computed(() => productsStore.categories);
 const units = computed(() => productsStore.units);
 
-// پیش‌نمایش تصویر
-const previewImage = (event) => {
-  const file = event?.[0];
-  if (file) {
-    imageSrc.value = URL.createObjectURL(file);
-  } else {
-    imageSrc.value = null;
-  }
-};
-
 // ایجاد دسته‌بندی جدید
 const openCategoryDialog = () => {
   categoryDialog.value = true;
@@ -281,46 +217,63 @@ const onCategoryAdded = (newCategory) => {
 
 // ذخیره محصول
 const saveProduct = async () => {
-  const { valid } = await form.value.validate();
-  
-  if (!valid) return;
-  
-  // ایجاد FormData برای آپلود تصویر
-  const formData = new FormData();
-  
-  // اضافه کردن فیلدهای محصول به FormData
-  Object.keys(product.value).forEach(key => {
-    if (key === 'category' && product.value.category) {
-      formData.append('category', product.value.category.id);
-    } else if (key === 'unit' && product.value.unit) {
-      formData.append('unit', product.value.unit.id);
-    } else if (product.value[key] !== null && product.value[key] !== undefined) {
-      formData.append(key, product.value[key]);
+  try {
+    const { valid } = await form.value.validate();
+    
+    if (!valid) return;
+    
+    // تبدیل داده‌های محصول به فرمت مناسب برای API
+    const productData = { ...product.value };
+    
+    // تبدیل آبجکت دسته‌بندی به ID
+    if (productData.category) {
+      productData.category = productData.category.id;
     }
-  });
-  
-  // اضافه کردن تصویر در صورت انتخاب
-  if (productImage.value?.[0]) {
-    formData.append('image', productImage.value[0]);
-  }
-  
-  // ذخیره محصول
-  let result;
-  if (isEdit.value) {
-    result = await productsStore.updateProduct(props.editedProduct.id, formData);
-  } else {
-    result = await productsStore.addProduct(formData);
-  }
-  
-  if (result) {
-    emit('product-saved', result);
-    close();
+    
+    // تبدیل آبجکت واحد به ID
+    if (productData.unit) {
+      productData.unit = productData.unit.id;
+    }
+    
+    console.log('Saving product data:', productData);
+    
+    // ذخیره محصول
+    let result;
+    if (isEdit.value) {
+      result = await productsStore.updateProduct(props.editedProduct.id, productData);
+      console.log('Product updated, result:', result);
+    } else {
+      result = await productsStore.addProduct(productData);
+      console.log('Product added, result:', result);
+    }
+    
+    // حتی اگر result تعریف نشده یا null باشد، دیالوگ را ببند
+    console.log('Closing product dialog directly...');
+    
+    // بستن دیالوگ به طور مستقیم
+    emit('update:modelValue', false);
+    // بستن دیالوگ از طریق computed property
+    dialogVisible.value = false;
+    
+    // اگر عملیات موفقیت آمیز بود، رویداد product-saved را ارسال کن
+    if (result) {
+      emit('product-saved', result);
+    }
+    
+    // ریست کردن فرم
+    resetForm();
+  } catch (error) {
+    console.error('Error in saveProduct:', error);
   }
 };
 
 // بستن دیالوگ
 const close = () => {
+  console.log('Closing product dialog through close()...');
+  // بستن دیالوگ به طور مستقیم
+  emit('update:modelValue', false);
   dialogVisible.value = false;
+  // ریست کردن فرم
   resetForm();
 };
 
@@ -328,7 +281,6 @@ const close = () => {
 const resetForm = () => {
   product.value = {
     code: '',
-    barcode: '',
     name: '',
     description: '',
     category: null,
@@ -336,11 +288,9 @@ const resetForm = () => {
     purchase_price: 0,
     selling_price: 0,
     min_stock: 0,
-    is_active: true,
-    image: null
+    is_active: true
   };
-  productImage.value = null;
-  imageSrc.value = null;
+  
   if (form.value) {
     form.value.resetValidation();
   }

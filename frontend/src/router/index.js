@@ -6,6 +6,8 @@ import { PERMISSIONS } from '../utils/rbac';
 const Login = () => import('../views/auth/Login.vue');
 const Dashboard = () => import('../views/Dashboard.vue');
 const ProductsList = () => import('../views/products/ProductsList.vue');
+const CategoriesList = () => import('../views/products/CategoriesList.vue');
+const UnitsList = () => import('../views/products/UnitsList.vue');
 const AccountingDashboard = () => import('../views/accounting/AccountingDashboard.vue');
 const InventoryList = () => import('../views/inventory/InventoryList.vue');
 
@@ -52,6 +54,26 @@ const routes = [
     component: ProductsList,
     meta: { 
       title: 'مدیریت محصولات',
+      requiresAuth: true,
+      permissions: [PERMISSIONS.PRODUCT_VIEW]
+    }
+  },
+  {
+    path: '/products/categories',
+    name: 'categories',
+    component: CategoriesList,
+    meta: { 
+      title: 'مدیریت دسته‌بندی‌ها',
+      requiresAuth: true,
+      permissions: [PERMISSIONS.PRODUCT_VIEW]
+    }
+  },
+  {
+    path: '/products/units',
+    name: 'units',
+    component: UnitsList,
+    meta: { 
+      title: 'مدیریت واحدها',
       requiresAuth: true,
       permissions: [PERMISSIONS.PRODUCT_VIEW]
     }
