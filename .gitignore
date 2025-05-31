@@ -1,0 +1,30 @@
+# Python
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+*.pdb
+
+# Django
+db.sqlite3
+*.sqlite3
+media/
+staticfiles/
+.env
+
+# VSCode
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node/Vue (frontend)
+frontend/node_modules/
+frontend/dist/
+frontend/.env.local
+frontend/.env.development
+frontend/.env.production
+
+# Migrations cache
+**/migrations/__pycache__/
