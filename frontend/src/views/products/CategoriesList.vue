@@ -33,7 +33,7 @@
               color="secondary" 
               variant="text" 
               prepend-icon="mdi-refresh"
-              @click="fetchCategories"
+              @click="resetFilters"
             >
               بازنشانی
             </v-btn>
@@ -50,9 +50,12 @@
         :loading="loading"
         :items-per-page="itemsPerPage"
         :page="page"
-        :server-items-length="totalItems"
+        :server-items-length="totalItems || 0"
+        :items-per-page-options="[5, 10, 15, 20]"
         class="elevation-1 rtl-table"
         hover
+        show-select
+        fixed-footer
         @update:options="handleOptions"
       >
         <!-- لودینگ -->
@@ -113,6 +116,29 @@
             </v-btn>
           </div>
         </template>
+
+        <!-- تنظیم نمایش فوتر -->
+        <template v-slot:bottom>
+          <div class="d-flex align-center justify-center pt-3 pb-3">
+            <v-pagination
+              v-model="page"
+              :length="Math.ceil(totalItems / itemsPerPage) || 1"
+              :total-visible="5"
+              show-first-last-page
+              prev-icon="mdi-chevron-right"
+              next-icon="mdi-chevron-left"
+              first-icon="mdi-page-first"
+              last-icon="mdi-page-last"
+              rounded="circle"
+              @click:prev="onPrevPage"
+              @click:next="onNextPage"
+              @update:model-value="pageChange"
+            ></v-pagination>
+            <div class="ml-4 text-body-2">
+              نمایش {{ totalItems ? (page - 1) * itemsPerPage + 1 : 0 }} تا {{ Math.min(page * itemsPerPage, totalItems) }} از {{ totalItems }} مورد
+            </div>
+          </div>
+        </template>
       </v-data-table>
     </v-card>
 
@@ -155,6 +181,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useProductsStore } from '../../store/products';
 import CategoryForm from './CategoryForm.vue';
+import moment from 'jalali-moment';
 
 // استور محصولات
 const productsStore = useProductsStore();
@@ -192,13 +219,30 @@ const safeCategories = computed(() => {
   
   // اطمینان از اینکه هر آیتم حداقل دارای id و name است
   return cats.map(cat => {
-    if (!cat) return { id: 'unknown', name: 'دسته‌بندی نامشخص', description: '', created_at: new Date() };
+    if (!cat) return { id: 'unknown', name: 'دسته‌بندی نامشخص', description: '', created_at: new Date().toISOString() };
+    
+    // اطمینان از اینکه created_at در فرمت ISO باشد یا به فرمت معتبر تبدیل شود
+    let safeCreatedAt = cat.created_at;
+    if (safeCreatedAt) {
+      try {
+        // بررسی کنیم که آیا تاریخ معتبر است
+        const testDate = new Date(safeCreatedAt);
+        if (isNaN(testDate.getTime())) {
+          // اگر معتبر نیست، از تاریخ فعلی استفاده می‌کنیم
+          safeCreatedAt = new Date().toISOString();
+        }
+      } catch (e) {
+        safeCreatedAt = new Date().toISOString();
+      }
+    } else {
+      safeCreatedAt = new Date().toISOString();
+    }
     
     return {
       id: cat.id || 'unknown',
       name: cat.name || 'بدون نام',
       description: cat.description || '',
-      created_at: cat.created_at || new Date()
+      created_at: safeCreatedAt
     };
   });
 });
@@ -212,52 +256,173 @@ const formatDate = (dateStr) => {
       return 'تاریخ نامعتبر';
     }
     
-    // تبدیل به تاریخ
-    const date = new Date(dateStr);
-    
-    // بررسی معتبر بودن تاریخ
-    if (isNaN(date.getTime())) {
+    // استفاده از تایید اعتبار تاریخ
+    const m = moment(String(dateStr));
+    if (!m.isValid()) {
+      console.log('تاریخ نامعتبر است:', dateStr);
       return 'تاریخ نامعتبر';
     }
     
-    // فرمت کردن تاریخ
-    return new Intl.DateTimeFormat('fa-IR').format(date);
+    // تبدیل به تاریخ شمسی
+    return m.locale('fa').format('jYYYY/jMM/jDD HH:mm');
   } catch (error) {
     console.error('خطا در تبدیل تاریخ:', error, 'مقدار:', dateStr);
     return 'تاریخ نامعتبر';
   }
 };
 
-// بارگذاری دسته‌بندی‌ها
-const fetchCategories = async () => {
+// مدیریت گزینه‌های جدول
+const handleOptions = (options) => {
+  console.log('Table options changed:', options);
+  
+  // بررسی تغییر در تعداد آیتم در هر صفحه
+  const perPageChanged = itemsPerPage.value !== options.itemsPerPage;
+  
+  // به‌روزرسانی مقادیر صفحه‌بندی
+  itemsPerPage.value = options.itemsPerPage;
+  
+  // اگر تعداد آیتم در هر صفحه تغییر کرده، برگشت به صفحه اول
+  if (perPageChanged) {
+    page.value = 1;
+  } else {
+    page.value = options.page;
+  }
+  
+  // تنظیم مرتب‌سازی
+  const sortBy = options.sortBy.length > 0 ? options.sortBy[0] : null;
+  
+  // آماده‌سازی پارامترهای درخواست
+  let params = {
+    page: page.value,
+    per_page: itemsPerPage.value,
+    search: search.value || ''
+  };
+  
+  // اضافه کردن مرتب‌سازی
+  if (sortBy) {
+    params.sort_by = sortBy.key;
+    params.sort_desc = sortBy.order === 'desc' ? '1' : '0';
+  }
+  
+  console.log('Fetching categories with params:', params);
+  
+  // فراخوانی API با پارامترهای جدید
+  fetchCategoriesWithParams(params);
+};
+
+// تابع جدید برای فراخوانی API با پارامترهای پیجینگ و فیلترینگ
+const fetchCategoriesWithParams = async (params) => {
   try {
-    console.log('Trying to fetch categories...');
+    console.log('Fetching categories with params:', params);
+    
     // تاخیر کوتاه برای اطمینان از اینکه کامپوننت کاملاً mount شده است
     await new Promise(resolve => setTimeout(resolve, 100));
     
-    // ارسال مقدار جستجو به تابع fetchCategories در استور
-    await productsStore.fetchCategories(search.value);
+    // استفاده از متغیر موقت برای ذخیره نتیجه درخواست
+    const result = await productsStore.fetchCategories(
+      params.search, 
+      params.page, 
+      params.per_page,
+      params.sort_by,
+      params.sort_desc === '1'
+    );
     
-    console.log('Categories fetched:', productsStore.categories);
+    console.log('Categories fetched with result:', result);
     
     // اطمینان از اینکه مقدار totalItems معتبر است
-    if (productsStore.categories && Array.isArray(productsStore.categories)) {
-      totalItems.value = productsStore.categories.length;
+    if (result && result.totalItems !== undefined) {
+      // استفاده از مقدار بازگشتی از تابع
+      totalItems.value = result.totalItems;
+      console.log('Setting totalItems from API result:', totalItems.value);
+    } else if (productsStore.categories && Array.isArray(productsStore.categories)) {
+      // استفاده از مقدار دریافت‌شده از استور
+      totalItems.value = productsStore.totalItems || productsStore.categories.length;
+      console.log('Setting totalItems from store:', totalItems.value);
     } else {
       totalItems.value = 0;
+      console.log('Reset totalItems to 0 (no valid data)');
     }
   } catch (error) {
-    console.error('خطا در بارگذاری دسته‌بندی‌ها:', error);
+    console.error('خطا در بارگذاری دسته‌بندی‌ها با پارامترها:', error);
     totalItems.value = 0;
   }
 };
 
-// مدیریت گزینه‌های جدول
-const handleOptions = (options) => {
-  page.value = options.page;
-  itemsPerPage.value = options.itemsPerPage;
+// اصلاح تابع اصلی fetchCategories که با search فراخوانی می‌شود
+const fetchCategories = async () => {
+  const params = {
+    page: page.value,
+    per_page: itemsPerPage.value,
+    search: search.value || ''
+  };
   
-  fetchCategories();
+  await fetchCategoriesWithParams(params);
+};
+
+// تابع بازنشانی فیلترها
+const resetFilters = async () => {
+  console.log('Resetting category filters');
+  
+  // بازنشانی متغیرهای محلی
+  search.value = '';
+  page.value = 1;
+  itemsPerPage.value = 10;
+  
+  // بارگذاری مجدد دسته‌بندی‌ها بدون فیلتر
+  await fetchCategories();
+};
+
+// تابع تغییر صفحه در پیجینیشن
+const pageChange = (newPage) => {
+  console.log('Page changed to:', newPage);
+  
+  if (newPage !== page.value) {
+    page.value = newPage;
+    
+    // بارگذاری داده‌ها با صفحه جدید
+    const params = {
+      page: page.value,
+      per_page: itemsPerPage.value,
+      search: search.value || ''
+    };
+    
+    fetchCategoriesWithParams(params);
+  }
+};
+
+// تابع برای رفتن به صفحه قبلی
+const onPrevPage = () => {
+  console.log('Go to previous page, current page:', page.value);
+  if (page.value > 1) {
+    page.value -= 1;
+    
+    // بارگذاری داده‌ها با صفحه جدید
+    const params = {
+      page: page.value,
+      per_page: itemsPerPage.value,
+      search: search.value || ''
+    };
+    
+    fetchCategoriesWithParams(params);
+  }
+};
+
+// تابع برای رفتن به صفحه بعدی
+const onNextPage = () => {
+  console.log('Go to next page, current page:', page.value);
+  const maxPage = Math.ceil(totalItems.value / itemsPerPage.value) || 1;
+  if (page.value < maxPage) {
+    page.value += 1;
+    
+    // بارگذاری داده‌ها با صفحه جدید
+    const params = {
+      page: page.value,
+      per_page: itemsPerPage.value,
+      search: search.value || ''
+    };
+    
+    fetchCategoriesWithParams(params);
+  }
 };
 
 // مدیریت دسته‌بندی‌ها
@@ -297,8 +462,21 @@ const onCategorySaved = () => {
 onMounted(() => {
   console.log('CategoriesList component mounted');
   // تاخیر بیشتر برای اطمینان از اینکه کامپوننت کاملاً آماده است
-  setTimeout(() => {
-    fetchCategories();
+  setTimeout(async () => {
+    console.log('Loading categories after mount delay');
+    
+    try {
+      // بازنشانی متغیرهای صفحه‌بندی
+      page.value = 1;
+      itemsPerPage.value = 10;
+      
+      // بارگذاری اولیه دسته‌بندی‌ها
+      await fetchCategories();
+      
+      console.log('Initial categories loaded successfully');
+    } catch (error) {
+      console.error('Error during initial categories load:', error);
+    }
   }, 500);
 });
 </script>

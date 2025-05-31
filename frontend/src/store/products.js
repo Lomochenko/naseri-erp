@@ -121,18 +121,22 @@ export const useProductsStore = defineStore('products', {
             // ساختار پاسخ استاندارد Django REST framework
             this.products = response.results;
             this.totalItems = response.count || response.results.length;
+            console.log('Total items set from API result (results):', this.totalItems);
           } else if (Array.isArray(response)) {
             // پاسخ به صورت آرایه
             this.products = response;
             this.totalItems = response.length;
+            console.log('Total items set from array length:', this.totalItems);
           } else if (response && typeof response === 'object') {
             // اگر یک آبجکت ساده بود، تلاش کنیم آن را پردازش کنیم
             if (Array.isArray(response.data)) {
               this.products = response.data;
               this.totalItems = response.total || response.data.length;
+              console.log('Total items set from response.total:', this.totalItems);
             } else {
               this.products = [response];
               this.totalItems = 1;
+              console.log('Total items set to 1 (single item)');
             }
           } else {
             // نمی‌توان داده‌ها را پردازش کرد
@@ -141,7 +145,10 @@ export const useProductsStore = defineStore('products', {
             console.warn('Response does not contain expected results structure:', response);
           }
           
-          return this.products;
+          return {
+            products: this.products,
+            totalItems: this.totalItems
+          };
         } catch (apiError) {
           console.error('API Error details:', {
             message: apiError.message,
@@ -155,33 +162,40 @@ export const useProductsStore = defineStore('products', {
         this.error = error.response?.data?.detail || error.message || 'خطا در دریافت لیست محصولات';
         this.products = [];
         this.totalItems = 0;
-        return [];
+        return { products: [], totalItems: 0 };
       } finally {
         this.loading = false;
       }
     },
     
     // دریافت دسته‌بندی‌ها
-    async fetchCategories(searchTerm = '') {
+    async fetchCategories(searchTerm = '', page = 1, pageSize = 10, sortBy = 'name', sortDesc = false) {
       this.loading = true;
       this.error = null;
       
       try {
-        console.log('Calling categories API...');
+        console.log('Calling categories API with params:', { searchTerm, page, pageSize, sortBy, sortDesc });
         
         // برای اطمینان از اینکه درخواست به صورت کامل انجام شود
         await new Promise(resolve => setTimeout(resolve, 50));
         
-        // اضافه کردن پارامتر جستجو به درخواست API
+        // ساخت پارامترهای API
         const params = {
-          ordering: 'name',
-          page_size: 100 // تعداد بیشتری دسته‌بندی دریافت می‌کنیم
+          page: page,
+          page_size: pageSize
         };
         
         // اگر عبارت جستجو موجود بود، به پارامترها اضافه کن
         if (searchTerm) {
           params.search = searchTerm;
         }
+        
+        // تنظیم مرتب‌سازی
+        if (sortBy) {
+          params.ordering = sortDesc ? `-${sortBy}` : sortBy;
+        }
+        
+        console.log('Sending API request with params:', params);
         
         const response = await categoriesService.getList(params);
         
@@ -198,54 +212,47 @@ export const useProductsStore = defineStore('products', {
         if (!response) {
           console.log('No response received, using empty array');
           this.categories = [];
-          return [];
+          this.totalItems = 0;
+          return { categories: [], totalItems: 0 };
         }
         
+        // مدیریت انواع مختلف پاسخ API
         if (response && response.results) {
-          console.log('Using results from DRF response');
+          // ساختار پاسخ استاندارد Django REST framework
           this.categories = response.results;
+          this.totalItems = response.count;
+          console.log('Total items set to DRF count:', this.totalItems);
         } else if (Array.isArray(response)) {
-          console.log('Using array response');
+          // پاسخ به صورت آرایه
           this.categories = response;
+          this.totalItems = response.length;
+          console.log('Total items set to array length:', this.totalItems);
         } else if (response && typeof response === 'object') {
+          // اگر یک آبجکت ساده بود، تلاش کنیم آن را پردازش کنیم
           if (Array.isArray(response.data)) {
-            console.log('Using data array from object response');
             this.categories = response.data;
+            this.totalItems = response.total || response.data.length;
+            console.log('Total items set to response.total:', this.totalItems);
           } else {
-            console.log('Converting single object to array');
             this.categories = [response];
+            this.totalItems = 1;
+            console.log('Total items set to 1 (single object)');
           }
-        } else {
-          console.log('No valid response format found, using empty array');
-          this.categories = [];
-        }
-        
-        // اطمینان از اینکه آرایه برگشتی معتبر است
-        if (!Array.isArray(this.categories)) {
-          console.warn('Invalid categories array, resetting to empty array');
-          this.categories = [];
         }
         
         console.log('Categories processed:', this.categories.length);
-        return this.categories;
+        console.log('Total items set to:', this.totalItems);
+        
+        return {
+          categories: this.categories,
+          totalItems: this.totalItems 
+        };
       } catch (error) {
-        console.error('Error details in fetchCategories:', error);
-        
-        // پیام خطای دقیق‌تر
-        if (error.response) {
-          // پاسخ سرور با کد خطا
-          this.error = `خطا از سرور: ${error.response.status} - ${error.response.data?.detail || 'بدون توضیحات'}`;
-        } else if (error.request) {
-          // درخواست ارسال شده اما پاسخی دریافت نشده
-          this.error = 'خطا در ارتباط با سرور: پاسخی از سرور دریافت نشد';
-        } else {
-          // خطا در تنظیم درخواست
-          this.error = `خطا در ارسال درخواست: ${error.message}`;
-        }
-        
         console.error('Error fetching categories:', error);
+        this.error = error.response?.data?.detail || error.message || 'خطا در دریافت لیست دسته‌بندی‌ها';
         this.categories = [];
-        return [];
+        this.totalItems = 0;
+        return { categories: [], totalItems: 0 };
       } finally {
         this.loading = false;
       }
@@ -595,15 +602,27 @@ export const useProductsStore = defineStore('products', {
     
     // تنظیم صفحه جاری
     setPage(page) {
-      this.page = page;
-      return this.fetchProducts();
+      console.log('Setting page to:', page);
+      if (page !== this.page) {
+        this.page = page;
+        console.log('Page changed, re-fetching data...');
+        return this.fetchProducts();
+      }
+      console.log('Page unchanged, skipping re-fetch');
+      return Promise.resolve();
     },
     
     // تنظیم تعداد آیتم در هر صفحه
     setItemsPerPage(count) {
-      this.itemsPerPage = count;
-      this.page = 1; // بازگشت به صفحه اول با تغییر تعداد آیتم‌ها
-      return this.fetchProducts();
+      console.log('Setting items per page to:', count);
+      if (count !== this.itemsPerPage) {
+        this.itemsPerPage = count;
+        this.page = 1; // بازگشت به صفحه اول با تغییر تعداد آیتم‌ها
+        console.log('Items per page changed, re-fetching data from page 1...');
+        return this.fetchProducts();
+      }
+      console.log('Items per page unchanged, skipping re-fetch');
+      return Promise.resolve();
     },
     
     // بازنشانی فیلترها

@@ -108,9 +108,12 @@
         :loading="loading"
         :items-per-page="itemsPerPage"
         :page="page"
-        :server-items-length="totalItems"
+        :server-items-length="totalItems || 0"
+        :items-per-page-options="[5, 10, 15, 20]"
         class="elevation-1 rtl-table"
         hover
+        show-select
+        fixed-footer
         @update:options="handleOptions"
       >
         <!-- لودینگ -->
@@ -214,6 +217,29 @@
             >
               تلاش مجدد
             </v-btn>
+          </div>
+        </template>
+
+        <!-- تنظیم نمایش فوتر -->
+        <template v-slot:bottom>
+          <div class="d-flex align-center justify-center pt-3 pb-3">
+            <v-pagination
+              v-model="page"
+              :length="Math.ceil(totalItems / itemsPerPage) || 1"
+              :total-visible="5"
+              show-first-last-page
+              prev-icon="mdi-chevron-right"
+              next-icon="mdi-chevron-left"
+              first-icon="mdi-page-first"
+              last-icon="mdi-page-last"
+              rounded="circle"
+              @click:prev="onPrevPage"
+              @click:next="onNextPage"
+              @update:model-value="pageChange"
+            ></v-pagination>
+            <div class="ml-4 text-body-2">
+              نمایش {{ totalItems ? (page - 1) * itemsPerPage + 1 : 0 }} تا {{ Math.min(page * itemsPerPage, totalItems) }} از {{ totalItems }} مورد
+            </div>
           </div>
         </template>
       </v-data-table>
@@ -392,67 +418,152 @@ const getStockLabel = (stock, minStock) => {
 
 // مدیریت فیلترها
 const updateFilters = () => {
-  console.log('Updating filters:', {
+  console.log('Updating filters manually:', {
     search: filters.value.search,
     category: filters.value.category,
-    categoryId: filters.value.category?.id || filters.value.category,
     status: filters.value.status
   });
   
+  // ساخت آبجکت بروزرسانی‌شده فیلترها
   const updatedFilters = {
-    search: filters.value.search,
-    status: filters.value.status
+    search: filters.value.search || '',
+    status: filters.value.status || null,
+    sortBy: filters.value.sortBy || 'name',
+    sortDesc: filters.value.sortDesc || false
   };
   
   // اگر دسته‌بندی انتخاب شده، آن را اضافه کن
   if (filters.value.category) {
-    if (typeof filters.value.category === 'object') {
-      updatedFilters.category = filters.value.category;
-    } else {
-      // اگر دسته‌بندی به صورت آیدی است، آبجکت کامل را پیدا کن
-      const categoryObj = categories.value.find(c => c.id === filters.value.category);
-      updatedFilters.category = categoryObj || { id: filters.value.category };
-    }
+    updatedFilters.category = typeof filters.value.category === 'object' ? 
+      filters.value.category : 
+      { id: filters.value.category };
   } else {
     updatedFilters.category = null;
   }
   
+  // بروزرسانی فیلترها در استور
   productsStore.updateFilters(updatedFilters);
+  
+  // بازنشانی پارامترهای صفحه‌بندی (برگشت به صفحه 1)
+  page.value = 1;
+  productsStore.setPage(1);
+  
+  // بارگذاری مجدد محصولات با فیلترهای جدید
+  loadProducts();
 };
 
 const resetFilters = () => {
+  console.log('Resetting all filters');
+  
+  // بازنشانی فیلترها در استور
   productsStore.resetFilters();
+  
+  // بروزرسانی مقادیر محلی
+  search.value = '';
+  page.value = 1;
+  
+  // بارگذاری مجدد محصولات بدون فیلتر
+  loadProducts();
+};
+
+// تابع تغییر صفحه در پیجینیشن
+const pageChange = (newPage) => {
+  console.log('Page changed to:', newPage);
+  
+  if (newPage !== page.value) {
+    page.value = newPage;
+    
+    // بروزرسانی صفحه در استور
+    productsStore.setPage(page.value);
+    
+    // بارگذاری مجدد محصولات با صفحه جدید
+    loadProducts();
+  }
+};
+
+// تابع برای رفتن به صفحه قبلی
+const onPrevPage = () => {
+  console.log('Go to previous page, current page:', page.value);
+  if (page.value > 1) {
+    page.value -= 1;
+    
+    // بروزرسانی صفحه در استور
+    productsStore.setPage(page.value);
+    
+    // بارگذاری مجدد محصولات با صفحه جدید
+    loadProducts();
+  }
+};
+
+// تابع برای رفتن به صفحه بعدی
+const onNextPage = () => {
+  console.log('Go to next page, current page:', page.value);
+  const maxPage = Math.ceil(totalItems.value / itemsPerPage.value) || 1;
+  if (page.value < maxPage) {
+    page.value += 1;
+    
+    // بروزرسانی صفحه در استور
+    productsStore.setPage(page.value);
+    
+    // بارگذاری مجدد محصولات با صفحه جدید
+    loadProducts();
+  }
 };
 
 // بارگذاری محصولات
 const loadProducts = async () => {
-  console.log('نصب اولیه: بارگذاری محصولات');
+  console.log('بارگذاری محصولات...');
   try {
-    await productsStore.fetchProducts();
-    console.log('نصب اولیه: محصولات با موفقیت بارگذاری شدند', products.value);
+    const result = await productsStore.fetchProducts();
+    
+    if (result && result.totalItems !== undefined) {
+      console.log('محصولات با موفقیت بارگذاری شدند. تعداد کل:', result.totalItems);
+    } else {
+      console.log('محصولات بارگذاری شدند اما اطلاعات تعداد کل دریافت نشد');
+    }
   } catch (error) {
-    console.error('نصب اولیه: خطا در بارگذاری محصولات', error);
+    console.error('خطا در بارگذاری محصولات:', error);
   }
 };
 
 // مدیریت گزینه‌های جدول
 const handleOptions = (options) => {
-  page.value = options.page;
+  console.log('Table options changed:', options);
+  
+  // بررسی تغییر در تعداد آیتم در هر صفحه
+  const perPageChanged = itemsPerPage.value !== options.itemsPerPage;
+  
+  // به‌روزرسانی مقادیر صفحه‌بندی
   itemsPerPage.value = options.itemsPerPage;
+  
+  // اگر تعداد آیتم در هر صفحه تغییر کرده، برگشت به صفحه اول
+  if (perPageChanged) {
+    page.value = 1;
+  } else {
+    page.value = options.page;
+  }
   
   // تنظیم مرتب‌سازی
   const sortBy = options.sortBy.length > 0 ? options.sortBy[0] : null;
   
-  if (sortBy) {
-    productsStore.updateFilters({
-      sortBy: sortBy.key,
-      sortDesc: sortBy.order === 'desc'
-    });
-  }
+  // به‌روزرسانی فیلترها با تنظیمات مرتب‌سازی
+  const updatedFilters = {
+    ...filters.value,
+    sortBy: sortBy ? sortBy.key : 'name',
+    sortDesc: sortBy ? sortBy.order === 'desc' : false
+  };
+  
+  console.log('Updating filters for product list:', updatedFilters);
+  
+  // بروزرسانی فیلترها در استور
+  productsStore.updateFilters(updatedFilters);
   
   // بروزرسانی تنظیمات صفحه‌بندی
   productsStore.setPage(page.value);
   productsStore.setItemsPerPage(itemsPerPage.value);
+  
+  // بارگذاری مجدد محصولات
+  loadProducts();
 };
 
 // مدیریت محصولات
@@ -511,14 +622,25 @@ onMounted(async () => {
   console.log('نصب اولیه: کامپوننت محصولات نصب شد');
   
   try {
+    // بازنشانی متغیرهای صفحه‌بندی
+    page.value = 1;
+    itemsPerPage.value = 10;
+    
+    // بارگذاری دسته‌بندی‌ها اگر هنوز بارگذاری نشده‌اند
     if (categories.value.length === 0) {
       console.log('نصب اولیه: بارگذاری دسته‌بندی‌ها');
       await productsStore.fetchCategories();
       console.log('نصب اولیه: دسته‌بندی‌ها بارگذاری شدند', categories.value);
     }
     
+    // تاخیر کوتاه بین درخواست‌ها
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    // بارگذاری اولیه محصولات
     console.log('نصب اولیه: فراخوانی loadProducts');
     await loadProducts();
+    
+    console.log('نصب اولیه: بارگذاری اولیه محصولات با موفقیت انجام شد');
   } catch (error) {
     console.error('نصب اولیه: خطا در onMounted', error);
   }

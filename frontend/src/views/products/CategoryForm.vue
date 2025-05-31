@@ -138,10 +138,6 @@ const save = async () => {
       console.log('Category updated:', result);
       if (result) {
         emit('category-updated', result);
-        // اطمینان از بسته شدن پنجره
-        setTimeout(() => {
-          close();
-        }, 100);
       }
     } else {
       // افزودن دسته‌بندی جدید
@@ -149,12 +145,17 @@ const save = async () => {
       console.log('Category added:', result);
       if (result) {
         emit('category-added', result);
-        // اطمینان از بسته شدن پنجره (افزودن تأخیر برای اطمینان از بسته شدن)
-        setTimeout(() => {
-          close();
-        }, 100);
       }
     }
+    
+    // بستن پنجره بعد از ذخیره، چه برای ویرایش و چه برای افزودن
+    console.log('Directly closing category dialog...');
+    
+    // بستن دیالوگ به طور مستقیم
+    emit('update:modelValue', false);
+    dialog.value = false;
+    resetForm();
+    
   } catch (err) {
     console.error('خطا در ذخیره دسته‌بندی:', err);
     error.value = err.message || 'خطا در ذخیره اطلاعات دسته‌بندی';
@@ -162,56 +163,89 @@ const save = async () => {
 };
 
 const resetForm = () => {
+  // ریست کردن رفرنس فرم
   if (form.value) {
-    form.value.reset();
+    try {
+      form.value.reset();
+    } catch (e) {
+      console.error('خطا در ریست کردن فرم:', e);
+    }
   }
   
+  // بازنشانی مستقیم فیلدها
   formData.value = {
     name: '',
     description: ''
   };
   
+  // بازنشانی آی‌دی دسته‌بندی ویرایش شده
   editedId.value = null;
+  
+  // بازنشانی پیام خطا
   error.value = '';
+  
+  console.log('Form reset completed');
 };
 
 const close = () => {
-  console.log('Closing dialog...');
-  // تنظیم مستقیم دیالوگ
+  console.log('Directly closing dialog via close button...');
+  // بستن دیالوگ به طور مستقیم 
+  emit('update:modelValue', false);
   dialog.value = false;
-  // فراخوانی resetForm برای پاکسازی فرم
   resetForm();
-  // اطمینان از اعمال تغییرات
-  setTimeout(() => {
-    emit('update:modelValue', false);
-    console.log('Dialog closed');
-  }, 50);
 };
 
 const loadCategoryData = () => {
-  if (props.editedCategory) {
-    editedId.value = props.editedCategory.id;
-    formData.value = {
-      name: props.editedCategory.name || '',
-      description: props.editedCategory.description || ''
-    };
-  } else {
-    resetForm();
+  if (!props.editedCategory) {
+    console.warn('No category data to load');
+    return;
   }
+  
+  console.log('Loading category data for editing:', props.editedCategory);
+  
+  // ذخیره آی‌دی برای استفاده در هنگام ذخیره تغییرات
+  editedId.value = props.editedCategory.id;
+  
+  // پر کردن فرم با مقادیر دسته‌بندی
+  formData.value = {
+    name: props.editedCategory.name || '',
+    description: props.editedCategory.description || ''
+  };
+  
+  console.log('Category data loaded into form:', formData.value);
 };
 
 // Watchers
-watch(() => dialog.value, (val) => {
-  if (val) {
+watch(() => props.modelValue, (newVal) => {
+  console.log('Dialog modelValue changed:', newVal);
+  dialog.value = newVal;
+  
+  if (!newVal) {
+    // اگر دیالوگ بسته شده است، فرم را ریست کنیم
+    console.log('Dialog closing via modelValue change, resetting form');
+    resetForm();
+  } else if (props.editedCategory) {
+    // اگر در حالت ویرایش هستیم، داده‌های دسته‌بندی را لود کنیم
     loadCategoryData();
   }
 });
 
-watch(() => props.editedCategory, (val) => {
-  if (val && dialog.value) {
+// واچر برای ردیابی تغییرات دسته‌بندی ویرایش شده
+watch(() => props.editedCategory, (newVal) => {
+  console.log('Edited category changed:', newVal);
+  if (newVal && dialog.value) {
+    // فقط اگر دیالوگ باز است، داده‌ها را لود کنیم
     loadCategoryData();
   }
-}, { deep: true });
+});
+
+// واچر برای ردیابی تغییرات dialog و انتقال به modelValue
+watch(() => dialog.value, (newVal) => {
+  console.log('Dialog value changed internally:', newVal);
+  if (newVal !== props.modelValue) {
+    emit('update:modelValue', newVal);
+  }
+});
 
 // Lifecycle hooks
 onMounted(() => {

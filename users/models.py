@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.utils.translation import gettext_lazy as _
+from django.conf import settings
+from django.utils import timezone
 
 class UserManager(BaseUserManager):
     """Define a model manager for User model with no username field."""
@@ -32,6 +34,10 @@ class UserManager(BaseUserManager):
 
         return self._create_user(phone_number, password, **extra_fields)
 
+    def get_queryset(self):
+        # Exclude soft-deleted users by default
+        return super().get_queryset().filter(is_deleted=False)
+
 class User(AbstractUser):
     """Custom User model with phone number as the unique identifier."""
 
@@ -44,6 +50,12 @@ class User(AbstractUser):
     # User roles
     is_manager = models.BooleanField(_('manager status'), default=False,
                                     help_text=_('Designates whether the user can manage the entire system.'))
+    # Soft delete and audit fields
+    is_deleted = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey('self', null=True, blank=True, related_name='created_users', on_delete=models.SET_NULL)
+    updated_by = models.ForeignKey('self', null=True, blank=True, related_name='updated_users', on_delete=models.SET_NULL)
 
     USERNAME_FIELD = 'phone_number'
     REQUIRED_FIELDS = ['first_name', 'last_name']
@@ -61,3 +73,7 @@ class User(AbstractUser):
         """Return the first_name plus the last_name, with a space in between."""
         full_name = f"{self.first_name} {self.last_name}"
         return full_name.strip()
+
+    def delete(self, using=None, keep_parents=False):
+        self.is_deleted = True
+        self.save()
