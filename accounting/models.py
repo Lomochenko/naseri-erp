@@ -52,15 +52,11 @@ class Account(models.Model):
     @property
     def balance(self):
         """Calculate account balance from transactions."""
-        # For asset and expense accounts, debit increases the balance
+        debit_sum = self.journal_transactions.filter(transaction_type='debit').aggregate(total=models.Sum('amount'))['total'] or 0
+        credit_sum = self.journal_transactions.filter(transaction_type='credit').aggregate(total=models.Sum('amount'))['total'] or 0
         if self.account_type.category in ['asset', 'expense']:
-            debit_sum = self.debit_transactions.aggregate(total=models.Sum('amount'))['total'] or 0
-            credit_sum = self.credit_transactions.aggregate(total=models.Sum('amount'))['total'] or 0
             return debit_sum - credit_sum
-        # For liability, equity, and income accounts, credit increases the balance
         else:
-            debit_sum = self.debit_transactions.aggregate(total=models.Sum('amount'))['total'] or 0
-            credit_sum = self.credit_transactions.aggregate(total=models.Sum('amount'))['total'] or 0
             return credit_sum - debit_sum
 
 class JournalEntry(models.Model):
@@ -104,7 +100,7 @@ class JournalTransaction(models.Model):
                                      on_delete=models.CASCADE, related_name='transactions')
     account = models.ForeignKey(Account, verbose_name=_('account'),
                                on_delete=models.PROTECT,
-                               related_name='%(class)s_transactions')
+                               related_name='journal_transactions')
     transaction_type = models.CharField(_('transaction type'), max_length=10, choices=TRANSACTION_TYPES)
     amount = models.DecimalField(_('amount'), max_digits=12, decimal_places=0,
                                 validators=[MinValueValidator(0.01)])
@@ -118,14 +114,8 @@ class JournalTransaction(models.Model):
         return f"{self.get_transaction_type_display()} - {self.account.name} - {self.amount}"
 
     def save(self, *args, **kwargs):
-        """Override save to set the correct related_name based on transaction type."""
         super().save(*args, **kwargs)
-
-        # Update the related_name based on transaction type
-        if self.transaction_type == 'debit':
-            self.account.debit_transactions.add(self)
-        else:
-            self.account.credit_transactions.add(self)
+        # دیگر نیازی به افزودن دستی به related_name نیست
 
 class FiscalYear(models.Model):
     """Fiscal year model."""
