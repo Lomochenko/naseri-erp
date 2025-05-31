@@ -30,6 +30,10 @@ class Unit(models.Model):
     def __str__(self):
         return f"{self.name} ({self.symbol})"
 
+class ProductManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(is_deleted=False)
+
 class Product(models.Model):
     """Product model."""
     code = models.CharField(_('product code'), max_length=50, unique=True)
@@ -48,8 +52,12 @@ class Product(models.Model):
     min_stock = models.DecimalField(_('minimum stock'), max_digits=10, decimal_places=2,
                                    default=0, validators=[MinValueValidator(0)])
     is_active = models.BooleanField(_('active'), default=True)
+    is_deleted = models.BooleanField(default=False)
     created_at = models.DateTimeField(_('created at'), auto_now_add=True)
     updated_at = models.DateTimeField(_('updated at'), auto_now=True)
+
+    objects = ProductManager()
+    all_objects = models.Manager()  # نمایش همه محصولات حتی حذف‌شده‌ها
 
     class Meta:
         verbose_name = _('product')
@@ -75,3 +83,7 @@ class Product(models.Model):
         ).aggregate(total=models.Sum('quantity'))['total'] or 0
 
         return incoming - outgoing
+
+    def delete(self, using=None, keep_parents=False):
+        self.is_deleted = True
+        self.save()
