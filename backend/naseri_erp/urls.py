@@ -43,6 +43,7 @@ urlpatterns = [
     path('api/sales/', include('sales.urls')),
     path('api/purchases/', include('purchases.urls')),
     path('api/accounting/', include('accounting.urls')),
+    path('api/reports/', include('reporting.urls')),  # Updated reports module path
 
     # REST framework authentication
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),

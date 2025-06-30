@@ -26,13 +26,9 @@ class UserManager(BaseUserManager):
         """Create and save a SuperUser with the given phone number and password."""
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('is_active', True)
 
-        if extra_fields.get('is_staff') is not True:
-            raise ValueError('Superuser must have is_staff=True.')
-        if extra_fields.get('is_superuser') is not True:
-            raise ValueError('Superuser must have is_superuser=True.')
-
-        return self._create_user(phone_number, password, **extra_fields)
+        return self.create_user(phone_number, password, **extra_fields)
 
     def get_queryset(self):
         # Exclude soft-deleted users by default
@@ -58,7 +54,7 @@ class User(AbstractUser):
     updated_by = models.ForeignKey('self', null=True, blank=True, related_name='updated_users', on_delete=models.SET_NULL)
 
     USERNAME_FIELD = 'phone_number'
-    REQUIRED_FIELDS = ['first_name', 'last_name']
+    REQUIRED_FIELDS = []
 
     objects = UserManager()
 

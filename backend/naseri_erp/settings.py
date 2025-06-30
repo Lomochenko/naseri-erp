@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'sales',
     'purchases',
     'accounting',
+    'reporting',
 ]
 
 MIDDLEWARE = [
@@ -95,8 +96,12 @@ WSGI_APPLICATION = 'naseri_erp.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'naseri_erp_db',
+        'USER': 'naseri_user',
+        'PASSWORD': 'G0n0llah',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
 
