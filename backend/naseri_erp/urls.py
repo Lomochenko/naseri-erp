@@ -51,6 +51,9 @@ urlpatterns = [
     # Direct authentication URLs
     path('login/', lambda request: redirect('/api/users/login/')),
     path('logout/', lambda request: redirect('/api/users/logout/')),
+
+    # Audit module
+    path('api/audit/', include('audit.urls')),
 ]
 
 # Serve media files in development
