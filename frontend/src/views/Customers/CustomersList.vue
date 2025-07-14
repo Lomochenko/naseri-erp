@@ -1,0 +1,345 @@
+<template>
+  <div class="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10">
+    <!-- Breadcrumb -->
+    <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <h2 class="text-title-md2 font-bold text-black dark:text-white">
+        مدیریت مشتریان
+      </h2>
+      <nav>
+        <ol class="flex items-center gap-2">
+          <li>
+            <router-link class="font-medium" to="/">داشبورد /</router-link>
+          </li>
+          <li class="font-medium text-primary">مشتریان</li>
+        </ol>
+      </nav>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div class="flex gap-3">
+        <button
+          @click="showCreateModal = true"
+          class="inline-flex items-center justify-center rounded-md bg-primary px-6 py-3 text-center font-medium text-white hover:bg-opacity-90"
+        >
+          <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+          افزودن مشتری جدید
+        </button>
+      </div>
+      
+      <!-- Search -->
+      <div class="relative">
+        <input
+          v-model="searchQuery"
+          type="text"
+          placeholder="جستجو در مشتریان..."
+          class="w-full rounded-lg border border-stroke bg-transparent py-3 pl-12 pr-4 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
+        />
+        <svg
+          class="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-body"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </div>
+    </div>
+
+    <!-- Customers Table -->
+    <div class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+      <div class="px-4 py-6 md:px-6 xl:px-7.5">
+        <h4 class="text-xl font-semibold text-black dark:text-white">
+          لیست مشتریان
+        </h4>
+      </div>
+
+      <div class="grid grid-cols-6 border-t border-stroke px-4 py-4.5 dark:border-strokedark sm:grid-cols-8 md:px-6 2xl:px-7.5">
+        <div class="col-span-2 flex items-center">
+          <p class="font-medium">نام مشتری</p>
+        </div>
+        <div class="col-span-2 hidden items-center sm:flex">
+          <p class="font-medium">شماره تلفن</p>
+        </div>
+        <div class="col-span-1 flex items-center">
+          <p class="font-medium">شهر</p>
+        </div>
+        <div class="col-span-1 flex items-center">
+          <p class="font-medium">کل خرید</p>
+        </div>
+        <div class="col-span-1 flex items-center">
+          <p class="font-medium">وضعیت</p>
+        </div>
+        <div class="col-span-1 flex items-center">
+          <p class="font-medium">عملیات</p>
+        </div>
+      </div>
+
+      <!-- Sample Customer Data -->
+      <div v-for="customer in sampleCustomers" :key="customer.id" class="grid grid-cols-6 border-t border-stroke px-4 py-4.5 dark:border-strokedark sm:grid-cols-8 md:px-6 2xl:px-7.5">
+        <div class="col-span-2 flex items-center">
+          <div class="flex flex-col gap-1 sm:flex-row sm:items-center">
+            <div class="h-12.5 w-15 rounded-md">
+              <div class="h-12.5 w-12.5 rounded-full bg-primary/10 flex items-center justify-center">
+                <span class="text-primary font-medium">{{ getInitials(customer.name) }}</span>
+              </div>
+            </div>
+            <p class="text-sm text-black dark:text-white">{{ customer.name }}</p>
+          </div>
+        </div>
+        <div class="col-span-2 hidden items-center sm:flex">
+          <p class="text-sm text-black dark:text-white">{{ customer.phone }}</p>
+        </div>
+        <div class="col-span-1 flex items-center">
+          <p class="text-sm text-black dark:text-white">{{ customer.city }}</p>
+        </div>
+        <div class="col-span-1 flex items-center">
+          <p class="text-sm text-black dark:text-white">{{ formatPrice(customer.totalPurchase) }}</p>
+        </div>
+        <div class="col-span-1 flex items-center">
+          <span
+            :class="customer.isActive ? 'bg-success text-success' : 'bg-danger text-danger'"
+            class="inline-flex rounded-full bg-opacity-10 px-3 py-1 text-sm font-medium"
+          >
+            {{ customer.isActive ? 'فعال' : 'غیرفعال' }}
+          </span>
+        </div>
+        <div class="col-span-1 flex items-center space-x-2">
+          <button
+            @click="editCustomer(customer)"
+            class="hover:text-primary"
+            title="ویرایش"
+          >
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+          </button>
+          <button
+            @click="viewCustomer(customer)"
+            class="hover:text-primary ml-2"
+            title="مشاهده"
+          >
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+          </button>
+          <button
+            @click="deleteCustomer(customer.id)"
+            class="hover:text-danger ml-2"
+            title="حذف"
+          >
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Create/Edit Customer Modal -->
+    <div v-if="showCreateModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+      <div class="w-full max-w-md rounded-lg bg-white p-6 dark:bg-boxdark">
+        <div class="mb-4 flex items-center justify-between">
+          <h3 class="text-lg font-medium text-black dark:text-white">
+            {{ editingCustomer ? 'ویرایش مشتری' : 'افزودن مشتری جدید' }}
+          </h3>
+          <button
+            @click="closeModal"
+            class="text-gray-400 hover:text-gray-600"
+          >
+            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <form @submit.prevent="handleSubmit">
+          <div class="mb-4">
+            <label class="mb-2 block text-sm font-medium text-black dark:text-white">
+              نام مشتری <span class="text-red-500">*</span>
+            </label>
+            <input
+              v-model="customerForm.name"
+              type="text"
+              required
+              class="w-full rounded border border-stroke bg-transparent px-3 py-2 text-black outline-none focus:border-primary dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
+              placeholder="نام کامل مشتری"
+            />
+          </div>
+
+          <div class="mb-4">
+            <label class="mb-2 block text-sm font-medium text-black dark:text-white">
+              شماره تلفن <span class="text-red-500">*</span>
+            </label>
+            <input
+              v-model="customerForm.phone"
+              type="tel"
+              required
+              class="w-full rounded border border-stroke bg-transparent px-3 py-2 text-black outline-none focus:border-primary dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
+              placeholder="09123456789"
+            />
+          </div>
+
+          <div class="mb-4">
+            <label class="mb-2 block text-sm font-medium text-black dark:text-white">
+              آدرس
+            </label>
+            <textarea
+              v-model="customerForm.address"
+              rows="3"
+              class="w-full rounded border border-stroke bg-transparent px-3 py-2 text-black outline-none focus:border-primary dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
+              placeholder="آدرس کامل مشتری"
+            ></textarea>
+          </div>
+
+          <div class="mb-6">
+            <label class="mb-2 block text-sm font-medium text-black dark:text-white">
+              شهر
+            </label>
+            <input
+              v-model="customerForm.city"
+              type="text"
+              class="w-full rounded border border-stroke bg-transparent px-3 py-2 text-black outline-none focus:border-primary dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
+              placeholder="نام شهر"
+            />
+          </div>
+
+          <div class="flex gap-3">
+            <button
+              type="submit"
+              class="flex-1 rounded bg-primary px-4 py-2 text-white hover:bg-opacity-90"
+            >
+              {{ editingCustomer ? 'به‌روزرسانی' : 'ذخیره' }}
+            </button>
+            <button
+              type="button"
+              @click="closeModal"
+              class="flex-1 rounded border border-stroke px-4 py-2 text-black hover:bg-gray-50 dark:border-strokedark dark:text-white dark:hover:bg-meta-4"
+            >
+              انصراف
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed } from 'vue'
+
+// Reactive data
+const searchQuery = ref('')
+const showCreateModal = ref(false)
+const editingCustomer = ref(null)
+
+const customerForm = ref({
+  name: '',
+  phone: '',
+  address: '',
+  city: ''
+})
+
+// Sample data - Replace with real data from store
+const sampleCustomers = ref([
+  {
+    id: 1,
+    name: 'احمد محمدی',
+    phone: '09123456789',
+    address: 'تهران، خیابان ولیعصر',
+    city: 'تهران',
+    totalPurchase: 5500000,
+    isActive: true
+  },
+  {
+    id: 2,
+    name: 'فاطمه احمدی',
+    phone: '09987654321',
+    address: 'اصفهان، خیابان چهارباغ',
+    city: 'اصفهان',
+    totalPurchase: 3200000,
+    isActive: true
+  },
+  {
+    id: 3,
+    name: 'علی رضایی',
+    phone: '09111111111',
+    address: 'شیراز، خیابان زند',
+    city: 'شیراز',
+    totalPurchase: 1800000,
+    isActive: false
+  }
+])
+
+// Computed
+const filteredCustomers = computed(() => {
+  if (!searchQuery.value) return sampleCustomers.value
+  
+  return sampleCustomers.value.filter(customer =>
+    customer.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+    customer.phone.includes(searchQuery.value) ||
+    customer.city.toLowerCase().includes(searchQuery.value.toLowerCase())
+  )
+})
+
+// Methods
+const formatPrice = (price) => {
+  return new Intl.NumberFormat('fa-IR').format(price) + ' تومان'
+}
+
+const getInitials = (name) => {
+  return name.split(' ').map(n => n[0]).join('').toUpperCase()
+}
+
+const editCustomer = (customer) => {
+  editingCustomer.value = customer
+  customerForm.value = { ...customer }
+  showCreateModal.value = true
+}
+
+const viewCustomer = (customer) => {
+  // Navigate to customer detail page or show detail modal
+  console.log('View customer:', customer)
+}
+
+const deleteCustomer = (id) => {
+  if (confirm('آیا از حذف این مشتری اطمینان دارید؟')) {
+    sampleCustomers.value = sampleCustomers.value.filter(c => c.id !== id)
+  }
+}
+
+const closeModal = () => {
+  showCreateModal.value = false
+  editingCustomer.value = null
+  customerForm.value = {
+    name: '',
+    phone: '',
+    address: '',
+    city: ''
+  }
+}
+
+const handleSubmit = () => {
+  if (editingCustomer.value) {
+    // Update existing customer
+    const index = sampleCustomers.value.findIndex(c => c.id === editingCustomer.value.id)
+    if (index !== -1) {
+      sampleCustomers.value[index] = { ...customerForm.value, id: editingCustomer.value.id }
+    }
+  } else {
+    // Create new customer
+    const newCustomer = {
+      ...customerForm.value,
+      id: Date.now(),
+      totalPurchase: 0,
+      isActive: true
+    }
+    sampleCustomers.value.unshift(newCustomer)
+  }
+  
+  closeModal()
+}
+</script>

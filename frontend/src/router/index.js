@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useAuthStore } from '../stores/auth'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -8,10 +9,11 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      name: 'Ecommerce',
+      name: 'Dashboard',
       component: () => import('../views/Ecommerce.vue'),
       meta: {
-        title: 'eCommerce Dashboard',
+        title: 'داشبورد',
+        requiresAuth: true,
       },
     },
     {
@@ -129,15 +131,78 @@ const router = createRouter({
       name: 'Signin',
       component: () => import('../views/Auth/Signin.vue'),
       meta: {
-        title: 'Signin',
+        title: 'ورود',
+      },
+    },
+
+    // Products Routes
+    {
+      path: '/products',
+      name: 'Products',
+      component: () => import('../views/Products/ProductsList.vue'),
+      meta: {
+        title: 'محصولات',
+        requiresAuth: true,
       },
     },
     {
-      path: '/signup',
-      name: 'Signup',
-      component: () => import('../views/Auth/Signup.vue'),
+      path: '/products/create',
+      name: 'CreateProduct',
+      component: () => import('../views/Products/CreateProduct.vue'),
       meta: {
-        title: 'Signup',
+        title: 'افزودن محصول',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/products/:id/edit',
+      name: 'EditProduct',
+      component: () => import('../views/Products/EditProduct.vue'),
+      meta: {
+        title: 'ویرایش محصول',
+        requiresAuth: true,
+      },
+    },
+
+    // Sales Routes
+    {
+      path: '/sales',
+      name: 'Sales',
+      component: () => import('../views/Sales/SalesList.vue'),
+      meta: {
+        title: 'فروش',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/customers',
+      name: 'Customers',
+      component: () => import('../views/Customers/CustomersList.vue'),
+      meta: {
+        title: 'مشتریان',
+        requiresAuth: true,
+      },
+    },
+
+    // Inventory Routes
+    {
+      path: '/inventory',
+      name: 'Inventory',
+      component: () => import('../views/Inventory/InventoryList.vue'),
+      meta: {
+        title: 'موجودی',
+        requiresAuth: true,
+      },
+    },
+
+    // Reports Routes
+    {
+      path: '/reports',
+      name: 'Reports',
+      component: () => import('../views/Reports/ReportsList.vue'),
+      meta: {
+        title: 'گزارشات',
+        requiresAuth: true,
       },
     },
   ],
@@ -146,6 +211,26 @@ const router = createRouter({
 export default router
 
 router.beforeEach((to, from, next) => {
-  document.title = `Vue.js ${to.meta.title} | TailAdmin - Vue.js Tailwind CSS Dashboard Template`
+  document.title = `یراقالات ناصری - ${to.meta.title || 'سیستم مدیریت'}`
+
+  // Check if route requires authentication
+  if (to.meta.requiresAuth) {
+    const authStore = useAuthStore()
+
+    if (!authStore.isAuthenticated) {
+      next('/signin')
+      return
+    }
+  }
+
+  // Redirect to dashboard if already authenticated and trying to access signin
+  if (to.name === 'Signin') {
+    const authStore = useAuthStore()
+    if (authStore.isAuthenticated) {
+      next('/')
+      return
+    }
+  }
+
   next()
 })
