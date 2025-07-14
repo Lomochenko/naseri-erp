@@ -107,6 +107,23 @@
                     ]"
                   />
                 </button>
+                <button
+                  v-else-if="item.action"
+                  @click="handleMenuAction(item.action)"
+                  :class="[
+                    'menu-item group',
+                    'menu-item-inactive',
+                  ]"
+                >
+                  <span class="menu-item-icon-inactive">
+                    <component :is="item.icon" />
+                  </span>
+                  <span
+                    v-if="isExpanded || isHovered || isMobileOpen"
+                    class="menu-item-text"
+                    >{{ item.name }}</span
+                  >
+                </button>
                 <router-link
                   v-else-if="item.path"
                   :to="item.path"
@@ -229,89 +246,77 @@ import {
   TableIcon,
   ListIcon,
   PlugInIcon,
+  BarChartIcon,
+  UserGroupIcon,
+  LogoutIcon,
 } from "../../icons";
 import SidebarWidget from "./SidebarWidget.vue";
 import BoxCubeIcon from "@/icons/BoxCubeIcon.vue";
 import { useSidebar } from "@/composables/useSidebar";
+import { useAuthStore } from "@/stores/auth";
+import { useRouter } from "vue-router";
 
 const route = useRoute();
+const router = useRouter();
+const authStore = useAuthStore();
 
 const { isExpanded, isMobileOpen, isHovered, openSubmenu } = useSidebar();
 
 const menuGroups = [
   {
-    title: "Menu",
+    title: "منوی اصلی",
     items: [
       {
         icon: GridIcon,
-        name: "Dashboard",
-        subItems: [{ name: "Ecommerce", path: "/", pro: false }],
+        name: "داشبورد",
+        path: "/",
       },
       {
-        icon: CalenderIcon,
-        name: "Calendar",
-        path: "/calendar",
-      },
-      {
-        icon: UserCircleIcon,
-        name: "User Profile",
-        path: "/profile",
-      },
-
-      {
-        name: "Forms",
-        icon: ListIcon,
+        icon: BoxCubeIcon,
+        name: "محصولات",
         subItems: [
-          { name: "Form Elements", path: "/form-elements", pro: false },
+          { name: "لیست محصولات", path: "/products", pro: false },
+          { name: "افزودن محصول", path: "/products/create", pro: false },
         ],
       },
       {
-        name: "Tables",
+        icon: BarChartIcon,
+        name: "فروش",
+        subItems: [
+          { name: "مدیریت فروش", path: "/sales", pro: false },
+          { name: "مشتریان", path: "/customers", pro: false },
+        ],
+      },
+      {
         icon: TableIcon,
-        subItems: [{ name: "Basic Tables", path: "/basic-tables", pro: false }],
+        name: "موجودی",
+        path: "/inventory",
       },
       {
-        name: "Pages",
-        icon: PageIcon,
-        subItems: [
-          { name: "Black Page", path: "/blank", pro: false },
-          { name: "404 Page", path: "/error-404", pro: false },
-        ],
+        icon: PieChartIcon,
+        name: "گزارشات",
+        path: "/reports",
+      },
+      {
+        icon: PlugInIcon,
+        name: "تست سیستم",
+        path: "/test",
       },
     ],
   },
   {
-    title: "Others",
+    title: "تنظیمات",
     items: [
       {
-        icon: PieChartIcon,
-        name: "Charts",
-        subItems: [
-          { name: "Line Chart", path: "/line-chart", pro: false },
-          { name: "Bar Chart", path: "/bar-chart", pro: false },
-        ],
+        icon: UserCircleIcon,
+        name: "پروفایل کاربری",
+        path: "/profile",
       },
       {
-        icon: BoxCubeIcon,
-        name: "Ui Elements",
-        subItems: [
-          { name: "Alerts", path: "/alerts", pro: false },
-          { name: "Avatars", path: "/avatars", pro: false },
-          { name: "Badge", path: "/badge", pro: false },
-          { name: "Buttons", path: "/buttons", pro: false },
-          { name: "Images", path: "/images", pro: false },
-          { name: "Videos", path: "/videos", pro: false },
-        ],
+        icon: LogoutIcon,
+        name: "خروج",
+        action: "logout",
       },
-      {
-        icon: PlugInIcon,
-        name: "Authentication",
-        subItems: [
-          { name: "Signin", path: "/signin", pro: false },
-          { name: "Signup", path: "/signup", pro: false },
-        ],
-      },
-      // ... Add other menu items here
     ],
   },
 ];
@@ -353,5 +358,12 @@ const startTransition = (el) => {
 
 const endTransition = (el) => {
   el.style.height = "";
+};
+
+const handleMenuAction = async (action) => {
+  if (action === 'logout') {
+    await authStore.logout();
+    router.push('/signin');
+  }
 };
 </script>

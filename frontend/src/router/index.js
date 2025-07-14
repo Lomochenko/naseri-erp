@@ -205,6 +205,17 @@ const router = createRouter({
         requiresAuth: true,
       },
     },
+
+    // Test Page
+    {
+      path: '/test',
+      name: 'TestPage',
+      component: () => import('../views/TestPage.vue'),
+      meta: {
+        title: 'تست سیستم',
+        requiresAuth: true,
+      },
+    },
   ],
 })
 

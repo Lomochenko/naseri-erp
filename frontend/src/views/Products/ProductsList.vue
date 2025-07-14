@@ -1,5 +1,6 @@
 <template>
-  <div class="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10">
+  <AdminLayout>
+    <div>
     <!-- Breadcrumb -->
     <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <h2 class="text-title-md2 font-bold text-black dark:text-white">
@@ -28,17 +29,17 @@
           افزودن محصول جدید
         </router-link>
       </div>
-      
+
       <!-- Search -->
       <div class="relative">
         <input
           v-model="searchQuery"
           type="text"
           placeholder="جستجو در محصولات..."
-          class="w-full rounded-lg border border-stroke bg-transparent py-3 pl-12 pr-4 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
+          class="w-full rounded-lg border border-stroke bg-transparent py-3 pr-12 pl-4 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
         />
         <svg
-          class="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-body"
+          class="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-body"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -49,14 +50,15 @@
     </div>
 
     <!-- Loading -->
-    <div v-if="productsStore.isLoading" class="flex justify-center py-8">
-      <div class="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-    </div>
+    <LoadingSpinner v-if="productsStore.isLoading" text="در حال بارگذاری محصولات..." />
 
     <!-- Error Message -->
-    <div v-if="productsStore.error" class="mb-4 rounded-lg bg-red-100 p-4 text-red-700">
-      {{ productsStore.error }}
-    </div>
+    <ErrorMessage
+      v-if="productsStore.error"
+      :message="productsStore.error"
+      @dismiss="productsStore.clearError"
+      class="mb-4"
+    />
 
     <!-- Products Table -->
     <div v-else class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
@@ -164,12 +166,16 @@
         </button>
       </div>
     </div>
-  </div>
+    </div>
+  </AdminLayout>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useProductsStore } from '@/stores/products'
+import AdminLayout from '@/components/layout/AdminLayout.vue'
+import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
+import ErrorMessage from '@/components/common/ErrorMessage.vue'
 
 const productsStore = useProductsStore()
 
@@ -181,7 +187,7 @@ const pageSize = ref(20)
 // Computed
 const filteredProducts = computed(() => {
   if (!searchQuery.value) return productsStore.products
-  
+
   return productsStore.products.filter(product =>
     product.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
     product.category?.name.toLowerCase().includes(searchQuery.value.toLowerCase())

@@ -1,5 +1,6 @@
 <template>
-  <div class="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10">
+  <AdminLayout>
+    <div>
     <!-- Breadcrumb -->
     <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <h2 class="text-title-md2 font-bold text-black dark:text-white">
@@ -27,7 +28,7 @@
           </svg>
           تعدیل موجودی
         </button>
-        
+
         <button
           @click="showTransactionModal = true"
           class="inline-flex items-center justify-center rounded-md border border-primary px-6 py-3 text-center font-medium text-primary hover:bg-opacity-90"
@@ -38,7 +39,7 @@
           انتقال موجودی
         </button>
       </div>
-      
+
       <!-- Search -->
       <div class="relative">
         <input
@@ -69,7 +70,7 @@
         <div class="mt-4 flex items-end justify-between">
           <div>
             <h4 class="text-title-md font-bold text-black dark:text-white">
-              {{ totalProducts }}
+              {{ inventoryStore.totalProducts }}
             </h4>
             <span class="text-sm font-medium">کل محصولات</span>
           </div>
@@ -85,7 +86,7 @@
         <div class="mt-4 flex items-end justify-between">
           <div>
             <h4 class="text-title-md font-bold text-success dark:text-white">
-              {{ inStockProducts }}
+              {{ inventoryStore.inStockProducts }}
             </h4>
             <span class="text-sm font-medium">محصولات موجود</span>
           </div>
@@ -101,7 +102,7 @@
         <div class="mt-4 flex items-end justify-between">
           <div>
             <h4 class="text-title-md font-bold text-warning dark:text-white">
-              {{ lowStockProducts }}
+              {{ inventoryStore.lowStockProducts }}
             </h4>
             <span class="text-sm font-medium">موجودی کم</span>
           </div>
@@ -117,7 +118,7 @@
         <div class="mt-4 flex items-end justify-between">
           <div>
             <h4 class="text-title-md font-bold text-danger dark:text-white">
-              {{ outOfStockProducts }}
+              {{ inventoryStore.outOfStockProducts }}
             </h4>
             <span class="text-sm font-medium">ناموجود</span>
           </div>
@@ -300,11 +301,18 @@
         </form>
       </div>
     </div>
-  </div>
+    </div>
+  </AdminLayout>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useInventoryStore } from '@/stores/inventory'
+import { useProductsStore } from '@/stores/products'
+import AdminLayout from '@/components/layout/AdminLayout.vue'
+
+const inventoryStore = useInventoryStore()
+const productsStore = useProductsStore()
 
 // Reactive data
 const searchQuery = ref('')
@@ -317,40 +325,6 @@ const adjustmentForm = ref({
   quantity: '',
   reason: ''
 })
-
-// Sample stats
-const totalProducts = ref(156)
-const inStockProducts = ref(142)
-const lowStockProducts = ref(12)
-const outOfStockProducts = ref(2)
-
-// Sample inventory data
-const sampleInventory = ref([
-  {
-    id: 1,
-    productName: 'پیچ فلزی 6mm',
-    category: 'پیچ و مهره',
-    currentStock: 250,
-    minStock: 50,
-    maxStock: 500
-  },
-  {
-    id: 2,
-    productName: 'مهره فلزی 6mm',
-    category: 'پیچ و مهره',
-    currentStock: 15,
-    minStock: 30,
-    maxStock: 300
-  },
-  {
-    id: 3,
-    productName: 'چکش 500 گرمی',
-    category: 'ابزار',
-    currentStock: 0,
-    minStock: 5,
-    maxStock: 50
-  }
-])
 
 // Methods
 const getStockClass = (current, min) => {
@@ -390,9 +364,21 @@ const closeAdjustmentModal = () => {
   }
 }
 
-const handleAdjustment = () => {
-  // Handle stock adjustment
-  console.log('Stock adjustment:', adjustmentForm.value)
-  closeAdjustmentModal()
+const handleAdjustment = async () => {
+  const result = await inventoryStore.createAdjustment(adjustmentForm.value)
+  if (result.success) {
+    closeAdjustmentModal()
+  } else {
+    alert('خطا در تعدیل موجودی: ' + result.error)
+  }
 }
+
+// Lifecycle
+onMounted(async () => {
+  await Promise.all([
+    inventoryStore.fetchStockLevels(),
+    inventoryStore.fetchWarehouses(),
+    productsStore.fetchProducts()
+  ])
+})
 </script>

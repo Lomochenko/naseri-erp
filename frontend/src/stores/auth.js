@@ -11,30 +11,51 @@ export const useAuthStore = defineStore('auth', () => {
 
   // Getters
   const isAuthenticated = computed(() => !!token.value && !!user.value)
-  const isAdmin = computed(() => user.value?.role === 'admin')
-  const isManager = computed(() => user.value?.role === 'manager')
+  const isAdmin = computed(() => user.value?.is_superuser === true)
+  const isManager = computed(() => user.value?.is_manager === true)
 
   // Actions
   const login = async (phone, password) => {
     isLoading.value = true
     error.value = null
-    
+
     try {
       const response = await authAPI.login(phone, password)
       const { token: authToken, user: userData } = response.data
-      
+
       // Store token and user data
       token.value = authToken
       user.value = userData
-      
+
       // Persist to localStorage
       localStorage.setItem('auth_token', authToken)
       localStorage.setItem('user_data', JSON.stringify(userData))
-      
+
       return { success: true }
     } catch (err) {
-      error.value = err.response?.data?.message || 'خطا در ورود به سیستم'
-      return { success: false, error: error.value }
+      console.error('Login error:', err)
+
+      // Handle different types of errors
+      let errorMessage = 'خطا در ورود به سیستم'
+
+      if (err.response) {
+        // Server responded with error status
+        if (err.response.status === 400) {
+          errorMessage = 'اطلاعات ورودی نامعتبر است'
+        } else if (err.response.status === 401) {
+          errorMessage = err.response.data?.error || 'شماره تلفن یا رمز عبور اشتباه است'
+        } else if (err.response.status >= 500) {
+          errorMessage = 'خطا در سرور. لطفاً دوباره تلاش کنید'
+        } else {
+          errorMessage = err.response.data?.error || err.response.data?.message || errorMessage
+        }
+      } else if (err.request) {
+        // Network error
+        errorMessage = 'خطا در اتصال به سرور. لطفاً اتصال اینترنت خود را بررسی کنید'
+      }
+
+      error.value = errorMessage
+      return { success: false, error: errorMessage }
     } finally {
       isLoading.value = false
     }
@@ -42,7 +63,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   const logout = async () => {
     isLoading.value = true
-    
+
     try {
       if (token.value) {
         await authAPI.logout()
@@ -61,9 +82,9 @@ export const useAuthStore = defineStore('auth', () => {
 
   const getCurrentUser = async () => {
     if (!token.value) return
-    
+
     isLoading.value = true
-    
+
     try {
       const response = await authAPI.getCurrentUser()
       user.value = response.data
@@ -82,7 +103,7 @@ export const useAuthStore = defineStore('auth', () => {
   const initializeAuth = () => {
     const storedToken = localStorage.getItem('auth_token')
     const storedUser = localStorage.getItem('user_data')
-    
+
     if (storedToken && storedUser) {
       token.value = storedToken
       try {
@@ -104,12 +125,12 @@ export const useAuthStore = defineStore('auth', () => {
     token,
     isLoading,
     error,
-    
+
     // Getters
     isAuthenticated,
     isAdmin,
     isManager,
-    
+
     // Actions
     login,
     logout,

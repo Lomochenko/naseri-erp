@@ -1,5 +1,6 @@
 <template>
-  <div class="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10">
+  <AdminLayout>
+    <div>
     <!-- Breadcrumb -->
     <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <h2 class="text-title-md2 font-bold text-black dark:text-white">
@@ -34,7 +35,7 @@
             </svg>
           </div>
         </div>
-        
+
         <div class="mt-6 space-y-3">
           <button
             @click="generateReport('daily-sales')"
@@ -80,7 +81,7 @@
             </svg>
           </div>
         </div>
-        
+
         <div class="mt-6 space-y-3">
           <button
             @click="generateReport('current-stock')"
@@ -126,7 +127,7 @@
             </svg>
           </div>
         </div>
-        
+
         <div class="mt-6 space-y-3">
           <button
             @click="generateReport('profit-loss')"
@@ -172,7 +173,7 @@
             </svg>
           </div>
         </div>
-        
+
         <div class="mt-6 space-y-3">
           <button
             @click="generateReport('purchase-summary')"
@@ -218,7 +219,7 @@
             </svg>
           </div>
         </div>
-        
+
         <div class="mt-6 space-y-3">
           <button
             @click="generateReport('customer-list')"
@@ -264,7 +265,7 @@
             </svg>
           </div>
         </div>
-        
+
         <div class="mt-6 space-y-3">
           <button
             @click="showCustomReportModal = true"
@@ -426,11 +427,13 @@
         </form>
       </div>
     </div>
-  </div>
+    </div>
+  </AdminLayout>
 </template>
 
 <script setup>
 import { ref } from 'vue'
+import AdminLayout from '@/components/layout/AdminLayout.vue'
 
 // Reactive data
 const showCustomReportModal = ref(false)

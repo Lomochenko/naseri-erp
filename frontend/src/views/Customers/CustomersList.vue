@@ -1,5 +1,6 @@
 <template>
-  <div class="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10">
+  <AdminLayout>
+    <div>
     <!-- Breadcrumb -->
     <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <h2 class="text-title-md2 font-bold text-black dark:text-white">
@@ -28,7 +29,7 @@
           افزودن مشتری جدید
         </button>
       </div>
-      
+
       <!-- Search -->
       <div class="relative">
         <input
@@ -77,8 +78,18 @@
         </div>
       </div>
 
-      <!-- Sample Customer Data -->
-      <div v-for="customer in sampleCustomers" :key="customer.id" class="grid grid-cols-6 border-t border-stroke px-4 py-4.5 dark:border-strokedark sm:grid-cols-8 md:px-6 2xl:px-7.5">
+      <!-- Loading -->
+      <div v-if="salesStore.isLoading" class="flex justify-center py-8">
+        <div class="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+      </div>
+
+      <!-- Error Message -->
+      <div v-if="salesStore.error" class="mx-4 my-4 rounded-lg bg-red-100 p-4 text-red-700">
+        {{ salesStore.error }}
+      </div>
+
+      <!-- Customer Data -->
+      <div v-for="customer in filteredCustomers" :key="customer.id" class="grid grid-cols-6 border-t border-stroke px-4 py-4.5 dark:border-strokedark sm:grid-cols-8 md:px-6 2xl:px-7.5">
         <div class="col-span-2 flex items-center">
           <div class="flex flex-col gap-1 sm:flex-row sm:items-center">
             <div class="h-12.5 w-15 rounded-md">
@@ -96,14 +107,14 @@
           <p class="text-sm text-black dark:text-white">{{ customer.city }}</p>
         </div>
         <div class="col-span-1 flex items-center">
-          <p class="text-sm text-black dark:text-white">{{ formatPrice(customer.totalPurchase) }}</p>
+          <p class="text-sm text-black dark:text-white">{{ formatPrice(customer.total_purchase || 0) }}</p>
         </div>
         <div class="col-span-1 flex items-center">
           <span
-            :class="customer.isActive ? 'bg-success text-success' : 'bg-danger text-danger'"
+            :class="customer.is_active ? 'bg-success text-success' : 'bg-danger text-danger'"
             class="inline-flex rounded-full bg-opacity-10 px-3 py-1 text-sm font-medium"
           >
-            {{ customer.isActive ? 'فعال' : 'غیرفعال' }}
+            {{ customer.is_active ? 'فعال' : 'غیرفعال' }}
           </span>
         </div>
         <div class="col-span-1 flex items-center space-x-2">
@@ -225,11 +236,16 @@
         </form>
       </div>
     </div>
-  </div>
+    </div>
+  </AdminLayout>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useSalesStore } from '@/stores/sales'
+import AdminLayout from '@/components/layout/AdminLayout.vue'
+
+const salesStore = useSalesStore()
 
 // Reactive data
 const searchQuery = ref('')
@@ -243,45 +259,14 @@ const customerForm = ref({
   city: ''
 })
 
-// Sample data - Replace with real data from store
-const sampleCustomers = ref([
-  {
-    id: 1,
-    name: 'احمد محمدی',
-    phone: '09123456789',
-    address: 'تهران، خیابان ولیعصر',
-    city: 'تهران',
-    totalPurchase: 5500000,
-    isActive: true
-  },
-  {
-    id: 2,
-    name: 'فاطمه احمدی',
-    phone: '09987654321',
-    address: 'اصفهان، خیابان چهارباغ',
-    city: 'اصفهان',
-    totalPurchase: 3200000,
-    isActive: true
-  },
-  {
-    id: 3,
-    name: 'علی رضایی',
-    phone: '09111111111',
-    address: 'شیراز، خیابان زند',
-    city: 'شیراز',
-    totalPurchase: 1800000,
-    isActive: false
-  }
-])
-
 // Computed
 const filteredCustomers = computed(() => {
-  if (!searchQuery.value) return sampleCustomers.value
-  
-  return sampleCustomers.value.filter(customer =>
+  if (!searchQuery.value) return salesStore.customers
+
+  return salesStore.customers.filter(customer =>
     customer.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
     customer.phone.includes(searchQuery.value) ||
-    customer.city.toLowerCase().includes(searchQuery.value.toLowerCase())
+    customer.city?.toLowerCase().includes(searchQuery.value.toLowerCase())
   )
 })
 
@@ -305,9 +290,12 @@ const viewCustomer = (customer) => {
   console.log('View customer:', customer)
 }
 
-const deleteCustomer = (id) => {
+const deleteCustomer = async (id) => {
   if (confirm('آیا از حذف این مشتری اطمینان دارید؟')) {
-    sampleCustomers.value = sampleCustomers.value.filter(c => c.id !== id)
+    const result = await salesStore.deleteCustomer(id)
+    if (!result.success) {
+      alert('خطا در حذف مشتری: ' + result.error)
+    }
   }
 }
 
@@ -322,24 +310,26 @@ const closeModal = () => {
   }
 }
 
-const handleSubmit = () => {
+const handleSubmit = async () => {
+  let result
+
   if (editingCustomer.value) {
     // Update existing customer
-    const index = sampleCustomers.value.findIndex(c => c.id === editingCustomer.value.id)
-    if (index !== -1) {
-      sampleCustomers.value[index] = { ...customerForm.value, id: editingCustomer.value.id }
-    }
+    result = await salesStore.updateCustomer(editingCustomer.value.id, customerForm.value)
   } else {
     // Create new customer
-    const newCustomer = {
-      ...customerForm.value,
-      id: Date.now(),
-      totalPurchase: 0,
-      isActive: true
-    }
-    sampleCustomers.value.unshift(newCustomer)
+    result = await salesStore.createCustomer(customerForm.value)
   }
-  
-  closeModal()
+
+  if (result.success) {
+    closeModal()
+  } else {
+    alert('خطا: ' + result.error)
+  }
 }
+
+// Lifecycle
+onMounted(async () => {
+  await salesStore.fetchCustomers()
+})
 </script>

@@ -1,5 +1,6 @@
 <template>
-  <div class="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10">
+  <AdminLayout>
+    <div>
     <!-- Breadcrumb -->
     <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <h2 class="text-title-md2 font-bold text-black dark:text-white">
@@ -205,7 +206,7 @@
             </span>
             {{ productsStore.isLoading ? 'در حال ذخیره...' : 'ذخیره محصول' }}
           </button>
-          
+
           <router-link
             to="/products"
             class="flex justify-center rounded border border-stroke px-6 py-2 font-medium text-black hover:shadow-1 dark:border-strokedark dark:text-white"
@@ -215,13 +216,15 @@
         </div>
       </form>
     </div>
-  </div>
+    </div>
+  </AdminLayout>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useProductsStore } from '@/stores/products'
+import AdminLayout from '@/components/layout/AdminLayout.vue'
 
 const router = useRouter()
 const productsStore = useProductsStore()
@@ -243,7 +246,7 @@ const form = ref({
 // Methods
 const handleSubmit = async () => {
   const result = await productsStore.createProduct(form.value)
-  
+
   if (result.success) {
     router.push('/products')
   }
