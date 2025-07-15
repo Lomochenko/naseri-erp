@@ -57,11 +57,11 @@ export const productsAPI = {
   getUnits: () => api.get('/products/units/'),
   createUnit: (data) => api.post('/products/units/', data),
 
-  getProducts: (params = {}) => api.get('/products/products/', { params }),
-  createProduct: (data) => api.post('/products/products/', data),
-  updateProduct: (id, data) => api.put(`/products/products/${id}/`, data),
-  deleteProduct: (id) => api.delete(`/products/products/${id}/`),
-  getProduct: (id) => api.get(`/products/products/${id}/`),
+  getProducts: (params = {}) => api.get('/products/', { params }),
+  createProduct: (data) => api.post('/products/', data),
+  updateProduct: (id, data) => api.put(`/products/${id}/`, data),
+  deleteProduct: (id) => api.delete(`/products/${id}/`),
+  getProduct: (id) => api.get(`/products/${id}/`),
 }
 
 // Sales API

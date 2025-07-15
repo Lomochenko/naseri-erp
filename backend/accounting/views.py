@@ -89,6 +89,7 @@ class ExpenseViewSet(viewsets.ModelViewSet):
 class ChartOfAccountsView(generics.ListAPIView):
     """API view for retrieving chart of accounts."""
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = AccountSerializer  # For swagger documentation
 
     def get(self, request):
         """Handle GET requests for chart of accounts."""
@@ -140,6 +141,7 @@ class ChartOfAccountsView(generics.ListAPIView):
 class AccountBalanceView(generics.RetrieveAPIView):
     """API view for retrieving account balance and transactions."""
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = AccountSerializer  # For swagger documentation
 
     def get(self, request, account_id):
         """Handle GET requests for account balance."""
@@ -190,6 +192,7 @@ class AccountBalanceView(generics.RetrieveAPIView):
 class TrialBalanceView(generics.ListAPIView):
     """API view for generating trial balance."""
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = AccountSerializer  # For swagger documentation
 
     def get(self, request):
         """Handle GET requests for trial balance."""
@@ -257,6 +260,7 @@ class TrialBalanceView(generics.ListAPIView):
 class IncomeStatementView(generics.ListAPIView):
     """API view for generating income statement."""
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = AccountSerializer  # For swagger documentation
 
     def get(self, request):
         """Handle GET requests for income statement."""
@@ -364,6 +368,7 @@ class IncomeStatementView(generics.ListAPIView):
 class BalanceSheetView(generics.ListAPIView):
     """API view for generating balance sheet."""
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = AccountSerializer  # For swagger documentation
 
     def get(self, request):
         """Handle GET requests for balance sheet."""
@@ -555,6 +560,7 @@ class BalanceSheetView(generics.ListAPIView):
 class CashFlowStatementView(generics.ListAPIView):
     """API view for generating cash flow statement."""
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = AccountSerializer  # For swagger documentation
 
     def get(self, request):
         """Handle GET requests for cash flow statement."""

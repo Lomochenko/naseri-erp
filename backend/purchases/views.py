@@ -65,6 +65,7 @@ class SupplierPaymentViewSet(viewsets.ModelViewSet):
 class SupplierPurchasesView(generics.RetrieveAPIView):
     """API view for retrieving supplier purchases information."""
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = PurchaseSerializer  # For swagger documentation
 
     def get(self, request, supplier_id):
         """Handle GET requests for supplier purchases."""
@@ -97,6 +98,7 @@ class SupplierPurchasesView(generics.RetrieveAPIView):
 class SupplierInvoicesView(generics.RetrieveAPIView):
     """API view for retrieving supplier invoices information."""
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = PurchaseInvoiceSerializer  # For swagger documentation
 
     def get(self, request, supplier_id):
         """Handle GET requests for supplier invoices."""
@@ -133,6 +135,7 @@ class SupplierInvoicesView(generics.RetrieveAPIView):
 class PurchasesReportView(generics.ListAPIView):
     """API view for generating purchases reports."""
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = PurchaseSerializer  # For swagger documentation
 
     def get(self, request):
         """Handle GET requests for purchases reports."""
@@ -219,6 +222,7 @@ class PurchasesReportView(generics.ListAPIView):
 class PurchasesByProductView(generics.ListAPIView):
     """API view for generating purchases by product reports."""
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = PurchaseSerializer  # For swagger documentation
 
     def get(self, request):
         """Handle GET requests for purchases by product reports."""

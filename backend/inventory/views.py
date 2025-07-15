@@ -1,7 +1,7 @@
 from rest_framework import viewsets, permissions, generics, filters
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
-from django.db.models import Sum
+from django.db.models import Sum, F
 from .models import Warehouse, InventoryTransaction, StockAdjustment, StockAdjustmentItem
 from products.models import Product
 from .serializers import (
@@ -48,11 +48,42 @@ class StockAdjustmentItemViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['adjustment', 'product']
+
+class StockLevelsView(generics.ListAPIView):
+    """API view to get current stock levels for all products."""
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = InventoryTransactionSerializer  # For swagger documentation
+    queryset = Product.objects.none()  # Required for DRF but not used
+
+    def list(self, request, *args, **kwargs):
+        """Get current stock levels for all products."""
+        products = Product.objects.select_related('category', 'unit').all()
+
+        stock_data = []
+        for product in products:
+            # Use the property from the model which has correct logic
+            current_stock = product.current_stock
+
+            stock_data.append({
+                'product_id': product.id,
+                'product_name': product.name,
+                'product_code': product.code,
+                'category_name': product.category.name if product.category else None,
+                'unit_symbol': product.unit.symbol if product.unit else None,
+                'current_stock': current_stock,
+                'min_stock': float(product.min_stock),
+                'is_low_stock': current_stock <= product.min_stock,
+                'selling_price': float(product.selling_price),
+                'purchase_price': float(product.purchase_price),
+            })
+
+        return Response(stock_data)
     search_fields = ['notes']
 
 class ProductStockView(generics.RetrieveAPIView):
     """API view for retrieving product stock information."""
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = InventoryTransactionSerializer  # For swagger documentation
 
     def get(self, request, product_id):
         """Handle GET requests for product stock."""
@@ -98,6 +129,7 @@ class ProductStockView(generics.RetrieveAPIView):
 class WarehouseStockView(generics.RetrieveAPIView):
     """API view for retrieving warehouse stock information."""
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = WarehouseSerializer  # For swagger documentation
 
     def get(self, request, warehouse_id):
         """Handle GET requests for warehouse stock."""
@@ -142,6 +174,7 @@ class WarehouseStockView(generics.RetrieveAPIView):
 class LowStockProductsView(generics.ListAPIView):
     """API view for listing products with low stock."""
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = InventoryTransactionSerializer  # For swagger documentation
 
     def get(self, request):
         """Handle GET requests for low stock products."""

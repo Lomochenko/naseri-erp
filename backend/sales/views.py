@@ -65,6 +65,7 @@ class PaymentViewSet(viewsets.ModelViewSet):
 class CustomerSalesView(generics.RetrieveAPIView):
     """API view for retrieving customer sales information."""
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = SaleSerializer  # For swagger documentation
 
     def get(self, request, customer_id):
         """Handle GET requests for customer sales."""
@@ -97,6 +98,7 @@ class CustomerSalesView(generics.RetrieveAPIView):
 class CustomerInvoicesView(generics.RetrieveAPIView):
     """API view for retrieving customer invoices information."""
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = InvoiceSerializer  # For swagger documentation
 
     def get(self, request, customer_id):
         """Handle GET requests for customer invoices."""
@@ -133,6 +135,7 @@ class CustomerInvoicesView(generics.RetrieveAPIView):
 class SalesReportView(generics.ListAPIView):
     """API view for generating sales reports."""
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = SaleSerializer  # For swagger documentation
 
     def get(self, request):
         """Handle GET requests for sales reports."""
@@ -219,6 +222,7 @@ class SalesReportView(generics.ListAPIView):
 class SalesByProductView(generics.ListAPIView):
     """API view for generating sales by product reports."""
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = SaleSerializer  # For swagger documentation
 
     def get(self, request):
         """Handle GET requests for sales by product reports."""

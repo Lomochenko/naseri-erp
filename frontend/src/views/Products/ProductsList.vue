@@ -94,23 +94,24 @@
 
       <div v-for="product in filteredProducts" :key="product.id" class="grid grid-cols-6 border-t border-stroke px-4 py-4.5 dark:border-strokedark sm:grid-cols-8 md:px-6 2xl:px-7.5">
         <div class="col-span-2 flex items-center">
-          <div class="flex flex-col gap-1 sm:flex-row sm:items-center">
-            <p class="text-sm text-black dark:text-white">{{ product.name }}</p>
+          <div class="flex flex-col gap-1">
+            <p class="text-sm font-medium text-black dark:text-white">{{ product.name }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">کد: {{ product.code }}</p>
           </div>
         </div>
         <div class="col-span-1 hidden items-center sm:flex">
-          <p class="text-sm text-black dark:text-white">{{ product.category?.name || '-' }}</p>
+          <p class="text-sm text-black dark:text-white">{{ product.category_name || '-' }}</p>
         </div>
         <div class="col-span-1 flex items-center">
-          <p class="text-sm text-black dark:text-white">{{ formatPrice(product.price) }}</p>
+          <p class="text-sm text-black dark:text-white">{{ formatPrice(product.selling_price) }}</p>
         </div>
         <div class="col-span-1 flex items-center">
-          <p class="text-sm" :class="getStockClass(product.stock_quantity)">
-            {{ product.stock_quantity }}
+          <p class="text-sm" :class="getStockClass(product.current_stock)">
+            {{ product.current_stock || 0 }}
           </p>
         </div>
         <div class="col-span-1 hidden items-center sm:flex">
-          <p class="text-sm text-black dark:text-white">{{ product.unit?.name || '-' }}</p>
+          <p class="text-sm text-black dark:text-white">{{ product.unit_symbol || '-' }}</p>
         </div>
         <div class="col-span-1 flex items-center">
           <span
@@ -190,7 +191,9 @@ const filteredProducts = computed(() => {
 
   return productsStore.products.filter(product =>
     product.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-    product.category?.name.toLowerCase().includes(searchQuery.value.toLowerCase())
+    product.code.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+    (product.category_name && product.category_name.toLowerCase().includes(searchQuery.value.toLowerCase())) ||
+    (product.description && product.description.toLowerCase().includes(searchQuery.value.toLowerCase()))
   )
 })
 

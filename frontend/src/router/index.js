@@ -216,6 +216,17 @@ const router = createRouter({
         requiresAuth: true,
       },
     },
+
+    // API Test Page
+    {
+      path: '/api-test',
+      name: 'ApiTest',
+      component: () => import('../views/ApiTest.vue'),
+      meta: {
+        title: 'تست API',
+        requiresAuth: false,
+      },
+    },
   ],
 })
 
