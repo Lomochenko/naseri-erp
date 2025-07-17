@@ -203,7 +203,6 @@
           </div>
         </div>
       </nav>
-      <SidebarWidget v-if="isExpanded || isHovered || isMobileOpen" />
     </div>
   </aside>
 </template>
@@ -230,7 +229,6 @@ import {
   UserGroupIcon,
   LogoutIcon,
 } from "../../icons";
-import SidebarWidget from "./SidebarWidget.vue";
 import BoxCubeIcon from "@/icons/BoxCubeIcon.vue";
 import { useSidebar } from "@/composables/useSidebar";
 import { useAuthStore } from "@/stores/auth";
