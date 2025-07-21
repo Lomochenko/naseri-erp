@@ -10,12 +10,12 @@
           <div class="grid grid-cols-1 gap-4 lg:grid-cols-4 lg:gap-7 2xl:gap-x-32">
             <div>
               <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">نام</p>
-              <p class="text-sm font-medium text-gray-800 dark:text-white/90">Musharof</p>
+              <p class="text-sm font-medium text-gray-800 dark:text-white/90">{{ userData.first_name || 'تعریف نشده' }}</p>
             </div>
 
             <div>
               <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">نام خانوادگی</p>
-              <p class="text-sm font-medium text-gray-800 dark:text-white/90">Chowdhury</p>
+              <p class="text-sm font-medium text-gray-800 dark:text-white/90">{{ userData.last_name || 'تعریف نشده' }}</p>
             </div>
 
             <div>
@@ -23,32 +23,30 @@
                 آدرس ایمیل
               </p>
               <p class="text-sm font-medium text-gray-800 dark:text-white/90">
-                randomuser@pimjo.com
+                {{ userData.email || 'تعریف نشده' }}
               </p>
             </div>
 
             <div>
               <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">شماره تلفن</p>
-              <p class="text-sm font-medium text-gray-800 dark:text-white/90">+09 363 398 46</p>
+              <p class="text-sm font-medium text-gray-800 dark:text-white/90">{{ userData.phone_number || 'تعریف نشده' }}</p>
             </div>
 
             <div>
               <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">بیوگرافی</p>
-              <p class="text-sm font-medium text-gray-800 dark:text-white/90">Team Manager</p>
+              <p class="text-sm font-medium text-gray-800 dark:text-white/90">{{ userData.bio || 'تعریف نشده' }}</p>
             </div>
-            <!--  -->
+
             <div>
-              <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">آدرس کامل</p>
-              <p class="text-sm font-medium text-gray-800 dark:text-white/90">
-                Phoenix, United States
-              </p>
+              <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">نقش کاربری</p>
+              <p class="text-sm font-medium text-gray-800 dark:text-white/90">{{ userRole }}</p>
             </div>
 
             <div>
               <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                کد ملی
+                تاریخ عضویت
               </p>
-              <p class="text-sm font-medium text-gray-800 dark:text-white/90">2489</p>
+              <p class="text-sm font-medium text-gray-800 dark:text-white/90">{{ joinDate }}</p>
             </div>
             <!--  -->
           </div>
@@ -99,7 +97,7 @@
                     <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
                       نام
                     </label>
-                    <input type="text" value="Musharof"
+                    <input type="text" v-model="formData.first_name" placeholder="نام خود را وارد کنید"
                       class="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800" />
                   </div>
 
@@ -107,7 +105,7 @@
                     <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
                       نام خانوادگی
                     </label>
-                    <input type="text" value="Chowdhury"
+                    <input type="text" v-model="formData.last_name" placeholder="نام خانوادگی خود را وارد کنید"
                       class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800" />
                   </div>
 
@@ -115,7 +113,7 @@
                     <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
                       آدرس ایمیل
                     </label>
-                    <input type="text" value="emirhanboruch55@gmail.com"
+                    <input type="email" v-model="formData.email" placeholder="ایمیل خود را وارد کنید"
                       class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800" />
                   </div>
 
@@ -123,7 +121,7 @@
                     <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
                       شمار همراه
                     </label>
-                    <input type="text" value="+09 363 398 46"
+                    <input type="tel" v-model="formData.phone_number" placeholder="شماره تلفن خود را وارد کنید"
                       class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800" />
                   </div>
 
@@ -155,14 +153,73 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useAuthStore } from '@/stores/auth'
 import Modal from './Modal.vue'
 
+const authStore = useAuthStore()
 const isProfileInfoModal = ref(false)
 
-const saveProfile = () => {
-  // Implement save profile logic here
-  console.log('Profile saved')
-  isProfileInfoModal.value = false
+// Form data
+const formData = ref({
+  first_name: '',
+  last_name: '',
+  email: '',
+  phone_number: '',
+  bio: ''
+})
+
+// Computed properties
+const userData = computed(() => authStore.user || {})
+
+const userRole = computed(() => {
+  if (authStore.user) {
+    if (authStore.user.is_superuser) return 'مدیر سیستم'
+    if (authStore.user.is_manager) return 'مدیر'
+    return 'کاربر'
+  }
+  return 'کاربر'
+})
+
+const joinDate = computed(() => {
+  if (authStore.user?.date_joined) {
+    return new Date(authStore.user.date_joined).toLocaleDateString('fa-IR')
+  }
+  return 'تعریف نشده'
+})
+
+const loadUserData = () => {
+  if (authStore.user) {
+    formData.value = {
+      first_name: authStore.user.first_name || '',
+      last_name: authStore.user.last_name || '',
+      email: authStore.user.email || '',
+      phone_number: authStore.user.phone_number || '',
+      bio: authStore.user.bio || ''
+    }
+  }
 }
+
+const saveProfile = async () => {
+  try {
+    // TODO: Implement actual API call to update profile
+    // const response = await authAPI.updateProfile(formData.value)
+
+    // For now, just update the auth store
+    if (authStore.user) {
+      authStore.user = { ...authStore.user, ...formData.value }
+      localStorage.setItem('user_data', JSON.stringify(authStore.user))
+    }
+
+    console.log('Profile saved successfully')
+    isProfileInfoModal.value = false
+  } catch (error) {
+    console.error('Error saving profile:', error)
+    alert('خطا در ذخیره اطلاعات')
+  }
+}
+
+onMounted(() => {
+  loadUserData()
+})
 </script>

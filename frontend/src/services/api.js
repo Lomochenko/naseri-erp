@@ -45,6 +45,10 @@ export const authAPI = {
   login: (phone, password) => api.post('/users/login/', { phone_number: phone, password }),
   logout: () => api.post('/users/logout/'),
   getCurrentUser: () => api.get('/users/profile/'),
+  updateProfile: (data) => api.put('/users/profile/', data),
+  uploadProfileImage: (formData) => api.post('/users/profile/image/', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
 }
 
 // Products API

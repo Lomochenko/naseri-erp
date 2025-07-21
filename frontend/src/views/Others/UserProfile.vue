@@ -8,7 +8,7 @@
       <h3 class="mb-5 text-lg font-semibold text-gray-800 dark:text-white/90 lg:mb-7">Profile</h3>
       <profile-card />
       <personal-info-card />
-      <address-card />
+      <staff-payment-card />
     </div>
   </admin-layout>
 </template>
@@ -19,5 +19,6 @@ import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
 import { ref } from 'vue'
 import ProfileCard from '../../components/profile/ProfileCard.vue'
 import PersonalInfoCard from '../../components/profile/PersonalInfoCard.vue'
+import StaffPaymentCard from '../../components/profile/StaffPaymentCard.vue'
 const currentPageTitle = ref('User Profile')
 </script>

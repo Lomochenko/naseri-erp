@@ -3,22 +3,41 @@
     <div class="p-5 mb-6 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">
       <div class="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
         <div class="flex flex-col items-center w-full gap-6 xl:flex-row">
-          <div
-            class="w-20 h-20 overflow-hidden border border-gray-200 rounded-full dark:border-gray-800"
-          >
-            <img src="/images/user/owner.jpg" alt="user" />
+          <div class="relative">
+            <div
+              class="w-20 h-20 overflow-hidden border border-gray-200 rounded-full dark:border-gray-800"
+            >
+              <img :src="profileImage" alt="user" class="w-full h-full object-cover" />
+            </div>
+            <!-- Profile Image Upload Button -->
+            <button
+              @click="triggerImageUpload"
+              class="absolute bottom-0 right-0 w-6 h-6 bg-brand-500 hover:bg-brand-600 rounded-full flex items-center justify-center text-white text-xs transition-colors"
+              title="تغییر تصویر پروفایل"
+            >
+              <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+              </svg>
+            </button>
+            <!-- Hidden file input -->
+            <input
+              ref="imageInput"
+              type="file"
+              accept="image/*"
+              @change="handleImageUpload"
+              class="hidden"
+            />
           </div>
           <div class="order-3 xl:order-2">
             <h4
               class="mb-2 text-lg font-semibold text-center text-gray-800 dark:text-white/90 xl:text-right"
             >
-              Musharof Chowdhury
+              {{ displayName }}
             </h4>
             <div
               class="flex flex-col items-center gap-1 text-center xl:flex-row xl:gap-3 xl:text-left"
             >
-              <p class="text-sm text-gray-500 dark:text-gray-400">Team Manager</p>
-              <!-- <div class="hidden h-3.5 w-px bg-gray-300 dark:bg-gray-700 xl:block"></div> -->
+              <p class="text-sm text-gray-500 dark:text-gray-400">{{ userRole }}</p>
             </div>
           </div>
         </div>
@@ -92,7 +111,8 @@
                     </label>
                     <input
                       type="text"
-                      value="Musharof"
+                      v-model="formData.first_name"
+                      placeholder="نام خود را وارد کنید"
                       class="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
                     />
                   </div>
@@ -105,7 +125,8 @@
                     </label>
                     <input
                       type="text"
-                      value="Chowdhury"
+                      v-model="formData.last_name"
+                      placeholder="نام خانوادگی خود را وارد کنید"
                       class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
                     />
                   </div>
@@ -116,11 +137,12 @@
                     >
                       بیوگرافی
                     </label>
-                    <input
-                      type="text"
-                      value="Team Manager"
-                      class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
-                    />
+                    <textarea
+                      v-model="formData.bio"
+                      placeholder="بیوگرافی خود را وارد کنید"
+                      rows="3"
+                      class="dark:bg-dark-900 w-full rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800 resize-none"
+                    ></textarea>
                   </div>
                 </div>
               </div>
@@ -149,14 +171,127 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useAuthStore } from '@/stores/auth'
+import { authAPI } from '@/services/api'
 import Modal from './Modal.vue'
 
+const authStore = useAuthStore()
 const isProfileInfoModal = ref(false)
+const imageInput = ref(null)
+const profileImage = ref('/images/user/owner.jpg')
+const isUploading = ref(false)
 
-const saveProfile = () => {
-  // Implement save profile logic here
-  console.log('Profile saved')
-  isProfileInfoModal.value = false
+// Form data
+const formData = ref({
+  first_name: '',
+  last_name: '',
+  email: '',
+  phone_number: '',
+  bio: ''
+})
+
+// Computed properties
+const displayName = computed(() => {
+  if (authStore.user) {
+    return `${authStore.user.first_name || ''} ${authStore.user.last_name || ''}`.trim() || authStore.user.phone_number
+  }
+  return 'کاربر'
+})
+
+const userRole = computed(() => {
+  if (authStore.user) {
+    if (authStore.user.is_superuser) return 'مدیر سیستم'
+    if (authStore.user.is_manager) return 'مدیر'
+    return 'کاربر'
+  }
+  return 'کاربر'
+})
+
+// Methods
+const triggerImageUpload = () => {
+  imageInput.value?.click()
 }
+
+const handleImageUpload = async (event) => {
+  const file = event.target.files[0]
+  if (!file) return
+
+  // Validate file type
+  if (!file.type.startsWith('image/')) {
+    alert('لطفاً یک فایل تصویری انتخاب کنید')
+    return
+  }
+
+  // Validate file size (max 5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    alert('حجم فایل نباید بیشتر از 5 مگابایت باشد')
+    return
+  }
+
+  isUploading.value = true
+
+  try {
+    // Create FormData for file upload
+    const uploadData = new FormData()
+    uploadData.append('profile_image', file)
+
+    // TODO: Implement actual API call for image upload
+    // const response = await authAPI.uploadProfileImage(uploadData)
+
+    // For now, create a local preview
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      profileImage.value = e.target.result
+    }
+    reader.readAsDataURL(file)
+
+    console.log('Profile image uploaded successfully')
+  } catch (error) {
+    console.error('Error uploading profile image:', error)
+    alert('خطا در آپلود تصویر')
+  } finally {
+    isUploading.value = false
+  }
+}
+
+const loadUserData = () => {
+  if (authStore.user) {
+    formData.value = {
+      first_name: authStore.user.first_name || '',
+      last_name: authStore.user.last_name || '',
+      email: authStore.user.email || '',
+      phone_number: authStore.user.phone_number || '',
+      bio: authStore.user.bio || ''
+    }
+
+    // Load profile image if available
+    if (authStore.user.profile_image) {
+      profileImage.value = authStore.user.profile_image
+    }
+  }
+}
+
+const saveProfile = async () => {
+  try {
+    // TODO: Implement actual API call to update profile
+    // const response = await authAPI.updateProfile(formData.value)
+
+    // For now, just update the auth store
+    if (authStore.user) {
+      authStore.user = { ...authStore.user, ...formData.value }
+      localStorage.setItem('user_data', JSON.stringify(authStore.user))
+    }
+
+    console.log('Profile saved successfully')
+    isProfileInfoModal.value = false
+  } catch (error) {
+    console.error('Error saving profile:', error)
+    alert('خطا در ذخیره اطلاعات')
+  }
+}
+
+onMounted(() => {
+  loadUserData()
+})
 </script>

@@ -8,7 +8,7 @@
         <img src="/images/user/owner.jpg" alt="User" />
       </span>
 
-      <span class="block mr-1 font-medium text-theme-sm">Musharof </span>
+      <span class="block mr-1 font-medium text-theme-sm">{{ displayName }}</span>
 
       <ChevronDownIcon :class="{ 'rotate-180': dropdownOpen }" />
     </button>
@@ -20,10 +20,10 @@
     >
       <div>
         <span class="block font-medium text-gray-700 text-theme-sm dark:text-gray-400">
-          Musharof Chowdhury
+          {{ displayName }}
         </span>
         <span class="mt-0.5 block text-theme-xs text-gray-500 dark:text-gray-400">
-          randomuser@pimjo.com
+          {{ userEmail }}
         </span>
       </div>
 
@@ -42,16 +42,15 @@
           </router-link>
         </li>
       </ul>
-      <router-link
-        to="/signin"
+      <button
         @click="signOut"
-        class="flex items-center gap-3 px-3 py-2 mt-3 font-medium text-gray-700 rounded-lg group text-theme-sm hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
+        class="flex items-center gap-3 px-3 py-2 mt-3 font-medium text-gray-700 rounded-lg group text-theme-sm hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300 w-full text-right"
       >
         <LogoutIcon
           class="text-gray-500 group-hover:text-gray-700 dark:group-hover:text-gray-300"
         />
-        Sign out
-      </router-link>
+        خروج
+      </button>
     </div>
     <!-- Dropdown End -->
   </div>
@@ -59,15 +58,30 @@
 
 <script setup>
 import { UserCircleIcon, ChevronDownIcon, LogoutIcon, SettingsIcon, InfoCircleIcon } from '@/icons'
-import { RouterLink } from 'vue-router'
-import { ref, onMounted, onUnmounted } from 'vue'
+import { RouterLink, useRouter } from 'vue-router'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useAuthStore } from '@/stores/auth'
 
+const router = useRouter()
+const authStore = useAuthStore()
 const dropdownOpen = ref(false)
 const dropdownRef = ref(null)
 
 const menuItems = [
-  { href: '/profile', icon: UserCircleIcon, text: 'Edit profile' }
+  { href: '/profile', icon: UserCircleIcon, text: 'ویرایش پروفایل' }
 ]
+
+// Computed properties
+const displayName = computed(() => {
+  if (authStore.user) {
+    return `${authStore.user.first_name || ''} ${authStore.user.last_name || ''}`.trim() || authStore.user.phone_number
+  }
+  return 'کاربر'
+})
+
+const userEmail = computed(() => {
+  return authStore.user?.email || authStore.user?.phone_number || ''
+})
 
 const toggleDropdown = () => {
   dropdownOpen.value = !dropdownOpen.value
@@ -77,10 +91,14 @@ const closeDropdown = () => {
   dropdownOpen.value = false
 }
 
-const signOut = () => {
-  // Implement sign out logic here
-  console.log('Signing out...')
-  closeDropdown()
+const signOut = async () => {
+  try {
+    await authStore.logout()
+    closeDropdown()
+    router.push('/signin')
+  } catch (error) {
+    console.error('Error signing out:', error)
+  }
 }
 
 const handleClickOutside = (event) => {
