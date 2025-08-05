@@ -9,19 +9,19 @@
       <nav>
         <ol class="flex items-center gap-2">
           <li>
-            <router-link class="font-medium" to="/">داشبورد /</router-link>
+            <router-link class="font-medium text-black dark:text-white" to="/">داشبورد /</router-link>
           </li>
           <li>
-            <router-link class="font-medium" to="/products">محصولات /</router-link>
+            <router-link class="font-medium text-black dark:text-white" to="/products">محصولات /</router-link>
           </li>
-          <li class="font-medium text-primary">افزودن محصول</li>
+          <li class="font-medium text-primary text-black dark:text-white">افزودن محصول</li>
         </ol>
       </nav>
     </div>
 
     <!-- Form -->
     <div class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
-      <div class="border-b border-stroke px-6.5 py-4 dark:border-strokedark">
+      <div class="bg-white dark:bg-gray-900 border-b rounded border-stroke px-6.5 py-4 dark:border-strokedark">
         <h3 class="font-medium text-black dark:text-white">
           اطلاعات محصول
         </h3>
@@ -32,7 +32,7 @@
         {{ productsStore.error }}
       </div>
 
-      <form @submit.prevent="handleSubmit" class="p-6.5">
+      <form @submit.prevent="handleSubmit" class="p-6.5 bg-white dark:bg-gray-900 dark:border-gray-800 border-r border-gray-200">
         <div class="mb-4.5 flex flex-col gap-6 xl:flex-row">
           <!-- Product Name -->
           <div class="w-full xl:w-1/2">
@@ -43,7 +43,7 @@
               v-model="form.name"
               type="text"
               placeholder="نام محصول را وارد کنید"
-              class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+              class="w-full placeholder-gray-500 rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary  active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
               required
             />
           </div>
@@ -57,7 +57,7 @@
               v-model="form.code"
               type="text"
               placeholder="کد محصول"
-              class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+              class="w-full placeholder-gray-500 rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
               required
             />
           </div>
@@ -69,6 +69,7 @@
             <label class="mb-2.5 block text-black dark:text-white">
               دسته‌بندی <span class="text-meta-1">*</span>
             </label>
+            <div class="flex gap-2">
             <select
               v-model="form.category"
               class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
@@ -79,6 +80,10 @@
                 {{ category.name }}
               </option>
             </select>
+            <button @click="openModal('category')" type="button" class="rounded border-[1.5px] outline-none transition dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary border-gray-200 hover:border-gray-400 px-4 py-2 font-medium text-black dark:text-white">
+              جدید
+            </button>
+            </div>
           </div>
 
           <!-- Unit -->
@@ -86,6 +91,7 @@
             <label class="mb-2.5 block text-black dark:text-white">
               واحد <span class="text-meta-1">*</span>
             </label>
+            <div class="flex gap-2">
             <select
               v-model="form.unit"
               class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
@@ -96,6 +102,10 @@
                 {{ unit.name }}
               </option>
             </select>
+            <button @click="openModal('unit')" type="button" class="rounded border-[1.5px] outline-none transition dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary border-gray-200 hover:border-gray-400 px-4 py-2 font-medium text-black dark:text-white">
+              جدید
+            </button>
+            </div>
           </div>
         </div>
 
@@ -110,7 +120,7 @@
               type="number"
               step="1"
               placeholder="قیمت خرید محصول"
-              class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+              class="w-full placeholder-gray-500 rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
               required
             />
           </div>
@@ -125,7 +135,7 @@
               type="number"
               step="1"
               placeholder="قیمت فروش محصول"
-              class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+              class="w-full placeholder-gray-500 rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
               required
             />
           </div>
@@ -142,7 +152,7 @@
               type="number"
               step="0.01"
               placeholder="حداقل موجودی"
-              class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+              class="w-full placeholder-gray-500 rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
             />
           </div>
         </div>
@@ -156,7 +166,7 @@
             v-model="form.description"
             rows="4"
             placeholder="توضیحات محصول"
-            class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+            class="w-full placeholder-gray-500 rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
           ></textarea>
         </div>
 
@@ -173,7 +183,7 @@
               class="mr-4 flex h-5 w-5 items-center justify-center rounded border"
             >
               <span :class="form.is_active ? 'opacity-100' : 'opacity-0'">
-                <svg class="h-3.5 w-3.5 stroke-current text-white" fill="none" viewBox="0 0 24 24">
+                <svg class="h-3.5 w-3.5 stroke-current text-black dark:text-white" fill="none" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                 </svg>
               </span>
@@ -187,7 +197,7 @@
           <button
             type="submit"
             :disabled="productsStore.isLoading"
-            class="flex justify-center rounded bg-primary px-6 py-2 font-medium text-gray hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+            class="flex justify-center rounded border border-stroke bg-primary px-6 py-2 font-medium text-black dark:text-white hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span v-if="productsStore.isLoading" class="mr-2">
               <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
@@ -207,6 +217,37 @@
         </div>
       </form>
     </div>
+    </div>
+
+    <!-- Modal for creating new category/unit -->
+    <div v-if="showModal" class="fixed inset-0 z-9999 flex items-center justify-center bg-black bg-opacity-50">
+      <div class="w-full max-w-md rounded-lg bg-white p-6 dark:bg-boxdark">
+        <h3 class="mb-4 text-lg font-medium text-black dark:text-white">
+          افزودن {{ modalType === 'category' ? 'دسته‌بندی' : 'واحد' }} جدید
+        </h3>
+        <input
+          v-model="newItemName"
+          type="text"
+          :placeholder="`نام ${modalType === 'category' ? 'دسته‌بندی' : 'واحد'} جدید`"
+          class="w-full placeholder-gray-500 rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+        />
+        <div v-if="modalType === 'unit'" class="mt-4">
+          <input
+            v-model="newUnitSymbol"
+            type="text"
+            placeholder="نماد واحد (مثال: kg)"
+            class="w-full placeholder-gray-500 rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+          />
+        </div>
+        <div class="mt-6 flex justify-start gap-4">
+          <button @click="handleCreateNewItem" class="rounded border border-stroke bg-primary px-6 py-2 font-medium text-black dark:text-white hover:bg-opacity-90">
+            ایجاد
+          </button>
+          <button @click="showModal = false" class="rounded border border-stroke px-6 py-2 font-medium text-black dark:text-white hover:shadow-1 dark:border-strokedark dark:text-white">
+            انصراف
+          </button>
+        </div>
+      </div>
     </div>
   </AdminLayout>
 </template>
@@ -233,7 +274,42 @@ const form = ref({
   is_active: true
 })
 
+// Modal state
+const showModal = ref(false)
+const modalType = ref('') // 'category' or 'unit'
+const newItemName = ref('')
+const newUnitSymbol = ref('')
+
 // Methods
+const openModal = (type) => {
+  modalType.value = type
+  newItemName.value = ''
+  if(type == 'unit') newUnitSymbol.value = ''
+  showModal.value = true
+}
+
+const handleCreateNewItem = async () => {
+  let result;
+  if (modalType.value === 'category') {
+    result = await productsStore.createCategory({ name: newItemName.value })
+    if (result.success) {
+        form.value.category = result.data.id
+    }
+  } else {
+    result = await productsStore.createUnit({ name: newItemName.value, symbol: newUnitSymbol.value })
+    if(result.success) {
+        form.value.unit = result.data.id
+    }
+  }
+
+  if (result.success) {
+    showModal.value = false
+  } else {
+    // Handle error display if necessary
+    alert(result.error)
+  }
+}
+
 const handleSubmit = async () => {
   const result = await productsStore.createProduct(form.value)
 

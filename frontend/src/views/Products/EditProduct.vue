@@ -66,23 +66,27 @@
             />
           </div>
         </div>
-
         <div class="mb-4.5 flex flex-col gap-6 xl:flex-row">
           <!-- Category -->
           <div class="w-full xl:w-1/2">
             <label class="mb-2.5 block text-black dark:text-white">
               دسته‌بندی <span class="text-meta-1">*</span>
             </label>
-            <select
-              v-model="form.category"
-              class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
-              required
-            >
-              <option value="">دسته‌بندی را انتخاب کنید</option>
-              <option v-for="category in productsStore.categories" :key="category.id" :value="category.id">
-                {{ category.name }}
-              </option>
-            </select>
+            <div class="flex gap-2">
+              <select
+                v-model="form.category"
+                class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+                required
+              >
+                <option value="">دسته‌بندی را انتخاب کنید</option>
+                <option v-for="category in productsStore.categories" :key="category.id" :value="category.id">
+                  {{ category.name }}
+                </option>
+              </select>
+              <button @click="openModal('category')" type="button" class="rounded bg-primary px-4 py-2 font-medium text-white hover:bg-opacity-90">
+                جدید
+              </button>
+            </div>
           </div>
 
           <!-- Unit -->
@@ -90,16 +94,21 @@
             <label class="mb-2.5 block text-black dark:text-white">
               واحد <span class="text-meta-1">*</span>
             </label>
-            <select
-              v-model="form.unit"
-              class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
-              required
-            >
-              <option value="">واحد را انتخاب کنید</option>
-              <option v-for="unit in productsStore.units" :key="unit.id" :value="unit.id">
-                {{ unit.name }}
-              </option>
-            </select>
+            <div class="flex gap-2">
+              <select
+                v-model="form.unit"
+                class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+                required
+              >
+                <option value="">واحد را انتخاب کنید</option>
+                <option v-for="unit in productsStore.units" :key="unit.id" :value="unit.id">
+                  {{ unit.name }}
+                </option>
+              </select>
+              <button @click="openModal('unit')" type="button" class="rounded bg-primary px-4 py-2 font-medium text-white hover:bg-opacity-90">
+                جدید
+              </button>
+            </div>
           </div>
         </div>
 
@@ -222,6 +231,36 @@
         </div>
       </form>
     </div>
+
+    <!-- Modal for creating new category/unit -->
+    <div v-if="showModal" class="fixed inset-0 z-9999 flex items-center justify-center bg-black bg-opacity-50">
+      <div class="w-full max-w-md rounded-lg bg-white p-6 dark:bg-boxdark">
+        <h3 class="mb-4 text-lg font-medium text-black dark:text-white">
+          افزودن {{ modalType === 'category' ? 'دسته‌بندی' : 'واحد' }} جدید
+        </h3>
+        <input
+          v-model="newItemName"
+          type="text"
+          :placeholder="`نام ${modalType === 'category' ? 'دسته‌بندی' : 'واحد'} جدید`"
+          class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+        />
+        <div v-if="modalType === 'unit'" class="mt-4">
+          <input
+            v-model="newUnitSymbol"
+            type="text"
+            placeholder="نماد واحد (مثال: kg)"
+            class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+          />
+        </div>
+        <div class="mt-6 flex justify-end gap-4">
+          <button @click="showModal = false" class="rounded border border-stroke px-6 py-2 font-medium text-black hover:shadow-1 dark:border-strokedark dark:text-white">
+            انصراف
+          </button>
+          <button @click="handleCreateNewItem" class="rounded bg-primary px-6 py-2 font-medium text-white hover:bg-opacity-90">
+            ایجاد
+          </button>
+        </div>
+      </div>
     </div>
   </AdminLayout>
 </template>
@@ -250,7 +289,42 @@ const form = ref({
   is_active: true
 })
 
+// Modal state
+const showModal = ref(false)
+const modalType = ref('') // 'category' or 'unit'
+const newItemName = ref('')
+const newUnitSymbol = ref('')
+
 // Methods
+const openModal = (type) => {
+  modalType.value = type
+  newItemName.value = ''
+  if(type == 'unit') newUnitSymbol.value = ''
+  showModal.value = true
+}
+
+const handleCreateNewItem = async () => {
+  let result;
+  if (modalType.value === 'category') {
+    result = await productsStore.createCategory({ name: newItemName.value })
+    if (result.success) {
+        form.value.category = result.data.id
+    }
+  } else {
+    result = await productsStore.createUnit({ name: newItemName.value, symbol: newUnitSymbol.value })
+    if(result.success) {
+        form.value.unit = result.data.id
+    }
+  }
+
+  if (result.success) {
+    showModal.value = false
+  } else {
+    // Handle error display if necessary
+    alert(result.error)
+  }
+}
+
 const loadProduct = async () => {
   const productId = route.params.id
   const result = await productsStore.getProduct(productId)
@@ -291,4 +365,5 @@ onMounted(async () => {
     loadProduct()
   ])
 })
+
 </script>
