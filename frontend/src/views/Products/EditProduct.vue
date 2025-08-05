@@ -1,6 +1,6 @@
 <template>
   <AdminLayout>
-    <div>
+    
     <!-- Breadcrumb -->
     <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <h2 class="text-title-md2 font-bold text-black dark:text-white">
@@ -53,16 +53,17 @@
             />
           </div>
 
-          <!-- SKU -->
+          <!-- Product Code -->
           <div class="w-full xl:w-1/2">
             <label class="mb-2.5 block text-black dark:text-white">
-              کد محصول (SKU)
+              کد محصول <span class="text-meta-1">*</span>
             </label>
             <input
-              v-model="form.sku"
+              v-model="form.code"
               type="text"
               placeholder="کد محصول"
               class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+              required
             />
           </div>
         </div>
@@ -113,63 +114,67 @@
         </div>
 
         <div class="mb-4.5 flex flex-col gap-6 xl:flex-row">
-          <!-- Price -->
+          <!-- Purchase Price -->
           <div class="w-full xl:w-1/2">
             <label class="mb-2.5 block text-black dark:text-white">
-              قیمت (تومان) <span class="text-meta-1">*</span>
+              قیمت خرید (تومان) <span class="text-meta-1">*</span>
             </label>
             <input
-              v-model="form.price"
+              v-model="form.purchase_price"
               type="number"
-              step="0.01"
-              placeholder="قیمت محصول"
+              step="1"
+              placeholder="قیمت خرید محصول"
               class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
               required
             />
           </div>
 
+          <!-- Selling Price -->
+          <div class="w-full xl:w-1/2">
+            <label class="mb-2.5 block text-black dark:text-white">
+              قیمت فروش (تومان) <span class="text-meta-1">*</span>
+            </label>
+            <input
+              v-model="form.selling_price"
+              type="number"
+              step="1"
+              placeholder="قیمت فروش محصول"
+              class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+              required
+            />
+          </div>
+        </div>
+
+        <div class="mb-4.5 flex flex-col gap-6 xl:flex-row">
           <!-- Current Stock (Read-only) -->
           <div class="w-full xl:w-1/2">
             <label class="mb-2.5 block text-black dark:text-white">
               موجودی فعلی
             </label>
             <input
-              :value="form.stock_quantity"
+              :value="form.current_stock"
               type="number"
               readonly
               class="w-full rounded border-[1.5px] border-stroke bg-gray-100 px-5 py-3 text-black outline-none dark:border-form-strokedark dark:bg-form-input dark:text-white"
             />
             <p class="mt-1 text-xs text-gray-500">برای تغییر موجودی از بخش انبار استفاده کنید</p>
           </div>
-        </div>
 
-        <div class="mb-4.5 flex flex-col gap-6 xl:flex-row">
           <!-- Min Stock Level -->
           <div class="w-full xl:w-1/2">
             <label class="mb-2.5 block text-black dark:text-white">
               حداقل موجودی
             </label>
             <input
-              v-model="form.min_stock_level"
+              v-model="form.min_stock"
               type="number"
+              step="0.01"
               placeholder="حداقل موجودی"
               class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
             />
           </div>
-
-          <!-- Max Stock Level -->
-          <div class="w-full xl:w-1/2">
-            <label class="mb-2.5 block text-black dark:text-white">
-              حداکثر موجودی
-            </label>
-            <input
-              v-model="form.max_stock_level"
-              type="number"
-              placeholder="حداکثر موجودی"
-              class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
-            />
-          </div>
         </div>
+
 
         <!-- Description -->
         <div class="mb-6">
@@ -278,14 +283,14 @@ const productsStore = useProductsStore()
 // Form data
 const form = ref({
   name: '',
-  sku: '',
+  code: '',
   description: '',
   category: '',
   unit: '',
-  price: '',
-  stock_quantity: 0,
-  min_stock_level: 0,
-  max_stock_level: 0,
+  purchase_price: '',
+  selling_price: '',
+  current_stock: 0,
+  min_stock: 0,
   is_active: true
 })
 
@@ -333,14 +338,14 @@ const loadProduct = async () => {
     const product = result.data
     form.value = {
       name: product.name,
-      sku: product.sku || '',
+      code: product.code || '',
       description: product.description || '',
-      category: product.category?.id || '',
-      unit: product.unit?.id || '',
-      price: product.price,
-      stock_quantity: product.stock_quantity,
-      min_stock_level: product.min_stock_level || 0,
-      max_stock_level: product.max_stock_level || 0,
+      category: product.category || '',
+      unit: product.unit || '',
+      purchase_price: product.purchase_price,
+      selling_price: product.selling_price,
+      current_stock: product.current_stock,
+      min_stock: product.min_stock || 0,
       is_active: product.is_active
     }
   } else {

@@ -7,7 +7,7 @@
         مدیریت محصولات
       </h2>
       <nav>
-        <ol class="flex items-center gap-2">
+        <ol class="flex items-center text-black dark:text-white gap-2">
           <li>
             <router-link class="font-medium" to="/">داشبورد /</router-link>
           </li>
@@ -18,15 +18,15 @@
 
     <!-- Action Buttons -->
     <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <div class="flex gap-3">
+      <div class="flex gap-2">
         <router-link
           to="/products/create"
-          class="inline-flex items-center justify-center rounded-md bg-primary px-6 py-3 text-center font-medium text-white hover:bg-opacity-90"
+          class="inline-flex items-center justify-center rounded-md border-[1.5px] border-gray-200 bg-primary px-3 py-3 text-center font-medium text-black dark:text-white hover:bg-opacity-90"
         >
-          <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-          </svg>
-          افزودن محصول جدید
+        افزودن محصول جدید
+        <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        </svg>
         </router-link>
       </div>
 
@@ -36,10 +36,10 @@
           v-model="searchQuery"
           type="text"
           placeholder="جستجو در محصولات..."
-          class="w-full rounded-lg border border-stroke bg-transparent py-3 pr-12 pl-4 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
+          class="w-full rounded-lg border-[1.5px] bg-transparent py-3 pr-12 pl-4 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
         />
         <svg
-          class="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-body"
+          class="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-black dark:text-white"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -61,14 +61,14 @@
     />
 
     <!-- Products Table -->
-    <div v-else class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+    <div v-else class="rounded-sm border border-stroke bg-slate-100 dark:bg-slate-300 shadow-default dark:border-strokedark dark:bg-boxdark">
       <div class="px-4 py-6 md:px-6 xl:px-7.5">
-        <h4 class="text-xl font-semibold text-black dark:text-white">
+        <h4 class="text-xl font-semibold text-black">
           لیست محصولات ({{ productsStore.totalProducts }})
         </h4>
       </div>
 
-      <div class="grid grid-cols-6 border-t border-stroke px-4 py-4.5 dark:border-strokedark sm:grid-cols-8 md:px-6 2xl:px-7.5">
+      <div class="grid grid-cols-7 border-t border-stroke px-4 py-4.5 dark:border-strokedark sm:grid-cols-9 md:px-6 2xl:px-7.5">
         <div class="col-span-2 flex items-center">
           <p class="font-medium">نام محصول</p>
         </div>
@@ -84,6 +84,9 @@
         <div class="col-span-1 hidden items-center sm:flex">
           <p class="font-medium">واحد</p>
         </div>
+        <div class="col-span-1 hidden items-center lg:flex">
+          <p class="font-medium">توضیحات</p>
+        </div>
         <div class="col-span-1 flex items-center">
           <p class="font-medium">وضعیت</p>
         </div>
@@ -92,18 +95,18 @@
         </div>
       </div>
 
-      <div v-for="product in filteredProducts" :key="product.id" class="grid grid-cols-6 border-t border-stroke px-4 py-4.5 dark:border-strokedark sm:grid-cols-8 md:px-6 2xl:px-7.5">
+      <div v-for="product in filteredProducts" :key="product.id" class="grid grid-cols-7 border-t hover:bg-slate-200 border-stroke px-4 py-4.5 dark:border-strokedark sm:grid-cols-9 md:px-6 2xl:px-7.5">
         <div class="col-span-2 flex items-center">
           <div class="flex flex-col gap-1">
-            <p class="text-sm font-medium text-black dark:text-white">{{ product.name }}</p>
-            <p class="text-xs text-gray-500 dark:text-gray-400">کد: {{ product.code }}</p>
+            <p class="text-sm font-medium text-black ">{{ product.name }}</p>
+            <p class="text-xs text-gray-500">کد: {{ product.code }}</p>
           </div>
         </div>
         <div class="col-span-1 hidden items-center sm:flex">
-          <p class="text-sm text-black dark:text-white">{{ product.category_name || '-' }}</p>
+          <p class="text-sm text-black ">{{ product.category_name || '-' }}</p>
         </div>
         <div class="col-span-1 flex items-center">
-          <p class="text-sm text-black dark:text-white">{{ formatPrice(product.selling_price) }}</p>
+          <p class="text-sm text-black ">{{ formatPrice(product.selling_price) }}</p>
         </div>
         <div class="col-span-1 flex items-center">
           <p class="text-sm" :class="getStockClass(product.current_stock)">
@@ -111,7 +114,12 @@
           </p>
         </div>
         <div class="col-span-1 hidden items-center sm:flex">
-          <p class="text-sm text-black dark:text-white">{{ product.unit_symbol || '-' }}</p>
+          <p class="text-sm text-black ">{{ product.unit_symbol || '-' }}</p>
+        </div>
+        <div class="col-span-1 hidden items-center lg:flex">
+          <p class="text-sm text-black  truncate max-w-32" :title="product.description">
+            {{ product.description ? (product.description.length > 30 ? product.description.substring(0, 30) + '...' : product.description) : '-' }}
+          </p>
         </div>
         <div class="col-span-1 flex items-center">
           <span
@@ -147,21 +155,21 @@
     <!-- Pagination -->
     <div v-if="productsStore.totalProducts > 0" class="mt-6 flex items-center justify-between">
       <div class="text-sm text-gray-700 dark:text-gray-300">
-        نمایش {{ ((currentPage - 1) * pageSize) + 1 }} تا {{ Math.min(currentPage * pageSize, productsStore.totalProducts) }} از {{ productsStore.totalProducts }} محصول
+        نمایش صفحه {{ ((currentPage - 1) * pageSize) + 1 }} <span class="text-lg">↫</span> {{ Math.min(currentPage * pageSize, productsStore.totalProducts) }} محصول از {{ productsStore.totalProducts }} محصول
       </div>
       <div class="flex items-center space-x-2">
         <button
           @click="previousPage"
           :disabled="!productsStore.hasPreviousPage"
-          class="rounded-lg border border-stroke px-3 py-2 text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:border-strokedark dark:hover:bg-meta-4"
+          class="rounded-lg border border-stroke text-gray-700 dark:text-gray-300 px-3 py-2 text-sm hover:bg-gray-50 disabled:hover:bg-inherit disabled:opacity-50 disabled:cursor-not-allowed dark:border-strokedark dark:hover:bg-meta-4"
         >
           قبلی
         </button>
-        <span class="px-3 py-2 text-sm">صفحه {{ currentPage }}</span>
+        <span class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300">صفحه {{ currentPage }}</span>
         <button
           @click="nextPage"
           :disabled="!productsStore.hasNextPage"
-          class="rounded-lg border border-stroke px-3 py-2 text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:border-strokedark dark:hover:bg-meta-4"
+          class="rounded-lg border border-stroke text-gray-700 dark:text-gray-300 px-3 py-2 text-sm hover:bg-gray-50 disabled:hover:bg-inherit disabled:opacity-50 disabled:cursor-not-allowed dark:border-strokedark dark:hover:bg-meta-4"
         >
           بعدی
         </button>
@@ -246,10 +254,19 @@ watch(searchQuery, () => {
 
 // Lifecycle
 onMounted(async () => {
-  await Promise.all([
-    productsStore.fetchProducts({ page: currentPage.value, page_size: pageSize.value }),
-    productsStore.fetchCategories(),
-    productsStore.fetchUnits()
-  ])
+  // Only fetch categories and units if they haven't been loaded yet
+  const promises = [
+    productsStore.fetchProducts({ page: currentPage.value, page_size: pageSize.value })
+  ]
+
+  if (productsStore.categories.length === 0) {
+    promises.push(productsStore.fetchCategories())
+  }
+
+  if (productsStore.units.length === 0) {
+    promises.push(productsStore.fetchUnits())
+  }
+
+  await Promise.all(promises)
 })
 </script>
