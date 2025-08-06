@@ -80,7 +80,7 @@
                 {{ category.name }}
               </option>
             </select>
-            <button @click="openModal('category')" type="button" class="rounded border-[1.5px] outline-none transition dark:border-form-strokedark dark:bg-form-input border-slate-300 dark:border-slate-500 dark:focus:border-slate-800  hover:border-gray-400 px-4 py-2 font-medium text-black">
+            <button @click="openModal('category')" type="button" class="hover:bg-slate-200 rounded border-[1.5px] outline-none transition dark:border-form-strokedark dark:bg-form-input border-slate-300 dark:border-slate-500 dark:focus:border-slate-800  hover:border-gray-400 px-4 py-2 font-medium text-black">
               جدید
             </button>
             </div>
@@ -102,7 +102,7 @@
                 {{ unit.name }}
               </option>
             </select>
-            <button @click="openModal('unit')" type="button" class="rounded border-[1.5px] outline-none transition dark:border-form-strokedark dark:bg-form-input border-slate-300 dark:border-slate-500 dark:focus:border-slate-800 hover:border-gray-400 px-4 py-2 font-medium text-black">
+            <button @click="openModal('unit')" type="button" class="hover:bg-slate-200 rounded border-[1.5px] outline-none transition dark:border-form-strokedark dark:bg-form-input border-slate-300 dark:border-slate-500 dark:focus:border-slate-800 hover:border-gray-400 px-4 py-2 font-medium text-black">
               جدید
             </button>
             </div>
