@@ -26,7 +26,7 @@
 
     <!-- Form -->
     <div v-else
-      class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark bg-slate-100 dark:bg-slate-300">
+      class="rounded-sm border border-stroke shadow-default dark:border-strokedark bg-slate-100 dark:bg-slate-300">
       <div class="border-b border-black border-stroke px-6.5 py-4 dark:border-strokedark">
         <h3 class="font-medium text-black">
           ویرایش اطلاعات محصول
@@ -46,7 +46,7 @@
               نام محصول <span class="text-meta-1">*</span>
             </label>
             <input v-model="form.name" type="text" placeholder="نام محصول را وارد کنید"
-              class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-slate-800 active:border-black disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input border-slate-300 dark:border-slate-500 dark:focus:border-slate-800"
+              class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input focus:border-slate-800 active:border-black border-slate-300 dark:border-slate-500 dark:focus:border-slate-800"
               required />
           </div>
 

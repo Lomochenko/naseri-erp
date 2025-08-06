@@ -21,8 +21,8 @@
 
     <!-- Form -->
     <div class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
-      <div class="bg-white dark:bg-gray-900 border-b rounded border-stroke px-6.5 py-4 dark:border-strokedark">
-        <h3 class="font-medium text-black dark:text-white">
+      <div class=" bg-slate-100 dark:bg-slate-300 border-b border-black rounded border-stroke px-6.5 py-4 dark:border-strokedark">
+        <h3 class="font-medium text-black">
           اطلاعات محصول
         </h3>
       </div>
@@ -32,32 +32,32 @@
         {{ productsStore.error }}
       </div>
 
-      <form @submit.prevent="handleSubmit" class="p-6.5 bg-white dark:bg-gray-900 dark:border-gray-800 border-r border-gray-200">
+      <form @submit.prevent="handleSubmit" class="p-6.5  bg-slate-100 dark:bg-slate-300 dark:border-gray-800 border-r border-gray-200">
         <div class="mb-4.5 flex flex-col gap-6 xl:flex-row">
           <!-- Product Name -->
           <div class="w-full xl:w-1/2">
-            <label class="mb-2.5 block text-black dark:text-white">
+            <label class="mb-2.5 block text-black">
               نام محصول <span class="text-meta-1">*</span>
             </label>
             <input
               v-model="form.name"
               type="text"
               placeholder="نام محصول را وارد کنید"
-              class="w-full placeholder-gray-500 rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary  active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+              class="w-full placeholder-gray-500 rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary  active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input border-slate-300 dark:border-slate-500 dark:focus:border-slate-800"
               required
             />
           </div>
 
           <!-- Product Code -->
           <div class="w-full xl:w-1/2">
-            <label class="mb-2.5 block text-black dark:text-white">
+            <label class="mb-2.5 block text-black">
               کد محصول <span class="text-meta-1">*</span>
             </label>
             <input
               v-model="form.code"
               type="text"
               placeholder="کد محصول"
-              class="w-full placeholder-gray-500 rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+              class="w-full placeholder-gray-500 rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-slate-800 active:border-black disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input border-slate-300 dark:border-slate-500 dark:focus:border-slate-800"
               required
             />
           </div>
@@ -66,13 +66,13 @@
         <div class="mb-4.5 flex flex-col gap-6 xl:flex-row">
           <!-- Category -->
           <div class="w-full xl:w-1/2">
-            <label class="mb-2.5 block text-black dark:text-white">
+            <label class="mb-2.5 block text-black">
               دسته‌بندی <span class="text-meta-1">*</span>
             </label>
             <div class="flex gap-2">
             <select
               v-model="form.category"
-              class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+              class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-slate-800 active:border-black disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input border-slate-300 dark:border-slate-500 dark:focus:border-slate-800"
               required
             >
               <option value="">دسته‌بندی را انتخاب کنید</option>
@@ -80,7 +80,7 @@
                 {{ category.name }}
               </option>
             </select>
-            <button @click="openModal('category')" type="button" class="rounded border-[1.5px] outline-none transition dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary border-gray-200 hover:border-gray-400 px-4 py-2 font-medium text-black dark:text-white">
+            <button @click="openModal('category')" type="button" class="rounded border-[1.5px] outline-none transition dark:border-form-strokedark dark:bg-form-input border-slate-300 dark:border-slate-500 dark:focus:border-slate-800  hover:border-gray-400 px-4 py-2 font-medium text-black">
               جدید
             </button>
             </div>
@@ -88,13 +88,13 @@
 
           <!-- Unit -->
           <div class="w-full xl:w-1/2">
-            <label class="mb-2.5 block text-black dark:text-white">
+            <label class="mb-2.5 block text-black">
               واحد <span class="text-meta-1">*</span>
             </label>
             <div class="flex gap-2">
             <select
               v-model="form.unit"
-              class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+              class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-slate-800 active:border-black disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input border-slate-300 dark:border-slate-500 dark:focus:border-slate-800"
               required
             >
               <option value="">واحد را انتخاب کنید</option>
@@ -102,7 +102,7 @@
                 {{ unit.name }}
               </option>
             </select>
-            <button @click="openModal('unit')" type="button" class="rounded border-[1.5px] outline-none transition dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary border-gray-200 hover:border-gray-400 px-4 py-2 font-medium text-black dark:text-white">
+            <button @click="openModal('unit')" type="button" class="rounded border-[1.5px] outline-none transition dark:border-form-strokedark dark:bg-form-input border-slate-300 dark:border-slate-500 dark:focus:border-slate-800 hover:border-gray-400 px-4 py-2 font-medium text-black">
               جدید
             </button>
             </div>
@@ -112,7 +112,7 @@
         <div class="mb-4.5 flex flex-col gap-6 xl:flex-row">
           <!-- Purchase Price -->
           <div class="w-full xl:w-1/2">
-            <label class="mb-2.5 block text-black dark:text-white">
+            <label class="mb-2.5 block text-black">
               قیمت خرید (تومان) <span class="text-meta-1">*</span>
             </label>
             <input
@@ -120,14 +120,14 @@
               type="number"
               step="1"
               placeholder="قیمت خرید محصول"
-              class="w-full placeholder-gray-500 rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+              class="w-full placeholder-gray-500 rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-slate-800 active:border-black disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input border-slate-300 dark:border-slate-500 dark:focus:border-slate-800"
               required
             />
           </div>
 
           <!-- Selling Price -->
           <div class="w-full xl:w-1/2">
-            <label class="mb-2.5 block text-black dark:text-white">
+            <label class="mb-2.5 block text-black">
               قیمت فروش (تومان) <span class="text-meta-1">*</span>
             </label>
             <input
@@ -135,7 +135,7 @@
               type="number"
               step="1"
               placeholder="قیمت فروش محصول"
-              class="w-full placeholder-gray-500 rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+              class="w-full placeholder-gray-500 rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-slate-800 active:border-black disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input border-slate-300 dark:border-slate-500 dark:focus:border-slate-800"
               required
             />
           </div>
@@ -144,7 +144,7 @@
         <div class="mb-4.5">
           <!-- Min Stock Level -->
           <div class="w-full xl:w-1/2">
-            <label class="mb-2.5 block text-black dark:text-white">
+            <label class="mb-2.5 block text-black">
               حداقل موجودی
             </label>
             <input
@@ -152,21 +152,21 @@
               type="number"
               step="0.01"
               placeholder="حداقل موجودی"
-              class="w-full placeholder-gray-500 rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+              class="w-full placeholder-gray-500 rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-slate-800 active:border-black disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input border-slate-300 dark:border-slate-500 dark:focus:border-slate-800"
             />
           </div>
         </div>
 
         <!-- Description -->
         <div class="mb-6">
-          <label class="mb-2.5 block text-black dark:text-white">
+          <label class="mb-2.5 block text-black">
             توضیحات
           </label>
           <textarea
             v-model="form.description"
             rows="4"
             placeholder="توضیحات محصول"
-            class="w-full placeholder-gray-500 rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+            class="w-full placeholder-gray-500 rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-slate-800 active:border-black disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input border-slate-300 dark:border-slate-500 dark:focus:border-slate-800"
           ></textarea>
         </div>
 
@@ -178,17 +178,17 @@
               type="checkbox"
               class="sr-only"
             />
+            <span class="text-black">محصول فعال باشد؟</span>
             <div
-              :class="form.is_active ? 'bg-primary border-primary' : 'bg-transparent border-stroke dark:border-form-strokedark'"
+              :class="form.is_active ? 'bg-gray-800 border-black text-white' : 'bg-transparent border-gray-800 border-stroke dark:border-form-strokedark'"
               class="mr-4 flex h-5 w-5 items-center justify-center rounded border"
             >
               <span :class="form.is_active ? 'opacity-100' : 'opacity-0'">
-                <svg class="h-3.5 w-3.5 stroke-current text-black dark:text-white" fill="none" viewBox="0 0 24 24">
+                <svg class="h-3.5 w-3.5 stroke-current text-white" fill="none" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                 </svg>
               </span>
             </div>
-            <span class="text-black dark:text-white">محصول فعال باشد</span>
           </label>
         </div>
 
@@ -197,7 +197,7 @@
           <button
             type="submit"
             :disabled="productsStore.isLoading"
-            class="flex justify-center rounded border border-stroke bg-primary px-6 py-2 font-medium text-black dark:text-white hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+            class="flex justify-center border-slate-800 hover:bg-slate-200  rounded border border-stroke bg-primary px-6 py-2 font-medium text-black hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span v-if="productsStore.isLoading" class="mr-2">
               <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
@@ -210,7 +210,7 @@
 
           <router-link
             to="/products"
-            class="flex justify-center rounded border border-stroke px-6 py-2 font-medium text-black hover:shadow-1 dark:border-strokedark dark:text-white"
+            class="flex justify-center hover:bg-slate-200  rounded border border-slate-800 border-stroke px-6 py-2 font-medium text-black hover:shadow-1 dark:border-strokedark"
           >
             انصراف
           </router-link>
@@ -222,28 +222,28 @@
     <!-- Modal for creating new category/unit -->
     <div v-if="showModal" class="fixed inset-0 z-9999 flex items-center justify-center bg-black bg-opacity-50">
       <div class="w-full max-w-md rounded-lg bg-white p-6 dark:bg-boxdark">
-        <h3 class="mb-4 text-lg font-medium text-black dark:text-white">
+        <h3 class="mb-4 text-lg font-medium text-black">
           افزودن {{ modalType === 'category' ? 'دسته‌بندی' : 'واحد' }} جدید
         </h3>
         <input
           v-model="newItemName"
           type="text"
           :placeholder="`نام ${modalType === 'category' ? 'دسته‌بندی' : 'واحد'} جدید`"
-          class="w-full placeholder-gray-500 rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+          class="w-full placeholder-gray-500 rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-slate-800 active:border-black disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input border-slate-300 dark:border-slate-500 dark:focus:border-slate-800"
         />
         <div v-if="modalType === 'unit'" class="mt-4">
           <input
             v-model="newUnitSymbol"
             type="text"
             placeholder="نماد واحد (مثال: kg)"
-            class="w-full placeholder-gray-500 rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+            class="w-full placeholder-gray-500 rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-slate-800 active:border-black disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input border-slate-300 dark:border-slate-500 dark:focus:border-slate-800"
           />
         </div>
         <div class="mt-6 flex justify-start gap-4">
-          <button @click="handleCreateNewItem" class="rounded border border-stroke bg-primary px-6 py-2 font-medium text-black dark:text-white hover:bg-opacity-90">
+          <button @click="handleCreateNewItem" class="rounded border border-stroke bg-primary px-6 py-2 font-medium text-black hover:bg-opacity-90">
             ایجاد
           </button>
-          <button @click="showModal = false" class="rounded border border-stroke px-6 py-2 font-medium text-black dark:text-white hover:shadow-1 dark:border-strokedark dark:text-white">
+          <button @click="showModal = false" class="rounded border border-stroke px-6 py-2 font-medium text-black hover:shadow-1 dark:border-strokedark dark:text-white">
             انصراف
           </button>
         </div>
