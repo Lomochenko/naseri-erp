@@ -155,7 +155,7 @@
     <!-- Pagination -->
     <div v-if="productsStore.totalProducts > 0" class="mt-6 flex items-center justify-between">
       <div class="text-sm text-gray-700 dark:text-gray-300">
-        نمایش صفحه {{ ((currentPage - 1) * pageSize) + 1 }} <span class="text-lg">↫</span> {{ Math.min(currentPage * pageSize, productsStore.totalProducts) }} محصول از {{ productsStore.totalProducts }} محصول
+        نمایش صفحه {{ ((currentPage - 1) * pageSize) + 1 }} <span class="text-lg">↫</span> {{ Math.min(currentPage * pageSize, productsStore.totalProducts) }} محصول از {{ productsStore.totalProducts }}
       </div>
       <div class="flex items-center space-x-2">
         <button
