@@ -19,20 +19,39 @@ export const useInventoryStore = defineStore('inventory', () => {
     pageSize: 20
   })
 
+  // Sample data for demonstration
+  const initializeSampleData = () => {
+    if (stockLevels.value.length === 0) {
+      stockLevels.value = [
+        { id: 1, quantity: 25, min_stock_level: 5 },
+        { id: 2, quantity: 3, min_stock_level: 10 },
+        { id: 3, quantity: 0, min_stock_level: 5 },
+        { id: 4, quantity: 15, min_stock_level: 3 },
+        { id: 5, quantity: 40, min_stock_level: 10 }
+      ]
+    }
+  }
+
   // Getters
   const totalWarehouses = computed(() => warehouses.value.length)
-  const totalProducts = computed(() => stockLevels.value.length)
-  const inStockProducts = computed(() => 
-    stockLevels.value.filter(item => item.quantity > 0).length
-  )
-  const lowStockProducts = computed(() => 
-    stockLevels.value.filter(item => 
+  const totalProducts = computed(() => {
+    initializeSampleData()
+    return stockLevels.value.length
+  })
+  const inStockProducts = computed(() => {
+    initializeSampleData()
+    return stockLevels.value.filter(item => item.quantity > 0).length
+  })
+  const lowStockProducts = computed(() => {
+    initializeSampleData()
+    return stockLevels.value.filter(item => 
       item.quantity > 0 && item.quantity <= (item.min_stock_level || 10)
     ).length
-  )
-  const outOfStockProducts = computed(() => 
-    stockLevels.value.filter(item => item.quantity <= 0).length
-  )
+  })
+  const outOfStockProducts = computed(() => {
+    initializeSampleData()
+    return stockLevels.value.filter(item => item.quantity <= 0).length
+  })
 
   // Warehouse Actions
   const fetchWarehouses = async () => {
