@@ -40,6 +40,9 @@ class StockAdjustmentViewSet(viewsets.ModelViewSet):
     search_fields = ['reason']
     ordering_fields = ['created_at']
     ordering = ['-created_at']
+    
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user)
 
 class StockAdjustmentItemViewSet(viewsets.ModelViewSet):
     """ViewSet for viewing and editing StockAdjustmentItem instances."""
@@ -192,3 +195,61 @@ class LowStockProductsView(generics.ListAPIView):
                 })
 
         return Response(low_stock_products)
+
+class SimpleAdjustmentView(generics.CreateAPIView):
+    """Simplified API view for creating stock adjustments."""
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = StockAdjustmentSerializer  # For swagger documentation
+    
+    def post(self, request):
+        """Handle POST requests for stock adjustments."""
+        try:
+            product_id = request.data.get('productId')
+            adjustment_type = request.data.get('type')  # 'increase' or 'decrease'
+            quantity = request.data.get('quantity')
+            reason = request.data.get('reason', '')
+            
+            if not all([product_id, adjustment_type, quantity]):
+                return Response({'error': 'Missing required fields'}, status=400)
+            
+            product = Product.objects.get(id=product_id)
+            
+            # Get or create default warehouse
+            warehouse, created = Warehouse.objects.get_or_create(
+                name='انبار اصلی',
+                defaults={
+                    'location': 'محل اصلی',
+                    'description': 'انبار پیش‌فرض سیستم',
+                    'is_active': True
+                }
+            )
+            
+            # Map frontend type to backend type
+            backend_type = 'add' if adjustment_type == 'increase' else 'subtract'
+            
+            # Create the adjustment
+            adjustment = StockAdjustment.objects.create(
+                adjustment_type=backend_type,
+                warehouse=warehouse,
+                reason=reason,
+                created_by=request.user
+            )
+            
+            # Create the adjustment item
+            StockAdjustmentItem.objects.create(
+                adjustment=adjustment,
+                product=product,
+                quantity=quantity,
+                notes=reason
+            )
+            
+            return Response({
+                'success': True,
+                'message': 'تعدیل موجودی با موفقیت انجام شد',
+                'adjustment_id': adjustment.id
+            })
+            
+        except Product.DoesNotExist:
+            return Response({'error': 'محصول یافت نشد'}, status=404)
+        except Exception as e:
+            return Response({'error': str(e)}, status=400)

@@ -135,30 +135,29 @@
         </div>
       </div>
 
-      <!-- Pagination -->
-      <div v-if="productsStore.totalProducts > 0" class="mt-6 flex items-center justify-between">
-        <div class="text-sm text-gray-700 dark:text-gray-300">
-         صفحه {{ currentPage }} <span class="text-lg">↫</span> {{ Math.min(currentPage * pageSize,
-            productsStore.totalProducts) }} محصول از {{ productsStore.totalProducts }}
-        </div>
-        <div class="flex items-center space-x-2">
-          <button @click="nextPage" :disabled="!productsStore.hasNextPage"
-            class="rounded-lg border border-gray-600 hover:text-neutral-950 border-stroke text-gray-700 dark:text-gray-300 px-3 py-2 text-sm disabled:hover:bg-inherit disabled:opacity-50 disabled:cursor-not-allowed dark:border-strokedark dark:hover:bg-meta-4">
-            بعدی
-          </button>
-          <span class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300">صفحه {{ currentPage }}</span>
-          <button @click="previousPage" :disabled="!productsStore.hasPreviousPage"
-            class="rounded-lg border border-gray-600 hover:text-neutral-950 border-stroke text-gray-700 dark:text-gray-300 px-3 py-2 text-sm hover:bg-gray-50 disabled:hover:bg-inherit disabled:opacity-50 disabled:cursor-not-allowed dark:border-strokedark dark:hover:bg-meta-4">
-            قبلی
-          </button>
-        </div>
+      <!-- Loading more indicator -->
+      <div v-if="isLoadingMore" class="mt-6 flex justify-center">
+        <LoadingSpinner text="در حال بارگذاری محصولات بیشتر..." />
+      </div>
+      
+      <!-- Load more button -->
+      <div v-if="productsStore.hasNextPage && !isLoadingMore" class="mt-6 flex justify-center">
+        <button @click="loadMoreProducts" 
+          class="rounded-lg bg-primary px-6 py-3 text-white hover:bg-opacity-90 transition-colors">
+          نمایش محصولات بیشتر
+        </button>
+      </div>
+      
+      <!-- Total count info -->
+      <div v-if="productsStore.totalProducts > 0" class="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
+        نمایش {{ productsStore.products.length }} از {{ productsStore.totalProducts }} محصول
       </div>
     </div>
   </AdminLayout>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useProductsStore } from '@/stores/products'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
@@ -170,6 +169,7 @@ const productsStore = useProductsStore()
 const searchQuery = ref('')
 const currentPage = ref(1)
 const pageSize = ref(20)
+const isLoadingMore = ref(false)
 
 // Computed
 const filteredProducts = computed(() => {
@@ -203,25 +203,17 @@ const deleteProduct = async (id) => {
   }
 }
 
-const nextPage = () => {
-  if (productsStore.hasNextPage) {
+const loadMoreProducts = async () => {
+  if (productsStore.hasNextPage && !isLoadingMore.value) {
+    isLoadingMore.value = true
     currentPage.value++
-    loadProducts()
+    await productsStore.fetchProducts({ 
+      page: currentPage.value, 
+      page_size: pageSize.value,
+      append: true // Add this to signal append mode
+    })
+    isLoadingMore.value = false
   }
-}
-
-const previousPage = () => {
-  if (productsStore.hasPreviousPage) {
-    currentPage.value--
-    loadProducts()
-  }
-}
-
-const loadProducts = async () => {
-  await productsStore.fetchProducts({
-    page: currentPage.value,
-    page_size: pageSize.value
-  })
 }
 
 // Watchers
@@ -230,8 +222,23 @@ watch(searchQuery, () => {
   currentPage.value = 1
 })
 
+// Infinite scroll functionality
+const handleScroll = () => {
+  const scrollTop = window.pageYOffset || document.documentElement.scrollTop
+  const windowHeight = window.innerHeight
+  const documentHeight = document.documentElement.scrollHeight
+  
+  // Load more when user scrolls to bottom 200px
+  if (scrollTop + windowHeight >= documentHeight - 200 && !isLoadingMore.value && productsStore.hasNextPage) {
+    loadMoreProducts()
+  }
+}
+
 // Lifecycle
 onMounted(async () => {
+  // Add scroll event listener for infinite scroll
+  window.addEventListener('scroll', handleScroll)
+  
   // Only fetch categories and units if they haven't been loaded yet
   const promises = [
     productsStore.fetchProducts({ page: currentPage.value, page_size: pageSize.value })
@@ -246,5 +253,10 @@ onMounted(async () => {
   }
 
   await Promise.all(promises)
+})
+
+// Cleanup on unmount
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
 })
 </script>

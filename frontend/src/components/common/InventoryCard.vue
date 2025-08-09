@@ -1,10 +1,34 @@
 <template>
-  <div class="outer">
-    <div class="card" :class="cardClass">
-      <div class="ray"></div>
-      <div class="text">{{ formatValue(value) }}</div>
-      <div class="label">{{ label }}</div>
-      
+  <div
+    class="relative h-[10em] w-full border-2 rounded-[1.5em] text-white font-nunito p-[1.5em] flex justify-center items-left flex-col gap-[1em] backdrop-blur-[12px] hover:shadow-2xl transition-all duration-500 group/card hover:-translate-y-1"
+    :class="[cardBackgroundClass, cardBorderClass, cardShadowClass]"
+  >
+    <div
+      class="absolute inset-0 opacity-0 group-hover/card:opacity-100 transition-opacity duration-500 rounded-[1.5em]"
+      :class="cardHoverOverlayClass"
+    ></div>
+    <div
+      class="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(120,50,190,0.1),transparent_60%)] group-hover/card:animate-pulse"
+    ></div>
+
+    <div class="absolute top-4 right-4 flex gap-2">
+      <div class="w-2 h-2 rounded-full" :class="dotClass1"></div>
+      <div class="w-2 h-2 rounded-full" :class="dotClass2"></div>
+      <div class="w-2 h-2 rounded-full" :class="dotClass3"></div>
+    </div>
+
+    <div
+      class="relative z-10 transition-transform duration-300 group-hover/card:translate-y-[-2px] space-y-3"
+    >
+      <h1
+        class="text-[2.2em] text-center font-bold bg-gradient-to-r bg-clip-text text-transparent"
+        :class="headingGradientClass"
+      >
+        {{ formatValue(value) }}
+      </h1>
+      <p class="text-[1rem]  text-center leading-relaxed " :class="textColorClass">
+        {{ label }}
+      </p>
     </div>
   </div>
 </template>
@@ -34,203 +58,146 @@ const formatValue = (value) => {
   } else if (value >= 1000) {
     return Math.floor(value / 1000) + 'K'
   }
-  return value.toString()
+  return value?.toString() || '0'
 }
 
-const cardClass = computed(() => {
-  return {
-    'card-success': props.type === 'success',
-    'card-warning': props.type === 'warning',
-    'card-danger': props.type === 'danger',
-    'card-total': props.type === 'total'
+// Color themes based on card type
+const cardBackgroundClass = computed(() => {
+  switch(props.type) {
+    case 'success': return 'bg-gradient-to-br from-[rgba(22,163,74,1)] via-green-700/80 to-[rgba(22,163,74,0.2)]' // Green
+    case 'warning': return 'bg-gradient-to-br from-[rgba(202,138,4,1)] via-yellow-600/80 to-[rgba(202,138,4,0.2)]' // Yellow
+    case 'danger': return 'bg-gradient-to-br from-[rgba(220,38,38,1)] via-red-600/80 to-[rgba(220,38,38,0.2)]' // Red
+    case 'total': return 'bg-gradient-to-br from-[rgba(37,99,235,1)] via-blue-700/80 to-[rgba(37,99,235,0.2)]' // Blue
+    default: return 'bg-gradient-to-br from-[rgba(75,30,133,1)] via-purple-700/80 to-[rgba(75,30,133,0.2)]'
+  }
+})
+
+const cardBorderClass = computed(() => {
+  switch(props.type) {
+    case 'success': return 'border-[rgba(22,163,74,0.5)]'
+    case 'warning': return 'border-[rgba(202,138,4,0.5)]'
+    case 'danger': return 'border-[rgba(220,38,38,0.5)]'
+    case 'total': return 'border-[rgba(37,99,235,0.5)]'
+    default: return 'border-[rgba(75,30,133,0.5)]'
+  }
+})
+
+const cardShadowClass = computed(() => {
+  switch(props.type) {
+    case 'success': return 'hover:shadow-green-500/30'
+    case 'warning': return 'hover:shadow-yellow-500/30'
+    case 'danger': return 'hover:shadow-red-500/30'
+    case 'total': return 'hover:shadow-blue-500/30'
+    default: return 'hover:shadow-purple-500/30'
+  }
+})
+
+const cardHoverOverlayClass = computed(() => {
+  switch(props.type) {
+    case 'success': return 'bg-gradient-to-br from-green-600/30 via-emerald-500/20 to-transparent'
+    case 'warning': return 'bg-gradient-to-br from-yellow-600/30 via-amber-500/20 to-transparent'
+    case 'danger': return 'bg-gradient-to-br from-red-600/30 via-rose-500/20 to-transparent'
+    case 'total': return 'bg-gradient-to-br from-blue-600/30 via-sky-500/20 to-transparent'
+    default: return 'bg-gradient-to-br from-purple-600/30 via-fuchsia-500/20 to-transparent'
+  }
+})
+
+const dotClass1 = computed(() => {
+  switch(props.type) {
+    case 'success': return 'bg-green-300/50'
+    case 'warning': return 'bg-yellow-300/50'
+    case 'danger': return 'bg-red-300/50'
+    case 'total': return 'bg-blue-300/50'
+    default: return 'bg-purple-300/50'
+  }
+})
+
+const dotClass2 = computed(() => {
+  switch(props.type) {
+    case 'success': return 'bg-green-300/30'
+    case 'warning': return 'bg-yellow-300/30'
+    case 'danger': return 'bg-red-300/30'
+    case 'total': return 'bg-blue-300/30'
+    default: return 'bg-purple-300/30'
+  }
+})
+
+const dotClass3 = computed(() => {
+  switch(props.type) {
+    case 'success': return 'bg-green-300/10'
+    case 'warning': return 'bg-yellow-300/10'
+    case 'danger': return 'bg-red-300/10'
+    case 'total': return 'bg-blue-300/10'
+    default: return 'bg-purple-300/10'
+  }
+})
+
+const headingGradientClass = computed(() => {
+  switch(props.type) {
+    case 'success': return 'from-white via-green-100 to-green-200'
+    case 'warning': return 'from-white via-yellow-100 to-yellow-200'
+    case 'danger': return 'from-white via-red-100 to-red-200'
+    case 'total': return 'from-white via-blue-100 to-blue-200'
+    default: return 'from-white via-purple-100 to-purple-200'
+  }
+})
+
+const textColorClass = computed(() => {
+  switch(props.type) {
+    case 'success': return 'text-green-100/90'
+    case 'warning': return 'text-yellow-100/90'
+    case 'danger': return 'text-red-100/90'
+    case 'total': return 'text-blue-100/90'
+    default: return 'text-purple-100/90'
   }
 })
 </script>
 
 <style scoped>
-  .outer {
-    width: 100%;
-    max-width: 300px;
-    height: 250px;
-    border-radius: 10px;
-    padding: 1px;
-    background: radial-gradient(circle 230px at 0% 0%, inherit, inherit);
-    position: relative;
-    margin: 0 auto;
+/* Responsive design */
+@media (max-width: 1200px) {
+  .responsive-height {
+    @apply h-[16em];
   }
-  .card {
-    z-index: 1;
-    width: 100%;
-    height: 100%;
-    border-radius: 9px;
-    border: solid 1px #202222;
-    background-size: 20px 20px;
-    background: radial-gradient(circle 280px at 0% 0%, #444444, #0c0d0d);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    flex-direction: column;
-    color: #fff;
-    transition: all 0.3s ease;
+}
+
+@media (max-width: 768px) {
+  .responsive-height {
+    @apply h-[14em];
   }
-
-  .card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+  .responsive-text {
+    @apply text-[1.8em];
   }
+}
 
-  .ray {
-    width: 220px;
-    height: 45px;
-    border-radius: 100px;
-    position: absolute;
-    background-color: #c7c7c7;
-    opacity: 0.4;
-    box-shadow: 0 0 50px #fff;
-    filter: blur(10px);
-    transform-origin: 10%;
-    top: 0%;
-    left: 0;
-    transform: rotate(40deg);
+@media (max-width: 480px) {
+  .responsive-height {
+    @apply h-[12em];
   }
-
-  .card .text {
-    font-weight: bolder;
-    font-size: 4rem;
-    background: linear-gradient(45deg, #000000 4%, #fff, #000);
-    background-clip: text;
-    -webkit-background-clip: text;
-    color: transparent;
-    margin-bottom: 10px;
+  .responsive-text {
+    @apply text-[1.5em];
   }
-
-  .label {
-    font-size: 1rem;
-    font-weight: 500;
-    opacity: 0.9;
-    text-align: center;
+  .responsive-padding {
+    @apply p-[1em];
   }
+}
 
-  .line {
-    position: absolute;
-    background-color: #2c2c2c;
-    opacity: 0.6;
+/* Responsive grid layout */
+.parent-container {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr); /* Default: 1 card per row */
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .parent-container {
+    grid-template-columns: repeat(2, 1fr); /* 2 cards per row on mobile */
   }
+}
 
-  .topl {
-    top: 10%;
-    left: 10%;
-    right: 10%;
-    height: 1px;
-    background: linear-gradient(90deg, #bdbcbc 30%, #688080 70%);
+@media (max-width: 1200px) {
+  .parent-container {
+    grid-template-columns: repeat(3, 1fr); /* 3 cards per row on tablets */
   }
-
-  .bottoml {
-    bottom: 10%;
-    left: 10%;
-    right: 10%;
-    height: 1px;
-  }
-
-  .leftl {
-    left: 10%;
-    top: 10%;
-    bottom: 10%;
-    width: 1px;
-    background: linear-gradient(180deg, #747474 30%, #222424 70%);
-  }
-
-  .rightl {
-    right: 10%;
-    top: 10%;
-    bottom: 10%;
-    width: 1px;
-  }
-
-  /* Different color schemes for different types */
-  .card-success .text {
-    background: linear-gradient(45deg, #10b981 4%, #34d399, #10b981);
-    background-clip: text;
-    -webkit-background-clip: text;
-  }
-
-  .card-success .ray {
-    background-color: #10b981;
-    box-shadow: 0 0 50px #10b981;
-  }
-
-  .card-warning .text {
-    background: linear-gradient(45deg, #f59e0b 4%, #fbbf24, #f59e0b);
-    background-clip: text;
-    -webkit-background-clip: text;
-  }
-
-  .card-warning .ray {
-    background-color: #f59e0b;
-    box-shadow: 0 0 50px #f59e0b;
-  }
-
-  .card-danger .text {
-    background: linear-gradient(45deg, #ef4444 4%, #f87171, #ef4444);
-    background-clip: text;
-    -webkit-background-clip: text;
-  }
-
-  .card-danger .ray {
-    background-color: #ef4444;
-    box-shadow: 0 0 50px #ef4444;
-  }
-
-  .card-total .text {
-    background: linear-gradient(45deg, #3b82f6 4%, #60a5fa, #3b82f6);
-    background-clip: text;
-    -webkit-background-clip: text;
-  }
-
-  .card-total .ray {
-    background-color: #3b82f6;
-    box-shadow: 0 0 50px #3b82f6;
-  }
-
-  /* Responsive design */
-  @media (max-width: 768px) {
-    .outer {
-      max-width: 280px;
-      height: 200px;
-    }
-
-    .card .text {
-      font-size: 3rem;
-    }
-
-    .label {
-      font-size: 0.9rem;
-    }
-
-    .ray {
-      width: 180px;
-      height: 35px;
-    }
-  }
-
-  @media (max-width: 480px) {
-    .outer {
-      max-width: 250px;
-      height: 180px;
-    }
-
-    .card .text {
-      font-size: 2.5rem;
-    }
-
-    .label {
-      font-size: 0.8rem;
-    }
-
-    .ray {
-      width: 150px;
-      height: 30px;
-    }
-  }
+}
 </style>

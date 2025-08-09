@@ -30,7 +30,14 @@ export const useProductsStore = defineStore('products', () => {
     
     try {
       const response = await productsAPI.getProducts(params)
-      products.value = response.data.results
+      
+      // If append mode is enabled, add to existing products
+      if (params.append && products.value.length > 0) {
+        products.value = [...products.value, ...response.data.results]
+      } else {
+        products.value = response.data.results
+      }
+      
       pagination.value = {
         count: response.data.count,
         next: response.data.next,

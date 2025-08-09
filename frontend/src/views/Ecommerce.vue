@@ -23,74 +23,34 @@
     </div>
 
     <!-- Stats Cards -->
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 xl:grid-cols-4 2xl:gap-7.5 mb-6">
-      <!-- Total Sales -->
-      <div class="rounded-sm border border-stroke bg-white px-7.5 py-6 shadow-default dark:border-strokedark dark:bg-boxdark">
-        <div class="flex h-11.5 w-11.5 items-center justify-center rounded-full bg-meta-2 dark:bg-meta-4">
-          <svg class="fill-primary dark:fill-white" width="22" height="16" viewBox="0 0 22 16" fill="none">
-            <path d="M11 15.1156C4.19376 15.1156 0.825012 8.61876 0.687512 8.34376C0.584387 8.13751 0.584387 7.86251 0.687512 7.65626C0.825012 7.38126 4.19376 0.918762 11 0.918762C17.8063 0.918762 21.175 7.38126 21.3125 7.65626C21.4156 7.86251 21.4156 8.13751 21.3125 8.34376C21.175 8.61876 17.8063 15.1156 11 15.1156Z"/>
-          </svg>
-        </div>
-        <div class="mt-4 flex items-end justify-between">
-          <div>
-            <h4 class="text-title-md font-bold text-black dark:text-white">
-              {{ formatPrice(todayStats.totalSales) }}
-            </h4>
-            <span class="text-sm font-medium">فروش امروز</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Total Products -->
-      <div class="rounded-sm border border-stroke bg-white px-7.5 py-6 shadow-default dark:border-strokedark dark:bg-boxdark">
-        <div class="flex h-11.5 w-11.5 items-center justify-center rounded-full bg-meta-2 dark:bg-meta-4">
-          <svg class="fill-primary dark:fill-white" width="20" height="22" viewBox="0 0 20 22" fill="none">
-            <path d="M11.7531 16.4312C10.3781 16.4312 9.27808 15.3312 9.27808 13.9562C9.27808 12.5812 10.3781 11.4812 11.7531 11.4812C13.1281 11.4812 14.2281 12.5812 14.2281 13.9562C14.2281 15.3312 13.1281 16.4312 11.7531 16.4312Z"/>
-          </svg>
-        </div>
-        <div class="mt-4 flex items-end justify-between">
-          <div>
-            <h4 class="text-title-md font-bold text-black dark:text-white">
-              {{ todayStats.totalProducts }}
-            </h4>
-            <span class="text-sm font-medium">کل محصولات</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Low Stock -->
-      <div class="rounded-sm border border-stroke bg-white px-7.5 py-6 shadow-default dark:border-strokedark dark:bg-boxdark">
-        <div class="flex h-11.5 w-11.5 items-center justify-center rounded-full bg-meta-2 dark:bg-meta-4">
-          <svg class="fill-warning dark:fill-white" width="22" height="22" viewBox="0 0 22 22" fill="none">
-            <path d="M21.1063 18.0469L19.3875 3.23126C19.2157 1.71876 17.9438 0.584381 16.3969 0.584381H5.56878C4.05628 0.584381 2.78441 1.71876 2.57816 3.23126L0.859406 18.0469C0.756281 18.9063 1.03128 19.7313 1.61566 20.3844C2.20003 21.0375 2.99066 21.3813 3.85003 21.3813H18.1157C18.975 21.3813 19.8 21.0031 20.35 20.3844C20.9 19.7656 21.2094 18.9063 21.1063 18.0469Z"/>
-          </svg>
-        </div>
-        <div class="mt-4 flex items-end justify-between">
-          <div>
-            <h4 class="text-title-md font-bold text-warning dark:text-white">
-              {{ todayStats.lowStockItems }}
-            </h4>
-            <span class="text-sm font-medium">موجودی کم</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Total Customers -->
-      <div class="rounded-sm border border-stroke bg-white px-7.5 py-6 shadow-default dark:border-strokedark dark:bg-boxdark">
-        <div class="flex h-11.5 w-11.5 items-center justify-center rounded-full bg-meta-2 dark:bg-meta-4">
-          <svg class="fill-primary dark:fill-white" width="22" height="18" viewBox="0 0 22 18" fill="none">
-            <path d="M7.18418 8.03751C9.31543 8.03751 11.0686 6.35313 11.0686 4.25626C11.0686 2.15938 9.31543 0.475006 7.18418 0.475006C5.05293 0.475006 3.2998 2.15938 3.2998 4.25626C3.2998 6.35313 5.05293 8.03751 7.18418 8.03751Z"/>
-          </svg>
-        </div>
-        <div class="mt-4 flex items-end justify-between">
-          <div>
-            <h4 class="text-title-md font-bold text-black dark:text-white">
-              {{ todayStats.totalCustomers }}
-            </h4>
-            <span class="text-sm font-medium">مشتریان</span>
-          </div>
-        </div>
-      </div>
+    <div class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:gap-6 2xl:gap-7.5 mb-6 max-w-7xl">
+      <!-- Today Sales Card -->
+      <InventoryCard
+        :value="todayStats.totalSales"
+        label="فروش امروز"
+        type="success"
+      />
+      
+      <!-- Total Products Card -->
+      <InventoryCard
+        :value="todayStats.totalProducts"
+        label="کل محصولات"
+        type="total"
+      />
+      
+      <!-- Low Stock Card -->
+      <InventoryCard
+        :value="todayStats.lowStockItems"
+        label="موجودی کم"
+        type="warning"
+      />
+      
+      <!-- Customers Card -->
+      <InventoryCard
+        :value="todayStats.totalCustomers"
+        label="مشتریان"
+        type="total"
+      />
     </div>
 
     <!-- Quick Actions -->
@@ -199,6 +159,7 @@ import { useProductsStore } from '@/stores/products'
 import { useSalesStore } from '@/stores/sales'
 import { useInventoryStore } from '@/stores/inventory'
 import AdminLayout from '../components/layout/AdminLayout.vue'
+import InventoryCard from '@/components/common/InventoryCard.vue'
 
 const authStore = useAuthStore()
 const productsStore = useProductsStore()

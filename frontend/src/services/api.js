@@ -98,7 +98,7 @@ export const inventoryAPI = {
   getStockLevels: (params = {}) => api.get('/inventory/stock-levels/', { params }),
 
   getAdjustments: (params = {}) => api.get('/inventory/adjustments/', { params }),
-  createAdjustment: (data) => api.post('/inventory/adjustments/', data),
+  createAdjustment: (data) => api.post('/inventory/simple-adjustment/', data),
 }
 
 // Purchases API

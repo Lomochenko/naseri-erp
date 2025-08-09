@@ -17,7 +17,7 @@
     </div>
 
     <!-- Report Categories -->
-    <div class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3 2xl:gap-7.5">
+    <div class="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3 xl:gap-6 2xl:gap-7.5 max-w-7xl">
       <!-- Sales Reports -->
       <div class="rounded-sm border border-stroke bg-white p-6 shadow-default dark:border-strokedark dark:bg-boxdark">
         <div class="flex items-center justify-between">
