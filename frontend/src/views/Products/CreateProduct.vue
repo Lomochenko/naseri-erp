@@ -141,7 +141,7 @@
           </div>
         </div>
 
-        <div class="mb-4.5">
+        <div class="mb-4.5 flex flex-col gap-6 xl:flex-row">
           <!-- Min Stock Level -->
           <div class="w-full xl:w-1/2">
             <label class="mb-2.5 block text-black">
@@ -151,7 +151,40 @@
               v-model="form.min_stock"
               type="number"
               step="0.01"
+              min="0"
               placeholder="حداقل موجودی"
+              class="w-full placeholder-gray-500 rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-slate-800 active:border-black disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input border-slate-300 dark:border-slate-500 dark:focus:border-slate-800"
+            />
+          </div>
+
+          <!-- Max Stock Level -->
+          <div class="w-full xl:w-1/2">
+            <label class="mb-2.5 block text-black">
+              حداکثر موجودی
+            </label>
+            <input
+              v-model="form.max_stock"
+              type="number"
+              step="0.01"
+              min="0"
+              placeholder="حداکثر موجودی"
+              class="w-full placeholder-gray-500 rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-slate-800 active:border-black disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input border-slate-300 dark:border-slate-500 dark:focus:border-slate-800"
+            />
+          </div>
+        </div>
+
+        <div class="mb-4.5">
+          <!-- Current Stock Level -->
+          <div class="w-full xl:w-1/2">
+            <label class="mb-2.5 block text-black">
+              موجودی فعلی <span class="text-sm text-gray-500">(اختیاری - در صورت خالی بودن صفر خواهد بود)</span>
+            </label>
+            <input
+              v-model="form.current_stock"
+              type="number"
+              step="0.01"
+              min="0"
+              placeholder="موجودی فعلی"
               class="w-full placeholder-gray-500 rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-slate-800 active:border-black disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input border-slate-300 dark:border-slate-500 dark:focus:border-slate-800"
             />
           </div>
@@ -271,6 +304,8 @@ const form = ref({
   purchase_price: '',
   selling_price: '',
   min_stock: 0,
+  max_stock: 0,
+  current_stock: 0,
   is_active: true
 })
 

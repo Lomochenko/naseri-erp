@@ -75,6 +75,7 @@ class StockLevelsView(generics.ListAPIView):
                 'unit_symbol': product.unit.symbol if product.unit else None,
                 'current_stock': current_stock,
                 'min_stock': float(product.min_stock),
+                'max_stock': float(product.max_stock) if product.max_stock else 0,
                 'is_low_stock': current_stock <= product.min_stock,
                 'selling_price': float(product.selling_price),
                 'purchase_price': float(product.purchase_price),

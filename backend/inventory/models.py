@@ -30,7 +30,6 @@ class InventoryTransaction(models.Model):
         ('return_to_supplier', _('Return to Supplier')),
         ('adjustment_add', _('Adjustment Add')),
         ('adjustment_subtract', _('Adjustment Subtract')),
-        ('transfer', _('Transfer')),
     ]
 
     transaction_type = models.CharField(_('transaction type'), max_length=30, choices=TRANSACTION_TYPES)

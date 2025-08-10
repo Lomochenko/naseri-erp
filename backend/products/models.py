@@ -51,6 +51,8 @@ class Product(models.Model):
                                        validators=[MinValueValidator(0)])
     min_stock = models.DecimalField(_('minimum stock'), max_digits=10, decimal_places=2,
                                    default=0, validators=[MinValueValidator(0)])
+    max_stock = models.DecimalField(_('maximum stock'), max_digits=10, decimal_places=2,
+                                   default=0, validators=[MinValueValidator(0)])
     is_active = models.BooleanField(_('active'), default=True)
     is_deleted = models.BooleanField(default=False)
     created_at = models.DateTimeField(_('created at'), auto_now_add=True)
@@ -87,3 +89,6 @@ class Product(models.Model):
     def delete(self, using=None, keep_parents=False):
         self.is_deleted = True
         self.save()
+
+# Import ProductHistory model
+from .models_history import ProductHistory

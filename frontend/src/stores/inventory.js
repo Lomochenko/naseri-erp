@@ -19,38 +19,27 @@ export const useInventoryStore = defineStore('inventory', () => {
     pageSize: 20
   })
 
-  // Sample data for demonstration
-  const initializeSampleData = () => {
-    if (stockLevels.value.length === 0) {
-      stockLevels.value = [
-        { id: 1, quantity: 25, min_stock_level: 5 },
-        { id: 2, quantity: 3, min_stock_level: 10 },
-        { id: 3, quantity: 0, min_stock_level: 5 },
-        { id: 4, quantity: 15, min_stock_level: 3 },
-        { id: 5, quantity: 40, min_stock_level: 10 }
-      ]
-    }
+  // Initialize empty state - data will be loaded from API
+  const initializeData = () => {
+    // This function can be used for any initial setup if needed
+    // Real data will be loaded from the API
   }
 
-  // Getters
+  // Getters - computed from real stock data
   const totalWarehouses = computed(() => warehouses.value.length)
   const totalProducts = computed(() => {
-    initializeSampleData()
     return stockLevels.value.length
   })
   const inStockProducts = computed(() => {
-    initializeSampleData()
-    return stockLevels.value.filter(item => item.quantity > 0).length
+    return stockLevels.value.filter(item => item.current_stock > 0).length
   })
   const lowStockProducts = computed(() => {
-    initializeSampleData()
     return stockLevels.value.filter(item => 
-      item.quantity > 0 && item.quantity <= (item.min_stock_level || 10)
+      item.current_stock > 0 && item.current_stock <= item.min_stock
     ).length
   })
   const outOfStockProducts = computed(() => {
-    initializeSampleData()
-    return stockLevels.value.filter(item => item.quantity <= 0).length
+    return stockLevels.value.filter(item => item.current_stock <= 0).length
   })
 
   // Warehouse Actions

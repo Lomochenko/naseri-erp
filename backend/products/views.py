@@ -1,7 +1,8 @@
-from rest_framework import viewsets, permissions, filters
+from rest_framework import viewsets, permissions, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
+from decimal import Decimal
 from .models import Category, Unit, Product
 from .serializers import (
     CategorySerializer, UnitSerializer,
@@ -44,6 +45,46 @@ class ProductViewSet(viewsets.ModelViewSet):
         if self.action == 'list':
             return ProductListSerializer
         return self.serializer_class
+    
+    def create(self, request, *args, **kwargs):
+        """Create product and handle initial stock if provided."""
+        # Extract current_stock from request data
+        current_stock = request.data.get('current_stock', 0)
+        
+        # Create the product first
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        product = serializer.save()
+        
+        # Create initial stock transaction if current_stock > 0
+        if current_stock and float(current_stock) > 0:
+            from inventory.models import InventoryTransaction, Warehouse
+            
+            # Get or create default warehouse
+            warehouse, created = Warehouse.objects.get_or_create(
+                name='انبار اصلی',
+                defaults={
+                    'location': 'محل اصلی',
+                    'description': 'انبار پیش‌فرض سیستم',
+                    'is_active': True
+                }
+            )
+            
+            # Create inventory transaction for initial stock
+            InventoryTransaction.objects.create(
+                transaction_type='purchase',
+                product=product,
+                warehouse=warehouse,
+                quantity=Decimal(str(current_stock)),
+                unit_price=product.purchase_price,
+                reference_number=f'INIT-{product.code}',
+                reference_type='initial_stock',
+                notes=f'موجودی اولیه محصول {product.name}',
+                created_by=request.user
+            )
+        
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     @action(detail=False, methods=['get'])
     def low_stock(self, request):

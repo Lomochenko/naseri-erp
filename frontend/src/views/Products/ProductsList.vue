@@ -139,15 +139,15 @@
       <div v-if="isLoadingMore" class="mt-6 flex justify-center">
         <LoadingSpinner text="در حال بارگذاری محصولات بیشتر..." />
       </div>
-      
+
       <!-- Load more button -->
       <div v-if="productsStore.hasNextPage && !isLoadingMore" class="mt-6 flex justify-center">
-        <button @click="loadMoreProducts" 
+        <button @click="loadMoreProducts"
           class="rounded-lg bg-primary px-6 py-3 text-white hover:bg-opacity-90 transition-colors">
           نمایش محصولات بیشتر
         </button>
       </div>
-      
+
       <!-- Total count info -->
       <div v-if="productsStore.totalProducts > 0" class="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
         نمایش {{ productsStore.products.length }} از {{ productsStore.totalProducts }} محصول
@@ -207,8 +207,8 @@ const loadMoreProducts = async () => {
   if (productsStore.hasNextPage && !isLoadingMore.value) {
     isLoadingMore.value = true
     currentPage.value++
-    await productsStore.fetchProducts({ 
-      page: currentPage.value, 
+    await productsStore.fetchProducts({
+      page: currentPage.value,
       page_size: pageSize.value,
       append: true // Add this to signal append mode
     })
@@ -227,7 +227,7 @@ const handleScroll = () => {
   const scrollTop = window.pageYOffset || document.documentElement.scrollTop
   const windowHeight = window.innerHeight
   const documentHeight = document.documentElement.scrollHeight
-  
+
   // Load more when user scrolls to bottom 200px
   if (scrollTop + windowHeight >= documentHeight - 200 && !isLoadingMore.value && productsStore.hasNextPage) {
     loadMoreProducts()
@@ -238,7 +238,7 @@ const handleScroll = () => {
 onMounted(async () => {
   // Add scroll event listener for infinite scroll
   window.addEventListener('scroll', handleScroll)
-  
+
   // Only fetch categories and units if they haven't been loaded yet
   const promises = [
     productsStore.fetchProducts({ page: currentPage.value, page_size: pageSize.value })
