@@ -1,6 +1,6 @@
 <template>
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-   <div class="w-full max-w-2xl rounded-lg bg-white shadow-xl dark:bg-boxdark h-[65vh] flex flex-col overflow-hidden">
+  <div class="fixed inset-0 z-50 flex items-center justify-center lg:justify-start bg-black bg-opacity-50 p-4">
+   <div class="w-full max-w-4xl rounded-lg bg-white shadow-xl dark:bg-boxdark h-[65vh] flex flex-col overflow-hidden">
       <!-- Header -->
       <div class="flex items-center justify-between border-b border-gray-200 px-6 py-4 dark:border-gray-700">
         <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
