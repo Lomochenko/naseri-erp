@@ -1,6 +1,6 @@
 <template>
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-    <div class="w-full max-w-2xl rounded-lg bg-white shadow-xl dark:bg-boxdark max-h-[65vh] flex flex-col">
+   <div class="w-full max-w-2xl rounded-lg bg-white shadow-xl dark:bg-boxdark h-[65vh] flex flex-col overflow-hidden">
       <!-- Header -->
       <div class="flex items-center justify-between border-b border-gray-200 px-6 py-4 dark:border-gray-700">
         <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
@@ -57,14 +57,14 @@
       </div>
 
       <!-- Content -->
-      <div class="flex-1 overflow-hidden">
+      <div class="flex-1 overflow-y-auto">
         <!-- Loading -->
         <div v-if="inventoryStore.isLoading" class="flex items-center justify-center p-8">
           <LoadingSpinner text="در حال بارگذاری تاریخچه..." />
         </div>
 
         <!-- History List -->
-        <div v-else class="h-full overflow-y-auto">
+        <div v-else>
           <div v-if="filteredAdjustments.length === 0" class="flex items-center justify-center p-8">
             <div class="text-center">
               <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
