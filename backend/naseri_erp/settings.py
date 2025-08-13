@@ -166,8 +166,8 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.JSONRenderer',
         'rest_framework.renderers.BrowsableAPIRenderer',
     ],
-    'DATETIME_FORMAT': 'jY/jm/jd H:i:s',
-    'DATE_FORMAT': 'jY/jm/jd',
+    'DATETIME_FORMAT': '%Y-%m-%d %H:%M:%S',  # Changed to Gregorian format
+    'DATE_FORMAT': '%Y-%m-%d', 
     'COERCE_DECIMAL_TO_STRING': False,
     'UNICODE_JSON': True,
 }

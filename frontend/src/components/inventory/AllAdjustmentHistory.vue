@@ -1,6 +1,6 @@
 <template>
-  <div class="fixed inset-0 z-50 flex items-center justify-center lg:justify-start bg-black bg-opacity-50 p-4">
-   <div class="w-full max-w-4xl rounded-lg bg-white shadow-xl dark:bg-boxdark h-[65vh] flex flex-col overflow-hidden">
+  <div class="fixed inset-0 z-50 flex items-center justify-center lg:justify-start bg-black bg-opacity-50 p-4" @click.self="handleOverlayClick">
+   <div class="w-full max-w-4xl rounded-lg bg-white shadow-xl dark:bg-boxdark h-[65vh] flex flex-col overflow-visible">
       <!-- Header -->
       <div class="flex items-center justify-between border-b border-gray-200 px-6 py-4 dark:border-gray-700">
         <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
@@ -30,17 +30,29 @@
           </div>
 
           <!-- Date Range -->
-          <div class="flex gap-2">
-            <input
+          <div class="flex gap-2 items-center">
+            <DatePicker
               v-model="dateFrom"
-              type="date"
+              format="YYYY/MM/DD"
+              display-format="jYYYY/jMM/jDD"
+              :editable="false"
+              :clearable="true"
+              placeholder="از تاریخ"
               class="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+              @open="isCalendarOpen = true"
+              @close="isCalendarOpen = false"
             />
             <span class="flex items-center px-2 text-gray-500">تا</span>
-            <input
+            <DatePicker
               v-model="dateTo"
-              type="date"
+              format="YYYY/MM/DD"
+              display-format="jYYYY/jMM/jDD"
+              :editable="false"
+              :clearable="true"
+              placeholder="تا تاریخ"
               class="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+              @open="isCalendarOpen = true"
+              @close="isCalendarOpen = false"
             />
           </div>
 
@@ -57,7 +69,7 @@
       </div>
 
       <!-- Content -->
-      <div class="flex-1 overflow-y-auto">
+      <div class="flex-1 overflow-y-auto" ref="scrollContainer">
         <!-- Loading -->
         <div v-if="loading" class="flex items-center justify-center p-8">
           <LoadingSpinner text="در حال بارگذاری تاریخچه..." />
@@ -177,12 +189,13 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { inventoryAPI } from '@/services/api'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
+import DatePicker from 'vue3-persian-datetime-picker'
 
 // Emits
-defineEmits(['close'])
+const emit = defineEmits(['close'])
 
 // State
 const searchQuery = ref('')
@@ -191,6 +204,8 @@ const dateTo = ref('')
 const adjustmentTypeFilter = ref('')
 const currentPage = ref(1)
 const pageSize = ref(10)
+const scrollContainer = ref(null)
+const isCalendarOpen = ref(false)
 
 const adjustments = ref([])
 const hasMoreData = ref(false)
@@ -204,18 +219,27 @@ const filteredAdjustments = computed(() => {
   if (searchQuery.value) {
     const q = searchQuery.value.toLowerCase()
     filtered = filtered.filter(adj =>
-      (adj.items?.some(item => item.product_name?.toLowerCase().includes(q)) || (adj.reason || '').toLowerCase().includes(q))
+      (adj.items?.some(item => item.product_name?.toLowerCase().includes(q)) ||
+      (adj.reason || '').toLowerCase().includes(q))
     )
   }
 
-  // Date filter
+  // Date filter - now using Gregorian dates
   if (dateFrom.value) {
-    filtered = filtered.filter(adj => new Date(adj.created_at) >= new Date(dateFrom.value))
+    const from = new Date(dateFrom.value)
+    filtered = filtered.filter(adj => {
+      const adjDate = new Date(adj.created_at)
+      return adjDate >= from
+    })
   }
+
   if (dateTo.value) {
-    const end = new Date(dateTo.value)
-    end.setHours(23, 59, 59, 999)
-    filtered = filtered.filter(adj => new Date(adj.created_at) <= end)
+    const to = new Date(dateTo.value)
+    to.setHours(23, 59, 59, 999) // Include entire day
+    filtered = filtered.filter(adj => {
+      const adjDate = new Date(adj.created_at)
+      return adjDate <= to
+    })
   }
 
   // Type filter
@@ -233,26 +257,44 @@ const paginatedAdjustments = computed(() => {
 
 // Methods
 const formatDate = (dateString) => {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('fa-IR', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
+  if (!dateString) return 'تاریخ نامشخص'
+
+  try {
+    const date = new Date(dateString)
+    if (isNaN(date.getTime())) return 'تاریخ نامعتبر'
+
+    // Format to Persian/Jalali date
+    return new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: 'Asia/Tehran'
+    }).format(date)
+  } catch (error) {
+    console.error('Date formatting error:', error, dateString)
+    return 'تاریخ نامعتبر'
+  }
 }
 
 const fetchAdjustments = async (page = 1, append = false) => {
   try {
     loading.value = true
-    const response = await inventoryAPI.getAdjustments({ page, page_size: pageSize.value, ordering: '-created_at' })
+    const response = await inventoryAPI.getAdjustments({
+      page,
+      page_size: pageSize.value,
+      ordering: '-created_at'
+    })
+
     const results = response.data.results || response.data
+
     if (append) {
-      adjustments.value = adjustments.value.concat(results)
+      adjustments.value = [...adjustments.value, ...results]
     } else {
       adjustments.value = results
     }
+
     hasMoreData.value = Boolean(response.data.next)
   } catch (error) {
     console.error('Error fetching adjustments:', error)
@@ -269,9 +311,33 @@ const loadMoreAdjustments = async () => {
   await fetchAdjustments(currentPage.value, true)
 }
 
+// Infinite scroll
+const handleScroll = () => {
+  const el = scrollContainer.value
+  if (!el || loading.value || !hasMoreData.value) return
+  const threshold = 150
+  if (el.scrollTop + el.clientHeight >= el.scrollHeight - threshold) {
+    loadMoreAdjustments()
+  }
+}
+
 // Lifecycle
 onMounted(async () => {
   currentPage.value = 1
   await fetchAdjustments(1, false)
+  if (scrollContainer.value) {
+    scrollContainer.value.addEventListener('scroll', handleScroll)
+  }
 })
+
+onUnmounted(() => {
+  if (scrollContainer.value) {
+    scrollContainer.value.removeEventListener('scroll', handleScroll)
+  }
+})
+
+const handleOverlayClick = () => {
+  if (isCalendarOpen.value) return
+  emit('close')
+}
 </script>
