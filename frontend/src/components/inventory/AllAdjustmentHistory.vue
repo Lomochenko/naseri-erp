@@ -59,7 +59,7 @@
       <!-- Content -->
       <div class="flex-1 overflow-y-auto">
         <!-- Loading -->
-        <div v-if="inventoryStore.isLoading" class="flex items-center justify-center p-8">
+        <div v-if="loading" class="flex items-center justify-center p-8">
           <LoadingSpinner text="در حال بارگذاری تاریخچه..." />
         </div>
 
@@ -110,7 +110,7 @@
                 <!-- User Info -->
                 <div class="text-right">
                   <p class="text-sm font-medium text-gray-900 dark:text-white">
-                    {{ adjustment.created_by?.first_name }} {{ adjustment.created_by?.last_name }}
+                    {{ adjustment.created_by_name || 'نامشخص' }}
                   </p>
                   <p class="text-xs text-gray-500">کاربر</p>
                 </div>
@@ -162,7 +162,7 @@
           </div>
 
           <!-- Load More Button -->
-          <div v-if="hasMoreData && !inventoryStore.isLoading" class="border-t border-gray-200 p-4 text-center dark:border-gray-700">
+          <div v-if="hasMoreData && !loading" class="border-t border-gray-200 p-4 text-center dark:border-gray-700">
             <button
               @click="loadMoreAdjustments"
               class="rounded-lg bg-primary px-4 py-2 text-white hover:bg-opacity-90 transition-colors"
@@ -178,14 +178,11 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useInventoryStore } from '@/stores/inventory'
+import { inventoryAPI } from '@/services/api'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 
 // Emits
 defineEmits(['close'])
-
-// Store
-const inventoryStore = useInventoryStore()
 
 // State
 const searchQuery = ref('')
@@ -195,9 +192,9 @@ const adjustmentTypeFilter = ref('')
 const currentPage = ref(1)
 const pageSize = ref(10)
 
-// Mock data - replace with real API call
 const adjustments = ref([])
-const hasMoreData = ref(true)
+const hasMoreData = ref(false)
+const loading = ref(false)
 
 // Computed
 const filteredAdjustments = computed(() => {
@@ -205,10 +202,9 @@ const filteredAdjustments = computed(() => {
 
   // Search filter
   if (searchQuery.value) {
+    const q = searchQuery.value.toLowerCase()
     filtered = filtered.filter(adj =>
-      adj.items.some(item =>
-        item.product_name.toLowerCase().includes(searchQuery.value.toLowerCase())
-      ) || adj.reason?.toLowerCase().includes(searchQuery.value.toLowerCase())
+      (adj.items?.some(item => item.product_name?.toLowerCase().includes(q)) || (adj.reason || '').toLowerCase().includes(q))
     )
   }
 
@@ -217,7 +213,9 @@ const filteredAdjustments = computed(() => {
     filtered = filtered.filter(adj => new Date(adj.created_at) >= new Date(dateFrom.value))
   }
   if (dateTo.value) {
-    filtered = filtered.filter(adj => new Date(adj.created_at) <= new Date(dateTo.value))
+    const end = new Date(dateTo.value)
+    end.setHours(23, 59, 59, 999)
+    filtered = filtered.filter(adj => new Date(adj.created_at) <= end)
   }
 
   // Type filter
@@ -230,8 +228,7 @@ const filteredAdjustments = computed(() => {
 })
 
 const paginatedAdjustments = computed(() => {
-  const start = (currentPage.value - 1) * pageSize.value
-  return filteredAdjustments.value.slice(0, start + pageSize.value)
+  return filteredAdjustments.value.slice(0, currentPage.value * pageSize.value)
 })
 
 // Methods
@@ -246,51 +243,35 @@ const formatDate = (dateString) => {
   })
 }
 
-const loadMoreAdjustments = () => {
-  currentPage.value++
-  // In real implementation, this would load more data from API
+const fetchAdjustments = async (page = 1, append = false) => {
+  try {
+    loading.value = true
+    const response = await inventoryAPI.getAdjustments({ page, page_size: pageSize.value, ordering: '-created_at' })
+    const results = response.data.results || response.data
+    if (append) {
+      adjustments.value = adjustments.value.concat(results)
+    } else {
+      adjustments.value = results
+    }
+    hasMoreData.value = Boolean(response.data.next)
+  } catch (error) {
+    console.error('Error fetching adjustments:', error)
+    if (!append) adjustments.value = []
+    hasMoreData.value = false
+  } finally {
+    loading.value = false
+  }
 }
 
-// Sample data - replace with real API call
-const loadAdjustments = async () => {
-  // Mock data
-  adjustments.value = [
-    {
-      id: 1,
-      adjustment_type: 'add',
-      reason: 'موجودی اولیه محصولات جدید',
-      created_at: '2025-01-10T08:30:00Z',
-      created_by: { first_name: 'علی', last_name: 'احمدی' },
-      items: [
-        { id: 1, product_name: 'دریل برقی 18 ولت', quantity: 25, notes: 'موجودی اولیه' },
-        { id: 2, product_name: 'چکش ضربه‌ای', quantity: 15, notes: 'موجودی اولیه' }
-      ]
-    },
-    {
-      id: 2,
-      adjustment_type: 'subtract',
-      reason: 'کسری موجودی پس از انبارگردانی',
-      created_at: '2025-01-09T14:15:00Z',
-      created_by: { first_name: 'فاطمه', last_name: 'رضایی' },
-      items: [
-        { id: 3, product_name: 'متر لیزری', quantity: 3, notes: 'کسری در انبار' }
-      ]
-    },
-    {
-      id: 3,
-      adjustment_type: 'add',
-      reason: 'بازگشت کالا از مشتری',
-      created_at: '2025-01-08T10:45:00Z',
-      created_by: { first_name: 'محمد', last_name: 'کریمی' },
-      items: [
-        { id: 4, product_name: 'اره برقی', quantity: 2, notes: 'محصول سالم برگشتی' }
-      ]
-    }
-  ]
+const loadMoreAdjustments = async () => {
+  if (!hasMoreData.value || loading.value) return
+  currentPage.value += 1
+  await fetchAdjustments(currentPage.value, true)
 }
 
 // Lifecycle
 onMounted(async () => {
-  await loadAdjustments()
+  currentPage.value = 1
+  await fetchAdjustments(1, false)
 })
 </script>
