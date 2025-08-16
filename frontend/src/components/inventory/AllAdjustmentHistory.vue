@@ -1,70 +1,67 @@
 <template>
-  <div class="fixed inset-0 z-50 flex items-center justify-center lg:justify-start bg-black bg-opacity-50 p-4" @click.self="handleOverlayClick">
-   <div class="w-full max-w-4xl rounded-lg bg-white shadow-xl dark:bg-boxdark h-[65vh] flex flex-col overflow-visible">
-      <!-- Header -->
-      <div class="flex items-center justify-between border-b border-gray-200 px-6 py-4 dark:border-gray-700">
-        <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
-          تاریخچه کامل تعدیلات موجودی
-        </h3>
-        <button
-          @click="$emit('close')"
-          class="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-600 dark:hover:text-gray-300"
-        >
-          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
+  <div class="fixed inset-0 z-50 flex items-center justify-center lg:justify-start bg-black bg-opacity-50 p-0 lg:p-4"
+    @click.self="handleOverlayClick">
+    <!-- Modal container - full screen on mobile, centered on desktop -->
+    <div
+      class="w-full h-full lg:w-auto lg:max-w-4xl lg:h-[70vh] rounded-lg bg-white shadow-xl flex flex-col overflow-visible relative">
 
-      <!-- Filters -->
-      <div class="border-b border-gray-200 px-6 py-4 dark:border-gray-700">
-        <div class="flex flex-col gap-4 md:flex-row md:items-center md:gap-6">
-          <!-- Search -->
-          <div class="flex-1">
-            <input
-              v-model="searchQuery"
-              type="text"
-              placeholder="جستجو در محصولات..."
-              class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-primary focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-            />
+      <!-- Close button for large screens (top-left corner with blinking effect) -->
+      <button @click="$emit('close')"
+        class="hidden lg:block absolute -top-2 -left-2 z-50 rounded-full p-2 bg-red-500 text-white shadow-lg animate-pulse">
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+
+      <!-- Filters Container (sticky with collapse animation) -->
+      <div ref="filtersContainer" :class="[
+        'sticky z-20 bg-white border-b border-gray-200 overflow-hidden transition-all duration-300 ease-in-out',
+        showFilters ? 'max-h-60' : 'max-h-0 border-b-0',
+        'pt-16 lg:pt-0'  // Add top padding for mobile header space
+      ]">
+        <div class="px-6 py-4">
+          <!-- Mobile layout (column) -->
+          <div class="flex flex-col gap-4 md:flex-row md:gap-6 md:items-center">
+            <!-- Mobile: Top row (search + close button) -->
+            <div class="flex gap-2 items-center w-full">
+
+              <!-- Search -->
+              <div class="flex-1">
+                <input v-model="searchQuery" type="text" placeholder="جستجو در محصولات..."
+                class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-primary focus:outline-none" />
+              </div>
+              <!-- Close button for mobile -->
+              <button @click="$emit('close')"
+                class="lg:hidden rounded-lg p-2 bg-red-500 text-white shadow animate-pulse">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <!-- Filters row (adjustment type + date pickers) -->
+            <div class="flex flex-col sm:flex-row gap-4 w-full">
+              <!-- Adjustment Type Filter -->
+              <select v-model="adjustmentTypeFilter"
+                class="w-full sm:w-auto rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none">
+                <option value="">همه تعدیلات</option>
+                <option value="increase">افزایش موجودی</option>
+                <option value="decrease">کاهش موجودی</option>
+              </select>
+
+              <!-- Date Range -->
+              <div class="flex flex-row gap-2 w-full">
+                <DatePicker v-model="dateFrom" format="YYYY/MM/DD" display-format="jYYYY/jMM/jDD" :editable="false"
+                  :clearable="true" placeholder="از تاریخ"
+                  class="flex-1 min-w-[120px] rounded-lg border-0 outline outline-gray-300 px-2 py-1 text-sm focus:outline-primary focus:outline-none"
+                  @open="isCalendarOpen = true" @close="isCalendarOpen = false" />
+                <DatePicker v-model="dateTo" format="YYYY/MM/DD" display-format="jYYYY/jMM/jDD" :editable="false"
+                  :clearable="true" placeholder="تا تاریخ"
+                  class="flex-1 min-w-[120px] rounded-lg border-0 outline outline-gray-300 px-2 py-1 text-sm focus:outline-primary focus:outline-none "
+                  @open="isCalendarOpen = true" @close="isCalendarOpen = false" />
+              </div>
+            </div>
           </div>
-
-          <!-- Date Range -->
-          <div class="flex gap-2 items-center">
-            <DatePicker
-              v-model="dateFrom"
-              format="YYYY/MM/DD"
-              display-format="jYYYY/jMM/jDD"
-              :editable="false"
-              :clearable="true"
-              placeholder="از تاریخ"
-              class="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-              @open="isCalendarOpen = true"
-              @close="isCalendarOpen = false"
-            />
-            <span class="flex items-center px-2 text-gray-500">تا</span>
-            <DatePicker
-              v-model="dateTo"
-              format="YYYY/MM/DD"
-              display-format="jYYYY/jMM/jDD"
-              :editable="false"
-              :clearable="true"
-              placeholder="تا تاریخ"
-              class="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-              @open="isCalendarOpen = true"
-              @close="isCalendarOpen = false"
-            />
-          </div>
-
-          <!-- Adjustment Type Filter -->
-          <select
-            v-model="adjustmentTypeFilter"
-            class="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-          >
-            <option value="">همه تعدیلات</option>
-            <option value="increase">افزایش موجودی</option>
-            <option value="decrease">کاهش موجودی</option>
-          </select>
         </div>
       </div>
 
@@ -80,7 +77,8 @@
           <div v-if="filteredAdjustments.length === 0" class="flex items-center justify-center p-8">
             <div class="text-center">
               <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2V9a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 5H7a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2V9a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
               <p class="mt-4 text-gray-500">هیچ تعدیلی یافت نشد</p>
             </div>
@@ -88,21 +86,19 @@
 
           <!-- Adjustment Cards -->
           <div v-else class="space-y-4 p-6">
-            <div
-              v-for="adjustment in paginatedAdjustments"
-              :key="adjustment.id"
-              class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800"
-            >
+            <div v-for="adjustment in paginatedAdjustments" :key="adjustment.id"
+              class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
               <!-- Adjustment Header -->
               <div class="flex items-center justify-between border-b border-gray-100 pb-3 dark:border-gray-700">
                 <div class="flex items-center gap-3">
                   <!-- Type Icon -->
                   <div
                     :class="adjustment.adjustment_type === 'add' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'"
-                    class="flex h-10 w-10 items-center justify-center rounded-full"
-                  >
-                    <svg v-if="adjustment.adjustment_type === 'add'" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    class="flex h-10 w-10 items-center justify-center rounded-full">
+                    <svg v-if="adjustment.adjustment_type === 'add'" class="h-5 w-5" fill="none" stroke="currentColor"
+                      viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>
                     <svg v-else class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
@@ -149,17 +145,12 @@
                         </tr>
                       </thead>
                       <tbody>
-                        <tr
-                          v-for="item in adjustment.items"
-                          :key="item.id"
-                          class="border-t border-gray-100 dark:border-gray-600"
-                        >
+                        <tr v-for="item in adjustment.items" :key="item.id"
+                          class="border-t border-gray-100 dark:border-gray-600">
                           <td class="px-3 py-2 text-gray-900 dark:text-white">{{ item.product_name }}</td>
                           <td class="px-3 py-2">
-                            <span
-                              :class="adjustment.adjustment_type === 'add' ? 'text-green-600' : 'text-red-600'"
-                              class="font-medium"
-                            >
+                            <span :class="adjustment.adjustment_type === 'add' ? 'text-green-600' : 'text-red-600'"
+                              class="font-medium">
                               {{ adjustment.adjustment_type === 'add' ? '+' : '-' }}{{ item.quantity }}
                             </span>
                           </td>
@@ -175,10 +166,8 @@
 
           <!-- Load More Button -->
           <div v-if="hasMoreData && !loading" class="border-t border-gray-200 p-4 text-center dark:border-gray-700">
-            <button
-              @click="loadMoreAdjustments"
-              class="rounded-lg bg-primary px-4 py-2 text-white hover:bg-opacity-90 transition-colors"
-            >
+            <button @click="loadMoreAdjustments"
+              class="rounded-lg bg-primary px-4 py-2 text-white hover:bg-opacity-90 transition-colors">
               بارگذاری بیشتر
             </button>
           </div>
@@ -189,7 +178,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { inventoryAPI } from '@/services/api'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import DatePicker from 'vue3-persian-datetime-picker'
@@ -205,11 +194,14 @@ const adjustmentTypeFilter = ref('')
 const currentPage = ref(1)
 const pageSize = ref(10)
 const scrollContainer = ref(null)
+const filtersContainer = ref(null)
 const isCalendarOpen = ref(false)
 
 const adjustments = ref([])
 const hasMoreData = ref(false)
 const loading = ref(false)
+const showFilters = ref(true)
+const lastScrollPosition = ref(0)
 
 // Computed
 const filteredAdjustments = computed(() => {
@@ -219,7 +211,7 @@ const filteredAdjustments = computed(() => {
   if (searchQuery.value) {
     const q = searchQuery.value.toLowerCase()
     filtered = filtered.filter(adj =>
-      (adj.items?.some(item => item.product_name?.toLowerCase().includes(q)) ||
+    (adj.items?.some(item => item.product_name?.toLowerCase().includes(q)) ||
       (adj.reason || '').toLowerCase().includes(q))
     )
   }
@@ -307,12 +299,45 @@ const fetchAdjustments = async (page = 1, append = false) => {
 
 const loadMoreAdjustments = async () => {
   if (!hasMoreData.value || loading.value) return
+
+  // Save scroll position before loading
+  const container = scrollContainer.value
+  const scrollTop = container.scrollTop
+  const scrollHeight = container.scrollHeight
+
   currentPage.value += 1
   await fetchAdjustments(currentPage.value, true)
+
+  // Restore scroll position after data loads
+  nextTick(() => {
+    container.scrollTop = scrollTop + (container.scrollHeight - scrollHeight)
+  })
+}
+
+// Scroll handling for hiding/showing filters
+const handleScroll = () => {
+  if (!scrollContainer.value) return
+
+  const currentScrollPosition = scrollContainer.value.scrollTop
+  const scrollDirection = currentScrollPosition > lastScrollPosition.value ? 'down' : 'up'
+
+  // Only hide filters if we've scrolled more than 50px
+  if (scrollDirection === 'down' && currentScrollPosition > 50) {
+    showFilters.value = false
+  } else if (scrollDirection === 'up') {
+    showFilters.value = true
+  }
+
+  // Always show filters when at top of container
+  if (currentScrollPosition <= 10) {
+    showFilters.value = true
+  }
+
+  lastScrollPosition.value = currentScrollPosition
 }
 
 // Infinite scroll
-const handleScroll = () => {
+const handleInfiniteScroll = () => {
   const el = scrollContainer.value
   if (!el || loading.value || !hasMoreData.value) return
   const threshold = 150
@@ -321,18 +346,24 @@ const handleScroll = () => {
   }
 }
 
+// Combined scroll handler
+const scrollHandler = () => {
+  handleScroll()
+  handleInfiniteScroll()
+}
+
 // Lifecycle
 onMounted(async () => {
   currentPage.value = 1
   await fetchAdjustments(1, false)
   if (scrollContainer.value) {
-    scrollContainer.value.addEventListener('scroll', handleScroll)
+    scrollContainer.value.addEventListener('scroll', scrollHandler)
   }
 })
 
 onUnmounted(() => {
   if (scrollContainer.value) {
-    scrollContainer.value.removeEventListener('scroll', handleScroll)
+    scrollContainer.value.removeEventListener('scroll', scrollHandler)
   }
 })
 
