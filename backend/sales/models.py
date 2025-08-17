@@ -79,6 +79,38 @@ class Sale(models.Model):
         """Calculate total amount including tax and discount."""
         return self.subtotal + self.tax_amount - self.discount_amount
 
+    def save(self, *args, **kwargs):
+        """Override save to handle status changes and inventory sync."""
+        is_new = self.pk is None
+        old_status = None
+
+        if not is_new:
+            old_sale = Sale.objects.get(pk=self.pk)
+            old_status = old_sale.status
+
+        # Generate invoice number if new
+        if is_new and not self.invoice_number:
+            self.generate_invoice_number()
+
+        super().save(*args, **kwargs)
+
+        # Handle status change to confirmed - check stock
+        if self.status == 'confirmed' and old_status == 'draft':
+            for item in self.items.all():
+                current_stock = item.product.current_stock
+                if current_stock < item.quantity:
+                    # Revert status change
+                    self.status = 'draft'
+                    self.save(update_fields=['status'])
+                    raise ValueError(f'موجودی کافی نیست برای محصول {item.product.name}. موجودی فعلی: {current_stock}، مقدار درخواستی: {item.quantity}')
+
+    def generate_invoice_number(self):
+        """Generate unique invoice number."""
+        from django.utils import timezone
+        today = timezone.now().date()
+        count = Sale.objects.filter(created_at__date=today).count() + 1
+        self.invoice_number = f"INV-{today.strftime('%Y%m%d')}-{count:04d}"
+
 class SaleItem(models.Model):
     """Sale item model."""
     sale = models.ForeignKey(Sale, verbose_name=_('sale'),
@@ -108,10 +140,21 @@ class SaleItem(models.Model):
     def save(self, *args, **kwargs):
         """Override save to create inventory transaction when sale is confirmed."""
         is_new = self.pk is None
+        old_status = None
+
+        if not is_new:
+            old_item = SaleItem.objects.get(pk=self.pk)
+            old_status = old_item.sale.status
+
         super().save(*args, **kwargs)
 
-        # Create inventory transaction if sale status is confirmed or completed
-        if is_new and self.sale.status in ['confirmed', 'completed']:
+        # Create inventory transaction if sale status changed to confirmed or completed
+        if self.sale.status in ['confirmed', 'completed'] and (is_new or old_status == 'draft'):
+            # Check stock availability
+            current_stock = self.product.current_stock
+            if current_stock < self.quantity:
+                raise ValueError(f'موجودی کافی نیست. موجودی فعلی: {current_stock}، مقدار درخواستی: {self.quantity}')
+
             InventoryTransaction.objects.create(
                 transaction_type='sale',
                 product=self.product,

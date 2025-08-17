@@ -75,10 +75,10 @@ export const salesAPI = {
   updateCustomer: (id, data) => api.put(`/sales/customers/${id}/`, data),
   deleteCustomer: (id) => api.delete(`/sales/customers/${id}/`),
 
-  getSalesOrders: (params = {}) => api.get('/sales/sales-orders/', { params }),
-  createSalesOrder: (data) => api.post('/sales/sales-orders/', data),
-  updateSalesOrder: (id, data) => api.put(`/sales/sales-orders/${id}/`, data),
-  deleteSalesOrder: (id) => api.delete(`/sales/sales-orders/${id}/`),
+  getSalesOrders: (params = {}) => api.get('/sales/sales/', { params }),
+  createSalesOrder: (data) => api.post('/sales/sales/', data),
+  updateSalesOrder: (id, data) => api.put(`/sales/sales/${id}/`, data),
+  deleteSalesOrder: (id) => api.delete(`/sales/sales/${id}/`),
 
   getInvoices: (params = {}) => api.get('/sales/invoices/', { params }),
   createInvoice: (data) => api.post('/sales/invoices/', data),
