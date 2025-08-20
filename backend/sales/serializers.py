@@ -8,9 +8,9 @@ class CustomerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Customer
         fields = [
-            'id', 'name', 'phone', 'email', 'address', 'tax_number',
-            'credit_limit', 'is_active', 'notes', 'created_at', 'updated_at',
-            'total_due'
+            'id', 'name', 'phone', 'email', 'customer_type', 'business_category',
+            'address', 'tax_number', 'credit_limit', 'is_active', 'notes',
+            'created_at', 'updated_at', 'total_due'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'total_due']
 
@@ -27,14 +27,50 @@ class SaleItemSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id']
 
+class SaleCreateUpdateSerializer(serializers.ModelSerializer):
+    """Serializer for creating/updating Sale model."""
+    items = SaleItemSerializer(many=True)
+
+    class Meta:
+        model = Sale
+        fields = [
+            'id', 'customer', 'warehouse', 'status', 'sale_date',
+            'notes', 'discount_amount', 'tax_amount', 'items'
+        ]
+        read_only_fields = ['id']
+
+    def create(self, validated_data):
+        items_data = validated_data.pop('items', [])
+        sale = Sale.objects.create(**validated_data)
+
+        for item_data in items_data:
+            SaleItem.objects.create(sale=sale, **item_data)
+
+        return sale
+
+    def update(self, instance, validated_data):
+        items_data = validated_data.pop('items', [])
+
+        # Update sale fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        # Update items
+        instance.items.all().delete()
+        for item_data in items_data:
+            SaleItem.objects.create(sale=instance, **item_data)
+
+        return instance
+
 class SaleSerializer(serializers.ModelSerializer):
-    """Serializer for Sale model."""
+    """Serializer for Sale model (read-only)."""
     customer_name = serializers.ReadOnlyField(source='customer.name')
     warehouse_name = serializers.ReadOnlyField(source='warehouse.name')
     status_display = serializers.ReadOnlyField(source='get_status_display')
     created_by_name = serializers.ReadOnlyField(source='created_by.get_full_name')
     items = SaleItemSerializer(many=True, read_only=True)
-    
+
     class Meta:
         model = Sale
         fields = [

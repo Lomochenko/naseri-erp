@@ -8,9 +8,25 @@ from inventory.models import Warehouse, InventoryTransaction
 
 class Customer(models.Model):
     """Customer model."""
+    CUSTOMER_TYPE_CHOICES = [
+        ('individual', _('Individual')),
+        ('business', _('Business')),
+    ]
+
+    BUSINESS_CATEGORY_CHOICES = [
+        ('retail', _('Retail')),
+        ('wholesale', _('Wholesale')),
+        ('contractor', _('Contractor')),
+        ('other', _('Other')),
+    ]
+
     name = models.CharField(_('name'), max_length=255)
     phone = models.CharField(_('phone'), max_length=20, blank=True)
     email = models.EmailField(_('email'), blank=True)
+    customer_type = models.CharField(_('customer type'), max_length=20,
+                                   choices=CUSTOMER_TYPE_CHOICES, default='individual')
+    business_category = models.CharField(_('business category'), max_length=20,
+                                       choices=BUSINESS_CATEGORY_CHOICES, blank=True)
     address = models.TextField(_('address'), blank=True)
     tax_number = models.CharField(_('tax number'), max_length=50, blank=True)
     credit_limit = models.DecimalField(_('credit limit'), max_digits=12, decimal_places=0,
@@ -31,8 +47,11 @@ class Customer(models.Model):
     @property
     def total_due(self):
         """Calculate total amount due from customer."""
-        return self.invoices.filter(status='unpaid').aggregate(
-            total=models.Sum('remaining_amount'))['total'] or 0
+        try:
+            return self.invoices.filter(status='unpaid').aggregate(
+                total=models.Sum('remaining_amount'))['total'] or 0
+        except:
+            return 0
 
 class Sale(models.Model):
     """Sale model."""
@@ -43,7 +62,7 @@ class Sale(models.Model):
         ('cancelled', _('Cancelled')),
     ]
 
-    invoice_number = models.CharField(_('invoice number'), max_length=50, unique=True)
+    invoice_number = models.CharField(_('invoice number'), max_length=50, unique=True, blank=True, null=True)
     customer = models.ForeignKey(Customer, verbose_name=_('customer'),
                                 on_delete=models.PROTECT, related_name='sales')
     warehouse = models.ForeignKey(Warehouse, verbose_name=_('warehouse'),

@@ -252,18 +252,13 @@ const menuGroups = [
       {
         icon: BoxCubeIcon,
         name: "محصولات",
-        subItems: [
-          { name: "لیست محصولات", path: "/products", pro: false },
-          { name: "افزودن محصول", path: "/products/create", pro: false },
-        ],
+        path: "/products"
       },
       {
         icon: BarChartIcon,
         name: "فروش",
-        subItems: [
-          { name: "مدیریت فروش", path: "/sales", pro: false },
-          { name: "مشتریان", path: "/customers", pro: false },
-        ],
+        path: "/sales"
+
       },
       {
         icon: TableIcon,

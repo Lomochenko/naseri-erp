@@ -78,12 +78,12 @@
             </select>
           </div>
 
-          <!-- National ID -->
+          <!-- Tax Number -->
           <div>
-            <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">کد ملی/شناسه ملی</label>
-            <input v-model="form.national_id" type="text"
+            <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">شماره مالیاتی</label>
+            <input v-model="form.tax_number" type="text"
               class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-primary focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-              placeholder="1234567890" />
+              placeholder="شماره مالیاتی" />
           </div>
         </div>
 
@@ -96,7 +96,7 @@
         </div>
 
         <!-- Financial Settings -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div class="mb-6">
           <!-- Credit Limit -->
           <div>
             <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">سقف اعتبار (تومان)</label>
@@ -104,15 +104,6 @@
               class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-primary focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
               placeholder="0" />
             <p class="mt-1 text-xs text-gray-500">حداکثر مبلغ بدهی مجاز برای این مشتری</p>
-          </div>
-
-          <!-- Payment Terms -->
-          <div>
-            <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">شرایط پرداخت (روز)</label>
-            <input v-model.number="form.payment_terms" type="number" min="0" max="365"
-              class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-primary focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-              placeholder="30" />
-            <p class="mt-1 text-xs text-gray-500">تعداد روز مهلت پرداخت</p>
           </div>
         </div>
 
@@ -183,10 +174,9 @@ const form = ref({
   email: '',
   customer_type: 'individual',
   business_category: '',
-  national_id: '',
   address: '',
+  tax_number: '',
   credit_limit: 0,
-  payment_terms: 30,
   is_active: true,
   notes: ''
 })
@@ -234,10 +224,9 @@ watch(() => props.customer, (newCustomer) => {
       email: newCustomer.email || '',
       customer_type: newCustomer.customer_type || 'individual',
       business_category: newCustomer.business_category || '',
-      national_id: newCustomer.national_id || '',
       address: newCustomer.address || '',
+      tax_number: newCustomer.tax_number || '',
       credit_limit: newCustomer.credit_limit || 0,
-      payment_terms: newCustomer.payment_terms || 30,
       is_active: newCustomer.is_active !== false,
       notes: newCustomer.notes || ''
     }

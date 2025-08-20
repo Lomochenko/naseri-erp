@@ -235,10 +235,26 @@ const total = computed(() => {
 })
 
 const isFormValid = computed(() => {
-  return form.value.customer &&
-         form.value.warehouse &&
-         form.value.items.length > 0 &&
-         form.value.items.every(item => item.product && item.quantity > 0 && item.unit_price >= 0)
+  const hasCustomer = form.value.customer && form.value.customer !== ''
+  const hasWarehouse = form.value.warehouse && form.value.warehouse !== ''
+  const hasItems = form.value.items.length > 0
+  const itemsValid = form.value.items.every(item =>
+    item.product && item.product !== '' &&
+    item.quantity > 0 &&
+    item.unit_price >= 0
+  )
+
+  console.log('Form validation details:', {
+    hasCustomer,
+    hasWarehouse,
+    hasItems,
+    itemsValid,
+    customer: form.value.customer,
+    warehouse: form.value.warehouse,
+    items: form.value.items
+  })
+
+  return hasCustomer && hasWarehouse && hasItems && itemsValid
 })
 
 // Methods
@@ -261,7 +277,8 @@ const removeProduct = (index) => {
 
 const updateProductInfo = (index) => {
   const item = form.value.items[index]
-  const product = availableProducts.value.find(p => p.id === item.product)
+  const productId = parseInt(item.product)
+  const product = availableProducts.value.find(p => p.id === productId)
   if (product) {
     item.unit_price = form.value.sale_type === 'wholesale' ?
       Math.round(product.selling_price * 0.9) : // 10% wholesale discount
@@ -274,14 +291,35 @@ const calculateItemTotal = (index) => {
 }
 
 const handleSubmit = async () => {
-  if (!isFormValid.value) return
+  console.log('Form validation:', isFormValid.value)
+  console.log('Form data:', form.value)
+
+  if (!isFormValid.value) {
+    alert('لطفاً تمام فیلدهای اجباری را پر کنید')
+    return
+  }
 
   loading.value = true
   try {
     const orderData = {
-      ...form.value,
-      status: 'draft'
+      customer: parseInt(form.value.customer),
+      warehouse: parseInt(form.value.warehouse),
+      sale_type: form.value.sale_type,
+      sale_date: form.value.sale_date,
+      notes: form.value.notes || '',
+      discount_amount: parseFloat(form.value.discount_amount) || 0,
+      tax_amount: 0,
+      status: 'draft',
+      items: form.value.items.map(item => ({
+        product: parseInt(item.product),
+        quantity: parseFloat(item.quantity),
+        unit_price: parseFloat(item.unit_price),
+        discount: parseFloat(item.discount) || 0,
+        notes: item.notes || ''
+      }))
     }
+
+    console.log('Sending order data:', orderData)
 
     let result
     if (isEditing.value) {
@@ -298,7 +336,7 @@ const handleSubmit = async () => {
     }
   } catch (error) {
     console.error('Error saving sales order:', error)
-    alert('خطا در ذخیره سفارش')
+    alert('خطا در ذخیره سفارش: ' + (error.response?.data?.message || error.message))
   } finally {
     loading.value = false
   }
@@ -330,6 +368,11 @@ onMounted(async () => {
     productsStore.fetchProducts(),
     inventoryStore.fetchWarehouses()
   ])
+
+  // Auto-select warehouse if only one exists
+  if (!isEditing.value && warehouses.value.length === 1) {
+    form.value.warehouse = warehouses.value[0].id
+  }
 
   // Add first product row if creating new order
   if (!isEditing.value && form.value.items.length === 0) {

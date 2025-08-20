@@ -174,15 +174,6 @@ const router = createRouter({
         requiresAuth: true,
       },
     },
-    {
-      path: '/customers',
-      name: 'Customers',
-      component: () => import('../views/Customers/CustomersList.vue'),
-      meta: {
-        title: 'مشتریان',
-        requiresAuth: true,
-      },
-    },
 
     // Inventory Routes
     {

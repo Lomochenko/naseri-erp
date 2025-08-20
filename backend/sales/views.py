@@ -6,7 +6,7 @@ from django.utils import timezone
 from datetime import timedelta
 from .models import Customer, Sale, SaleItem, Invoice, Payment
 from .serializers import (
-    CustomerSerializer, SaleSerializer, SaleItemSerializer,
+    CustomerSerializer, SaleSerializer, SaleCreateUpdateSerializer, SaleItemSerializer,
     InvoiceSerializer, PaymentSerializer
 )
 
@@ -16,20 +16,27 @@ class CustomerViewSet(viewsets.ModelViewSet):
     serializer_class = CustomerSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ['name', 'phone', 'email', 'address']
+    search_fields = ['name', 'phone', 'address']
     ordering_fields = ['name', 'created_at']
     ordering = ['name']
 
 class SaleViewSet(viewsets.ModelViewSet):
     """ViewSet for viewing and editing Sale instances."""
     queryset = Sale.objects.all()
-    serializer_class = SaleSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['status', 'customer', 'warehouse']
     search_fields = ['invoice_number', 'notes']
     ordering_fields = ['sale_date', 'created_at']
     ordering = ['-sale_date']
+
+    def get_serializer_class(self):
+        if self.action in ['create', 'update', 'partial_update']:
+            return SaleCreateUpdateSerializer
+        return SaleSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user)
 
 class SaleItemViewSet(viewsets.ModelViewSet):
     """ViewSet for viewing and editing SaleItem instances."""
