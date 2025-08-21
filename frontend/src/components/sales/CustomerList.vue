@@ -202,8 +202,8 @@
     </div>
 
     <!-- Modals -->
-    <CustomerForm v-if="showCreateModal" @close="showCreateModal = false" @saved="handleCustomerSaved" />
-    <CustomerForm v-if="showEditModal" :customer="editingCustomer" @close="showEditModal = false" @saved="handleCustomerSaved" />
+    <CustomerForm :show="showCreateModal" @close="showCreateModal = false" @saved="handleCustomerSaved" />
+    <CustomerForm :show="showEditModal" :customer="editingCustomer" @close="showEditModal = false" @saved="handleCustomerSaved" />
   </div>
 </template>
 

@@ -1,34 +1,28 @@
 <template>
-  <div class="fixed inset-0 z-50 flex items-center justify-center lg:justify-start bg-black bg-opacity-50 p-0 lg:p-4" @click.self="handleOverlayClick">
-    <!-- Modal container - full screen on mobile, centered on desktop -->
-    <div class="w-full h-full lg:w-auto lg:max-w-2xl lg:h-[85vh] rounded-lg bg-white shadow-xl flex flex-col overflow-visible relative">
+  <div v-if="show" class="fixed inset-0 flex items-center justify-center overflow-y-auto z-99999">
+    <div
+      class="fixed inset-0 h-full w-full bg-gray-400/50 backdrop-blur-[32px]"
+      aria-hidden="true"
+      @click="$emit('close')"
+    ></div>
 
-      <!-- Close button for large screens (top-left corner with blinking effect) -->
-      <button @click="$emit('close')"
-        class="hidden lg:block absolute -top-2 -left-2 z-50 rounded-full p-2 bg-red-500 text-white shadow-lg animate-pulse">
-        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
-
-      <!-- Header with mobile close button -->
-      <div class="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-3 lg:px-6 lg:py-4">
-        <div class="flex items-center justify-between">
-          <h3 class="text-lg lg:text-xl font-semibold text-gray-900">
-            {{ isEditing ? 'ویرایش مشتری' : 'مشتری جدید' }}
-          </h3>
-          <!-- Mobile close button -->
-          <button @click="$emit('close')" class="lg:hidden rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
-            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
+    <!-- Modal Body -->
+    <div class="relative w-full max-w-4xl mx-4 bg-white rounded-xl shadow-2xl dark:bg-gray-900 max-h-[90vh] overflow-y-auto">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 rounded-t-xl">
+        <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
+          {{ isEditing ? 'ویرایش مشتری' : 'مشتری جدید' }}
+        </h3>
+        <button @click="$emit('close')" class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
       </div>
 
-      <!-- Form Content -->
-      <div class="flex-1 overflow-y-auto">
-        <form @submit.prevent="handleSubmit" class="p-4 lg:p-6">
+      <!-- Modal Content -->
+      <div class="p-6">
+        <form @submit.prevent="handleSubmit" class="space-y-6">
         <!-- Basic Information -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <!-- Customer Code -->
@@ -147,18 +141,23 @@
             placeholder="یادداشت اختیاری در مورد مشتری..."></textarea>
         </div>
 
-          <!-- Actions -->
-          <div class="flex gap-3 justify-end">
-            <button type="button" @click="$emit('close')"
-              class="rounded-lg border border-gray-300 px-6 py-2 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700">
-              انصراف
-            </button>
-            <button type="submit" :disabled="loading || !isFormValid"
-              class="rounded-lg bg-primary px-6 py-2 text-white hover:bg-opacity-90 disabled:opacity-50 transition-colors">
-              {{ loading ? 'در حال ذخیره...' : (isEditing ? 'به‌روزرسانی' : 'ایجاد مشتری') }}
-            </button>
-          </div>
         </form>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 rounded-b-xl">
+        <button type="button" @click="$emit('close')"
+          class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600">
+          انصراف
+        </button>
+        <button type="submit" @click="handleSubmit" :disabled="loading || !isFormValid"
+          class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-primary border border-transparent rounded-lg hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed">
+          <svg v-if="loading" class="w-4 h-4 mr-2 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          {{ loading ? 'در حال ذخیره...' : (isEditing ? 'به‌روزرسانی' : 'ایجاد مشتری') }}
+        </button>
       </div>
     </div>
   </div>
@@ -169,6 +168,10 @@ import { ref, computed, watch } from 'vue'
 import { useSalesStore } from '@/stores/sales'
 
 const props = defineProps({
+  show: {
+    type: Boolean,
+    default: false
+  },
   customer: {
     type: Object,
     default: null
@@ -177,10 +180,7 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'saved'])
 
-// Handle overlay click
-const handleOverlayClick = () => {
-  emit('close')
-}
+
 
 // Store
 const salesStore = useSalesStore()
