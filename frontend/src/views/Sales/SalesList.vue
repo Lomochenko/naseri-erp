@@ -9,9 +9,9 @@
         <nav>
           <ol class="flex items-center gap-2">
             <li>
-              <router-link class="font-medium" to="/">داشبورد /</router-link>
+              <router-link class="font-medium text-black dark:text-white" to="/">داشبورد /</router-link>
             </li>
-            <li class="font-medium text-primary">فروش</li>
+            <li class="font-medium text-black dark:text-white">فروش</li>
           </ol>
         </nav>
       </div>
@@ -94,12 +94,12 @@
         <div class="border-b border-gray-200 dark:border-gray-700">
           <nav class="-mb-px flex space-x-8 space-x-reverse">
             <button @click="activeTab = 'orders'"
-              :class="activeTab === 'orders' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+              :class="activeTab === 'orders' ? 'border-primary text-black dark:text-white' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 hover:border-gray-300'"
               class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
               سفارشات فروش
             </button>
             <button @click="activeTab = 'customers'"
-              :class="activeTab === 'customers' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+              :class="activeTab === 'customers' ? 'border-primary text-black dark:text-white' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 hover:border-gray-300'"
               class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
               مشتریان
             </button>
