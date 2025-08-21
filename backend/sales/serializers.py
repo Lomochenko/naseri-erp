@@ -8,11 +8,11 @@ class CustomerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Customer
         fields = [
-            'id', 'name', 'phone', 'email', 'customer_type', 'business_category',
+            'id', 'customer_code', 'name', 'phone', 'email', 'customer_type', 'business_category',
             'address', 'tax_number', 'credit_limit', 'is_active', 'notes',
-            'created_at', 'updated_at', 'total_due'
+            'created_at', 'updated_at', 'total_due', 'account_balance'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at', 'total_due']
+        read_only_fields = ['id', 'customer_code', 'created_at', 'updated_at', 'total_due', 'account_balance']
 
 class SaleItemSerializer(serializers.ModelSerializer):
     """Serializer for SaleItem model."""

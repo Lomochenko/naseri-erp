@@ -20,6 +20,7 @@ class Customer(models.Model):
         ('other', _('Other')),
     ]
 
+    customer_code = models.CharField(_('customer code'), max_length=20, unique=True, blank=True)
     name = models.CharField(_('name'), max_length=255)
     phone = models.CharField(_('phone'), max_length=20, blank=True)
     email = models.EmailField(_('email'), blank=True)
@@ -52,6 +53,46 @@ class Customer(models.Model):
                 total=models.Sum('remaining_amount'))['total'] or 0
         except:
             return 0
+
+    @property
+    def account_balance(self):
+        """Calculate customer's account balance (negative = debt, positive = credit)."""
+        try:
+            # Total sales amount
+            total_sales = self.sales.filter(status__in=['confirmed', 'completed']).aggregate(
+                total=models.Sum('total_amount'))['total'] or 0
+
+            # Total payments received
+            total_payments = 0
+            for sale in self.sales.filter(status__in=['confirmed', 'completed']):
+                sale_payments = sale.payments.aggregate(total=models.Sum('amount'))['total'] or 0
+                total_payments += sale_payments
+
+            # Balance = Payments - Sales (negative means customer owes money)
+            return total_payments - total_sales
+        except:
+            return 0
+
+    def save(self, *args, **kwargs):
+        """Override save to auto-generate customer code."""
+        if not self.customer_code:
+            # Generate customer code: CUST + 6-digit number
+            last_customer = Customer.objects.filter(
+                customer_code__startswith='CUST'
+            ).order_by('customer_code').last()
+
+            if last_customer and last_customer.customer_code:
+                try:
+                    last_number = int(last_customer.customer_code[4:])
+                    new_number = last_number + 1
+                except (ValueError, IndexError):
+                    new_number = 1
+            else:
+                new_number = 1
+
+            self.customer_code = f'CUST{new_number:06d}'
+
+        super().save(*args, **kwargs)
 
 class Sale(models.Model):
     """Sale model."""
