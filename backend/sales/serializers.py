@@ -25,28 +25,79 @@ class SaleItemSerializer(serializers.ModelSerializer):
             'id', 'sale', 'product', 'product_name', 'product_code',
             'quantity', 'unit_price', 'discount', 'notes'
         ]
-        read_only_fields = ['id']
+        read_only_fields = ['id', 'sale', 'product_name', 'product_code']
 
 class SaleCreateUpdateSerializer(serializers.ModelSerializer):
     """Serializer for creating/updating Sale model."""
-    items = SaleItemSerializer(many=True)
+    items = SaleItemSerializer(many=True, write_only=True)
 
     class Meta:
         model = Sale
         fields = [
-            'id', 'customer', 'warehouse', 'status', 'sale_date',
+            'id', 'customer', 'status', 'sale_date',
             'notes', 'discount_amount', 'tax_amount', 'items'
         ]
         read_only_fields = ['id']
 
+    def validate_customer(self, value):
+        """Validate customer exists."""
+        if not value:
+            raise serializers.ValidationError("Customer is required")
+        return value
+
+    def validate_items(self, value):
+        """Validate items."""
+        if not value:
+            raise serializers.ValidationError("At least one item is required")
+
+        for item in value:
+            if not item.get('product'):
+                raise serializers.ValidationError("Product is required for each item")
+            if not item.get('quantity') or float(item.get('quantity', 0)) <= 0:
+                raise serializers.ValidationError("Quantity must be greater than 0")
+            if item.get('unit_price') is None or float(item.get('unit_price', 0)) < 0:
+                raise serializers.ValidationError("Unit price must be 0 or greater")
+
+        return value
+
     def create(self, validated_data):
+        """Create sale with ERP integration."""
+        print(f"=== CREATING SALE ===")
+        print(f"Validated data: {validated_data}")
+
+        from django.db import transaction
+        from inventory.models import Warehouse
+
         items_data = validated_data.pop('items', [])
-        sale = Sale.objects.create(**validated_data)
+        print(f"Items count: {len(items_data)}")
 
-        for item_data in items_data:
-            SaleItem.objects.create(sale=sale, **item_data)
+        # Get user from context
+        user = self.context['request'].user
+        validated_data['created_by'] = user
 
-        return sale
+        # Auto-assign warehouse
+        if not validated_data.get('warehouse'):
+            default_warehouse = Warehouse.objects.filter(is_active=True).first()
+            if default_warehouse:
+                validated_data['warehouse'] = default_warehouse
+                print(f"Auto-assigned warehouse: {default_warehouse.name}")
+
+        try:
+            with transaction.atomic():
+                # Create sale
+                sale = Sale.objects.create(**validated_data)
+                print(f"Sale created: {sale.id}")
+
+                # Create items
+                for item_data in items_data:
+                    SaleItem.objects.create(sale=sale, **item_data)
+                    print(f"Item created: {item_data['product']}")
+
+                return sale
+
+        except Exception as e:
+            print(f"Error: {str(e)}")
+            raise
 
     def update(self, instance, validated_data):
         items_data = validated_data.pop('items', [])

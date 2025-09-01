@@ -112,12 +112,17 @@ export const useSalesStore = defineStore('sales', () => {
     isLoading.value = true
     error.value = null
 
+    console.log('Store: Fetching sales orders with params:', params)
+
     try {
       const response = await salesAPI.getSalesOrders(params)
+      console.log('Store: Fetch response:', response)
+
       salesOrders.value = response.data.results || response.data
+      console.log('Store: Updated salesOrders:', salesOrders.value)
     } catch (err) {
       error.value = err.response?.data?.message || 'خطا در دریافت سفارشات فروش'
-      console.error('Fetch sales orders error:', err)
+      console.error('Store: Fetch sales orders error:', err)
     } finally {
       isLoading.value = false
     }
@@ -127,11 +132,20 @@ export const useSalesStore = defineStore('sales', () => {
     isLoading.value = true
     error.value = null
 
+    console.log('Store: Creating sales order with data:', orderData)
+
     try {
       const response = await salesAPI.createSalesOrder(orderData)
+      console.log('Store: API response:', response)
+
       salesOrders.value.unshift(response.data)
+      console.log('Store: Updated salesOrders:', salesOrders.value)
+
       return { success: true, data: response.data }
     } catch (err) {
+      console.error('Store: Create sales order error:', err)
+      console.error('Store: Error response:', err.response?.data)
+
       error.value = err.response?.data?.message || 'خطا در ایجاد سفارش فروش'
       return { success: false, error: error.value }
     } finally {

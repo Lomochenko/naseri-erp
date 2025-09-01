@@ -35,7 +35,25 @@ class SaleViewSet(viewsets.ModelViewSet):
             return SaleCreateUpdateSerializer
         return SaleSerializer
 
+    def create(self, request, *args, **kwargs):
+        print(f"=== SALE CREATE REQUEST ===")
+        print(f"Request data: {request.data}")
+        print(f"Request user: {request.user}")
+        print(f"Content type: {request.content_type}")
+
+        try:
+            response = super().create(request, *args, **kwargs)
+            print(f"Sale created successfully: {response.data}")
+            return response
+        except Exception as e:
+            print(f"Error in create: {str(e)}")
+            print(f"Error type: {type(e)}")
+            if hasattr(e, 'detail'):
+                print(f"Error detail: {e.detail}")
+            raise
+
     def perform_create(self, serializer):
+        print(f"Perform create called")
         serializer.save(created_by=self.request.user)
 
 class SaleItemViewSet(viewsets.ModelViewSet):

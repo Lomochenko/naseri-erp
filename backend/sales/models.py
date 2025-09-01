@@ -2,6 +2,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.conf import settings
 from django.core.validators import MinValueValidator
+from decimal import Decimal
 import uuid
 from products.models import Product
 from inventory.models import Warehouse, InventoryTransaction
@@ -107,14 +108,14 @@ class Sale(models.Model):
     customer = models.ForeignKey(Customer, verbose_name=_('customer'),
                                 on_delete=models.PROTECT, related_name='sales')
     warehouse = models.ForeignKey(Warehouse, verbose_name=_('warehouse'),
-                                 on_delete=models.PROTECT, related_name='sales')
+                                 on_delete=models.PROTECT, related_name='sales', blank=True, null=True)
     status = models.CharField(_('status'), max_length=20, choices=STATUS_CHOICES, default='draft')
     sale_date = models.DateField(_('sale date'))
     notes = models.TextField(_('notes'), blank=True)
     discount_amount = models.DecimalField(_('discount amount'), max_digits=12, decimal_places=0,
-                                         default=0, validators=[MinValueValidator(0)])
+                                         default=0, validators=[MinValueValidator(Decimal('0'))])
     tax_amount = models.DecimalField(_('tax amount'), max_digits=12, decimal_places=0,
-                                    default=0, validators=[MinValueValidator(0)])
+                                    default=0, validators=[MinValueValidator(Decimal('0'))])
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('created by'),
                                   on_delete=models.PROTECT, related_name='sales')
     created_at = models.DateTimeField(_('created at'), auto_now_add=True)
@@ -164,6 +165,21 @@ class Sale(models.Model):
                     self.save(update_fields=['status'])
                     raise ValueError(f'موجودی کافی نیست برای محصول {item.product.name}. موجودی فعلی: {current_stock}، مقدار درخواستی: {item.quantity}')
 
+    def save(self, *args, **kwargs):
+        """Override save to auto-assign warehouse and generate invoice number."""
+        # Auto-assign warehouse if not set
+        if not self.warehouse_id:
+            from inventory.models import Warehouse
+            default_warehouse = Warehouse.objects.filter(is_active=True).first()
+            if default_warehouse:
+                self.warehouse = default_warehouse
+
+        # Generate invoice number if not set
+        if not self.invoice_number:
+            self.generate_invoice_number()
+
+        super().save(*args, **kwargs)
+
     def generate_invoice_number(self):
         """Generate unique invoice number."""
         from django.utils import timezone
@@ -178,11 +194,11 @@ class SaleItem(models.Model):
     product = models.ForeignKey(Product, verbose_name=_('product'),
                                on_delete=models.PROTECT, related_name='sale_items')
     quantity = models.DecimalField(_('quantity'), max_digits=10, decimal_places=2,
-                                  validators=[MinValueValidator(0.01)])
+                                  validators=[MinValueValidator(Decimal('0.01'))])
     unit_price = models.DecimalField(_('unit price'), max_digits=12, decimal_places=0,
-                                    validators=[MinValueValidator(0)])
+                                    validators=[MinValueValidator(Decimal('0'))])
     discount = models.DecimalField(_('discount'), max_digits=12, decimal_places=0,
-                                  default=0, validators=[MinValueValidator(0)])
+                                  default=0, validators=[MinValueValidator(Decimal('0'))])
     notes = models.TextField(_('notes'), blank=True)
 
     class Meta:
