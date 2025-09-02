@@ -41,8 +41,8 @@
                     <div v-for="customer in filteredCustomers" :key="customer.id"
                       @click="selectCustomer(customer)"
                       class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer">
-                      <div class="font-medium">{{ customer.name }}</div>
-                      <div class="text-sm text-gray-500">{{ customer.phone }}</div>
+                      <div class="font-medium  dark:text-white">{{ customer.name }}</div>
+                      <div class="text-sm text-gray-500 dark:tegray-300">{{ customer.phone }}</div>
                     </div>
                   </div>
                 </div>
@@ -66,12 +66,12 @@
             </div>
 
             <!-- Sale Date -->
-            <div>
-              <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">تاریخ فروش *</label>
+            <div class=" dark:bg-white">
+              <label class="mb-2 block text-sm font-medium text-gray-700">تاریخ فروش *</label>
               <div class="w-48">
                 <DatePicker v-model="form.sale_date" format="YYYY/MM/DD" display-format="jYYYY/jMM/jDD"
                   :editable="false" :clearable="false" required
-                  class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white" />
+                  class="w- px-3 py-2 text-sm focus:border-primary focus:outline-none text-black" />
               </div>
             </div>
 
@@ -180,38 +180,26 @@
 
               <div class="flex justify-between border-t pt-2">
                 <span class="font-medium text-gray-900 dark:text-white">مبلغ نهایی:</span>
-                <span class="font-bold text-lg text-primary">{{ formatPrice(total) }}</span>
+                <span class="font-bold text-lg text-gray-900 dark:text-white">{{ formatPrice(total) }}</span>
               </div>
             </div>
           </div>
-
-            <!-- Actions -->
-            <div class="flex gap-3 justify-end">
-              <button type="button" @click="$emit('close')"
-                class="rounded-lg border border-gray-300 px-6 py-2 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700">
-                انصراف
-              </button>
-              <button type="submit" :disabled="loading || !isFormValid"
-                class="rounded-lg bg-primary px-6 py-2 text-white hover:bg-opacity-90 disabled:opacity-50 transition-colors">
-                {{ loading ? 'در حال ذخیره...' : (isEditing ? 'به‌روزرسانی' : 'ایجاد سفارش') }}
-              </button>
-            </div>
         </form>
       </div>
 
       <!-- Modal Footer -->
-      <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 rounded-b-xl">
-        <button type="button" @click="$emit('close')"
-          class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600">
-          انصراف
-        </button>
+      <div class="flex items-center justify-start gap-3 px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 rounded-b-xl">
         <button type="submit" @click="handleSubmit" :disabled="loading || !isFormValid"
-          class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-primary border border-transparent rounded-lg hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed">
+          class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600 disabled:cursor-not-allowed">
           <svg v-if="loading" class="w-4 h-4 mr-2 animate-spin" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
           {{ loading ? 'در حال ذخیره...' : (isEditing ? 'به‌روزرسانی' : 'ایجاد سفارش') }}
+        </button>
+        <button type="button" @click="$emit('close')"
+          class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600">
+          انصراف
         </button>
       </div>
     </div>
@@ -326,7 +314,7 @@ const filterCustomers = () => {
 
 const selectCustomer = (customer) => {
   form.value.customer = customer.id
-  customerSearch.value = `${customer.name} - ${customer.phone}`
+  customerSearch.value = `${customer.name}`
   showCustomerDropdown.value = false
 }
 

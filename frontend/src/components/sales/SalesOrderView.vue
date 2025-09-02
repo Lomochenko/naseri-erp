@@ -1,7 +1,7 @@
 <template>
   <div class="fixed inset-0 z-50 flex items-center justify-center lg:justify-start bg-black bg-opacity-50 p-0 lg:p-4" @click.self="handleOverlayClick">
     <!-- Modal container - full screen on mobile, centered on desktop -->
-    <div class="w-full h-full lg:w-auto lg:max-w-4xl lg:h-[85vh] rounded-lg bg-white shadow-xl flex flex-col overflow-visible relative">
+    <div class="w-full h-full lg:w-auto lg:max-w-4xl lg:h-[85vh] rounded-lg bg-white dark:bg-black shadow-xl flex flex-col overflow-visible relative">
 
       <!-- Close button for large screens (top-left corner with blinking effect) -->
       <button @click="$emit('close')"

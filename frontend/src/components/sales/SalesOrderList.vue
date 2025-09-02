@@ -7,7 +7,7 @@
           سفارشات فروش
         </h4>
         <button @click="showCreateModal = true"
-          class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90 transition-colors">
+          class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-black dark:text-white hover:bg-opacity-90 transition-colors">
           <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
           </svg>
@@ -104,10 +104,7 @@
               </span>
             </td>
             <td class="px-5 py-4 sm:px-6">
-              <div class="flex items-center gap-3">
-                <div class="w-8 h-8 overflow-hidden rounded-full bg-primary/10 flex items-center justify-center">
-                  <span class="text-primary font-medium text-xs">{{ order.customer_name?.charAt(0) || 'N' }}</span>
-                </div>
+              <div>
                 <span class="block font-medium text-gray-800 text-sm dark:text-white/90">
                   {{ order.customer_name }}
                 </span>
@@ -179,7 +176,7 @@
                 </div>
 
                 <!-- Delete -->
-                <button v-if="order.status === 'draft'" @click="deleteOrder(order)" class="hover:text-danger" title="حذف">
+                <button v-if="order.status === 'draft'" @click="deleteOrder(order)" class="text-red-600" title="حذف">
                   <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                   </svg>
