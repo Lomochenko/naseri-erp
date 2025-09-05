@@ -329,10 +329,29 @@ const toggleStatusMenu = (orderId) => {
 }
 
 const updateOrderStatus = async (order, newStatus) => {
-  const result = await salesStore.updateSalesOrder(order.id, { status: newStatus })
+  // Confirm action with user
+  const statusText = {
+    'confirmed': 'تایید',
+    'cancelled': 'لغو',
+    'completed': 'تکمیل'
+  }
+
+  const confirmMessage = `آیا از ${statusText[newStatus]} سفارش شماره ${order.invoice_number || order.id} اطمینان دارید؟`
+
+  if (!confirm(confirmMessage)) {
+    return
+  }
+
+  console.log('Updating order status:', { orderId: order.id, newStatus })
+
+  const result = await salesStore.updateSalesOrderStatus(order.id, newStatus)
+
   if (result.success) {
-    activeStatusMenu.value = null
+    console.log('Status updated successfully')
+    // Success message
+    alert(`وضعیت سفارش با موفقیت به "${statusText[newStatus]}" تغییر یافت`)
   } else {
+    console.error('Status update failed:', result.error)
     alert('خطا در تغییر وضعیت: ' + result.error)
   }
 }

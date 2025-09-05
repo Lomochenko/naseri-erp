@@ -78,6 +78,7 @@ export const salesAPI = {
   getSalesOrders: (params = {}) => api.get('/sales/sales/', { params }),
   createSalesOrder: (data) => api.post('/sales/sales/', data),
   updateSalesOrder: (id, data) => api.put(`/sales/sales/${id}/`, data),
+  updateSalesOrderStatus: (id, status) => api.patch(`/sales/sales/${id}/update-status/`, { status }),
   deleteSalesOrder: (id) => api.delete(`/sales/sales/${id}/`),
 
   getInvoices: (params = {}) => api.get('/sales/invoices/', { params }),

@@ -1,4 +1,5 @@
 from rest_framework import viewsets, permissions, generics, filters
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Sum, F, Count
@@ -55,6 +56,76 @@ class SaleViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         print(f"Perform create called")
         serializer.save(created_by=self.request.user)
+
+    @action(detail=True, methods=['patch'], url_path='update-status')
+    def update_status(self, request, pk=None):
+        """Update sale status."""
+        from rest_framework.response import Response
+        from rest_framework import status as http_status
+        from django.db import transaction
+
+        sale = self.get_object()
+        new_status = request.data.get('status')
+
+        print(f"=== UPDATING SALE STATUS ===")
+        print(f"Sale ID: {sale.id}")
+        print(f"Current status: {sale.status}")
+        print(f"New status: {new_status}")
+
+        # Validate status
+        valid_statuses = ['draft', 'confirmed', 'completed', 'cancelled']
+        if new_status not in valid_statuses:
+            return Response(
+                {'error': f'Invalid status. Must be one of: {valid_statuses}'},
+                status=http_status.HTTP_400_BAD_REQUEST
+            )
+
+        # Business logic for status transitions
+        if sale.status == 'cancelled':
+            return Response(
+                {'error': 'Cannot change status of cancelled sale'},
+                status=http_status.HTTP_400_BAD_REQUEST
+            )
+
+        if sale.status == 'completed' and new_status != 'completed':
+            return Response(
+                {'error': 'Cannot change status of completed sale'},
+                status=http_status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            with transaction.atomic():
+                old_status = sale.status
+                sale.status = new_status
+                sale.save()
+
+                # Handle inventory updates based on status change
+                if new_status == 'confirmed' and old_status == 'draft':
+                    # When confirming, ensure stock is still available
+                    for item in sale.items.all():
+                        if item.product.current_stock < item.quantity:
+                            raise ValueError(f'Insufficient stock for {item.product.name}')
+
+                elif new_status == 'cancelled':
+                    # When cancelling, restore stock if it was previously confirmed
+                    if old_status in ['confirmed', 'completed']:
+                        for item in sale.items.all():
+                            item.product.current_stock += item.quantity
+                            item.product.save()
+                            print(f"Restored stock for {item.product.name}: +{item.quantity}")
+
+                print(f"Status updated successfully: {old_status} -> {new_status}")
+
+                # Return updated sale data
+                serializer = self.get_serializer(sale)
+                return Response(serializer.data, status=http_status.HTTP_200_OK)
+
+        except Exception as e:
+            print(f"Error updating status: {str(e)}")
+            return Response(
+                {'error': str(e)},
+                status=http_status.HTTP_400_BAD_REQUEST
+            )
 
 class SaleItemViewSet(viewsets.ModelViewSet):
     """ViewSet for viewing and editing SaleItem instances."""

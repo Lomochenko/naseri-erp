@@ -172,6 +172,33 @@ export const useSalesStore = defineStore('sales', () => {
     }
   }
 
+  const updateSalesOrderStatus = async (id, status) => {
+    isLoading.value = true
+    error.value = null
+
+    console.log('Store: Updating sales order status:', { id, status })
+
+    try {
+      const response = await salesAPI.updateSalesOrderStatus(id, status)
+      console.log('Store: Status update response:', response)
+
+      // Update the order in the local state
+      const index = salesOrders.value.findIndex(o => o.id === id)
+      if (index !== -1) {
+        salesOrders.value[index] = response.data
+        console.log('Store: Updated order in local state')
+      }
+
+      return { success: true, data: response.data }
+    } catch (err) {
+      console.error('Store: Status update error:', err)
+      error.value = err.response?.data?.error || err.response?.data?.message || 'خطا در تغییر وضعیت سفارش'
+      return { success: false, error: error.value }
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   // Invoice Actions
   const fetchInvoices = async (params = {}) => {
     isLoading.value = true
@@ -296,6 +323,7 @@ export const useSalesStore = defineStore('sales', () => {
     fetchSalesOrders,
     createSalesOrder,
     updateSalesOrder,
+    updateSalesOrderStatus,
     fetchInvoices,
     createInvoice,
     fetchPayments,
