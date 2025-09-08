@@ -156,7 +156,7 @@
 
               <div class="flex justify-between border-t pt-3">
                 <span class="text-lg font-medium text-gray-900 dark:text-white">مبلغ نهایی:</span>
-                <span class="text-lg font-bold text-primary">{{ formatPrice(salesOrder.total) }}</span>
+                <span class="text-lg font-bold text-gray-900 dark:text-white">{{ formatPrice(salesOrder.total) }}</span>
               </div>
             </div>
           </div>

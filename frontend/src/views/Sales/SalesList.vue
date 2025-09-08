@@ -89,19 +89,37 @@
         </div>
       </div>
 
-      <!-- Tabs -->
+      <!-- Modern Tabs -->
       <div class="mb-6">
-        <div class="border-b border-gray-200 dark:border-gray-700">
-          <nav class="-mb-px flex space-x-8 space-x-reverse">
+        <div class="rounded-sm border border-stroke bg-white p-2 shadow-default dark:border-strokedark dark:bg-boxdark">
+          <nav class="flex space-x-2 space-x-reverse">
             <button @click="activeTab = 'orders'"
-              :class="activeTab === 'orders' ? 'border-primary text-black dark:text-white' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 hover:border-gray-300'"
-              class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
-              سفارشات فروش
+              :class="[
+                'relative flex-1 rounded-lg px-6 py-3 text-sm font-medium transition-all duration-200',
+                activeTab === 'orders'
+                  ? 'bg-primary text-white shadow-lg transform scale-105'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-700'
+              ]">
+              <span class="relative z-10 flex items-center justify-center gap-2">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                سفارشات فروش
+              </span>
             </button>
             <button @click="activeTab = 'customers'"
-              :class="activeTab === 'customers' ? 'border-primary text-black dark:text-white' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 hover:border-gray-300'"
-              class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
-              مشتریان
+              :class="[
+                'relative flex-1 rounded-lg px-6 py-3 text-sm font-medium transition-all duration-200',
+                activeTab === 'customers'
+                  ? 'bg-primary text-white shadow-lg transform scale-105'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-700'
+              ]">
+              <span class="relative z-10 flex items-center justify-center gap-2">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                </svg>
+                مشتریان
+              </span>
             </button>
           </nav>
         </div>

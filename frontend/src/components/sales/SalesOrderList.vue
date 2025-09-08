@@ -16,6 +16,37 @@
       </div>
     </div>
 
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:gap-6 2xl:gap-7.5 mb-6">
+      <!-- Total Orders Card -->
+      <InventoryCard
+        :value="salesStats.totalOrders"
+        label="کل سفارشات"
+        type="total"
+      />
+
+      <!-- Today Revenue Card -->
+      <InventoryCard
+        :value="salesStats.todayRevenue"
+        label="درآمد امروز"
+        type="success"
+      />
+
+      <!-- Pending Orders Card -->
+      <InventoryCard
+        :value="salesStats.pendingOrders"
+        label="سفارشات در انتظار"
+        type="warning"
+      />
+
+      <!-- Cancelled Orders Card -->
+      <InventoryCard
+        :value="salesStats.cancelledOrders"
+        label="سفارشات لغو شده"
+        type="danger"
+      />
+    </div>
+
     <!-- Alert Messages -->
     <div v-if="alertMessage.show" class="px-6 py-4">
       <AlertJS
@@ -27,15 +58,21 @@
     </div>
 
     <!-- Filters -->
-    <div class="border-b border-gray-200 bg-gray-50 px-6 py-4 dark:border-gray-700 dark:bg-gray-800/50">
-      <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
-        <div>
+    <div class="rounded-sm border border-stroke bg-white p-6 shadow-default dark:border-strokedark dark:bg-boxdark mb-6">
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-5">
+        <!-- Search Input -->
+        <div class="relative">
           <input v-model="searchQuery" type="text" placeholder="جستجو در سفارشات..."
-            class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-primary focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white" />
+            class="w-full rounded-lg border-[1.5px] border-stroke bg-transparent py-3 pl-12 pr-4 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary" />
+          <svg class="absolute left-2 top-1/2 h-5 w-5 -translate-y-1/2 text-black dark:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
         </div>
+
+        <!-- Status Filter -->
         <div>
           <select v-model="statusFilter"
-            class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-primary focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+            class="w-full rounded-lg border-[1.5px] border-stroke bg-transparent py-3 px-4 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
             <option value="">همه وضعیت‌ها</option>
             <option value="draft">پیش‌نویس</option>
             <option value="confirmed">تأیید شده</option>
@@ -43,18 +80,41 @@
             <option value="cancelled">لغو شده</option>
           </select>
         </div>
+
+        <!-- Customer Filter -->
         <div>
           <select v-model="customerFilter"
-            class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-primary focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+            class="w-full rounded-lg border-[1.5px] border-stroke bg-transparent py-3 px-4 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
             <option value="">همه مشتریان</option>
             <option v-for="customer in customers" :key="customer.id" :value="customer.id">
               {{ customer.name }}
             </option>
           </select>
         </div>
+
+        <!-- Date From Filter -->
         <div>
-          <input v-model="dateFrom" type="date" placeholder="از تاریخ"
-            class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-primary focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white" />
+          <DatePicker
+            v-model="dateFromFilter"
+            placeholder="از تاریخ..."
+            format="YYYY-MM-DD"
+            display-format="jYYYY/jMM/jDD"
+            :auto-submit="true"
+            :clearable="true"
+            class="w-full"
+            input-class="w-full rounded-lg border-[1.5px] border-stroke bg-transparent py-3 px-4 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
+          />
+        </div>
+
+        <!-- Clear Filters Button -->
+        <div>
+          <button @click="clearFilters"
+            class="w-full inline-flex items-center justify-center rounded-md border-[1.5px] border-gray-200 bg-gray-100 px-4 py-3 text-center font-medium text-dark hover:bg-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600 transition-colors">
+            <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            پاک کردن فیلترها
+          </button>
         </div>
       </div>
     </div>
@@ -81,47 +141,46 @@
     </div>
 
     <!-- Sales Orders Table -->
-    <div v-else class="max-w-full overflow-x-auto custom-scrollbar">
-      <table class="min-w-full">
+    <div v-else class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+      <div class="max-w-full overflow-x-auto">
+        <table class="w-full table-auto">
         <thead>
-          <tr class="border-b border-gray-200 dark:border-gray-700">
-            <th class="px-5 py-3 text-right w-2/12 sm:px-6">
-              <p class="font-medium text-gray-500 text-sm dark:text-gray-400">شماره فاکتور</p>
+          <tr class="border-b border-[#eee] bg-gray-2 text-left dark:bg-meta-4">
+            <th class="min-w-[220px] px-4 py-4 font-medium text-black dark:text-white xl:pl-11">
+              شماره فاکتور
             </th>
-            <th class="px-5 py-3 text-right w-3/12 sm:px-6">
-              <p class="font-medium text-gray-500 text-sm dark:text-gray-400">مشتری</p>
+            <th class="min-w-[150px] px-4 py-4 font-medium text-black dark:text-white">
+              مشتری
             </th>
-            <th class="px-5 py-3 text-right w-2/12 sm:px-6">
-              <p class="font-medium text-gray-500 text-sm dark:text-gray-400">تاریخ</p>
+            <th class="min-w-[120px] px-4 py-4 font-medium text-black dark:text-white">
+              تاریخ
             </th>
-            <th class="px-5 py-3 text-center w-1/12 sm:px-6">
-              <p class="font-medium text-gray-500 text-sm dark:text-gray-400">وضعیت</p>
+            <th class="min-w-[120px] px-4 py-4 font-medium text-black dark:text-white">
+              وضعیت
             </th>
-            <th class="px-5 py-3 text-right w-2/12 sm:px-6">
-              <p class="font-medium text-gray-500 text-sm dark:text-gray-400">مبلغ کل</p>
+            <th class="min-w-[120px] px-4 py-4 font-medium text-black dark:text-white">
+              مبلغ کل
             </th>
-            <th class="px-5 py-3 text-center w-2/12 sm:px-6">
-              <p class="font-medium text-gray-500 text-sm dark:text-gray-400">عملیات</p>
+            <th class="px-4 py-4 font-medium text-black dark:text-white">
+              عملیات
             </th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+        <tbody>
           <tr v-for="order in paginatedOrders" :key="order.id"
-            class="border-t border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
-            <td class="px-5 py-4 sm:px-6">
-              <span class="block font-medium text-gray-800 text-sm dark:text-white/90">
+            class="border-b border-[#eee] dark:border-strokedark hover:bg-gray-2 dark:hover:bg-meta-4">
+            <td class="border-b border-[#eee] px-4 py-5 pl-9 dark:border-strokedark xl:pl-11">
+              <h5 class="font-medium text-black dark:text-white">
                 {{ order.invoice_number || 'در انتظار تولید' }}
-              </span>
+              </h5>
             </td>
-            <td class="px-5 py-4 sm:px-6">
-              <div>
-                <span class="block font-medium text-gray-800 text-sm dark:text-white/90">
-                  {{ order.customer_name }}
-                </span>
-              </div>
+            <td class="border-b border-[#eee] px-4 py-5 dark:border-strokedark">
+              <p class="text-black dark:text-white">
+                {{ order.customer_name }}
+              </p>
             </td>
-            <td class="px-5 py-4 sm:px-6">
-              <p class="text-gray-500 text-sm dark:text-gray-400">{{ formatDate(order.sale_date) }}</p>
+            <td class="border-b border-[#eee] px-4 py-5 dark:border-strokedark">
+              <p class="text-black dark:text-white">{{ formatDate(order.sale_date) }}</p>
             </td>
             <td class="">
               <div class="flex items-center gap-2">
@@ -214,6 +273,7 @@
           class="rounded-lg border border-gray-300 px-3 py-1 text-sm disabled:opacity-50 dark:border-gray-600">
           بعدی
         </button>
+        </div>
       </div>
     </div>
 
@@ -231,6 +291,8 @@ import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import SalesOrderForm from './SalesOrderForm.vue'
 import SalesOrderView from './SalesOrderView.vue'
 import AlertJS from '@/components/ui/AlertJS.vue'
+import InventoryCard from '@/components/common/InventoryCard.vue'
+import DatePicker from 'vue3-persian-datetime-picker'
 
 // Store
 const salesStore = useSalesStore()
@@ -239,6 +301,8 @@ const salesStore = useSalesStore()
 const searchQuery = ref('')
 const statusFilter = ref('')
 const customerFilter = ref('')
+const dateFromFilter = ref('')
+const dateToFilter = ref('')
 const currentPage = ref(1)
 const pageSize = ref(10)
 const showCreateModal = ref(false)
@@ -247,6 +311,14 @@ const showViewModal = ref(false)
 const editingOrder = ref(null)
 const viewingOrder = ref(null)
 const loading = ref(false)
+
+// Statistics
+const salesStats = ref({
+  totalOrders: 0,
+  todayRevenue: 0,
+  pendingOrders: 0,
+  cancelledOrders: 0
+})
 
 // Alert system
 const alertMessage = ref({
@@ -292,6 +364,23 @@ const filteredOrders = computed(() => {
 
   if (customerFilter.value) {
     filtered = filtered.filter(order => order.customer === parseInt(customerFilter.value))
+  }
+
+  // Date filtering
+  if (dateFromFilter.value) {
+    filtered = filtered.filter(order => {
+      const orderDate = new Date(order.sale_date)
+      const fromDate = new Date(dateFromFilter.value)
+      return orderDate >= fromDate
+    })
+  }
+
+  if (dateToFilter.value) {
+    filtered = filtered.filter(order => {
+      const orderDate = new Date(order.sale_date)
+      const toDate = new Date(dateToFilter.value)
+      return orderDate <= toDate
+    })
   }
 
   return filtered
@@ -357,7 +446,28 @@ const deleteOrder = async (order) => {
   }
 }
 
+const clearFilters = () => {
+  searchQuery.value = ''
+  statusFilter.value = ''
+  customerFilter.value = ''
+  dateFromFilter.value = ''
+  dateToFilter.value = ''
+  currentPage.value = 1
+}
 
+const calculateStatistics = () => {
+  const orders = salesOrders.value
+  const today = new Date().toISOString().split('T')[0]
+
+  salesStats.value = {
+    totalOrders: orders.length,
+    todayRevenue: orders
+      .filter(order => order.sale_date === today && order.status === 'completed')
+      .reduce((sum, order) => sum + parseFloat(order.total || 0), 0),
+    pendingOrders: orders.filter(order => order.status === 'draft').length,
+    cancelledOrders: orders.filter(order => order.status === 'cancelled').length
+  }
+}
 
 const updateOrderStatus = async (order, newStatus) => {
   // Confirm action with user
@@ -414,6 +524,9 @@ onMounted(async () => {
       salesStore.fetchSalesOrders(),
       salesStore.fetchCustomers()
     ])
+
+    // Calculate statistics
+    calculateStatistics()
   } finally {
     loading.value = false
   }
