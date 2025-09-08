@@ -22,6 +22,14 @@
 
       <!-- Modal Content -->
       <div class="p-6">
+        <!-- Alert Messages -->
+        <AlertJS
+          v-if="alertMessage.show"
+          :variant="alertMessage.type"
+          :title="alertMessage.title"
+          :message="alertMessage.message"
+          @close="alertMessage.show = false"
+        />
         <form @submit.prevent="handleSubmit" class="space-y-6">
           <!-- Customer & Basic Info -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -29,7 +37,7 @@
             <div>
               <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">مشتری *</label>
               <div class="flex gap-2">
-                <div class="flex-1 relative">
+                <div class="flex-1 relative" ref="customerDropdownRef">
                   <input v-model="customerSearch" type="text" placeholder="جستجو مشتری..."
                     @input="filterCustomers"
                     @focus="showCustomerDropdown = true"
@@ -94,11 +102,12 @@
                 class="border border-gray-200 rounded-lg p-4 dark:border-gray-700">
                 <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
                   <!-- Product -->
-                  <div class="md:col-span-2 relative">
+                  <div class="md:col-span-2 relative" :ref="`productDropdownRef${index}`">
                     <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">محصول</label>
                     <input v-model="item.productSearch" type="text" placeholder="جستجو محصول..."
                       @input="filterProducts(index)"
-                      @focus="item.showProductDropdown = true"
+                      @focus="showProductDropdown(index)"
+                      @click="showProductDropdown(index)"
                       class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white" />
 
                     <!-- Product Dropdown -->
@@ -210,11 +219,12 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useSalesStore } from '@/stores/sales'
 import { useProductsStore } from '@/stores/products'
 import DatePicker from 'vue3-persian-datetime-picker'
 import CustomerForm from './CustomerForm.vue'
+import AlertJS from '@/components/ui/AlertJS.vue'
 
 const props = defineProps({
   show: {
@@ -250,6 +260,27 @@ const form = ref({
   discount_percent: 0,
   items: []
 })
+
+// Alert system
+const alertMessage = ref({
+  show: false,
+  type: 'info',
+  title: '',
+  message: ''
+})
+
+const showAlert = (type, title, message) => {
+  alertMessage.value = {
+    show: true,
+    type,
+    title,
+    message
+  }
+  // Auto hide after 5 seconds
+  setTimeout(() => {
+    alertMessage.value.show = false
+  }, 5000)
+}
 
 // Computed
 const customers = computed(() => salesStore.customers)
@@ -334,13 +365,28 @@ const removeProduct = (index) => {
   form.value.items.splice(index, 1)
 }
 
+const showProductDropdown = (index) => {
+  const item = form.value.items[index]
+  item.showProductDropdown = true
+  // Show all products if no search term
+  if (!item.productSearch || item.productSearch.trim() === '') {
+    item.filteredProducts = availableProducts.value
+  } else {
+    filterProducts(index)
+  }
+}
+
 const filterProducts = (index) => {
   const item = form.value.items[index]
   const search = item.productSearch.toLowerCase()
-  item.filteredProducts = availableProducts.value.filter(product =>
-    product.name.toLowerCase().includes(search) ||
-    product.code.toLowerCase().includes(search)
-  )
+  if (search.trim() === '') {
+    item.filteredProducts = availableProducts.value
+  } else {
+    item.filteredProducts = availableProducts.value.filter(product =>
+      product.name.toLowerCase().includes(search) ||
+      product.code.toLowerCase().includes(search)
+    )
+  }
 }
 
 const selectProduct = (index, product) => {
@@ -356,6 +402,24 @@ const handleNewCustomerSaved = async () => {
   await salesStore.fetchCustomers()
 }
 
+// Click outside functionality
+const customerDropdownRef = ref(null)
+
+const handleClickOutside = (event) => {
+  // Close customer dropdown
+  if (customerDropdownRef.value && !customerDropdownRef.value.contains(event.target)) {
+    showCustomerDropdown.value = false
+  }
+
+  // Close product dropdowns
+  form.value.items.forEach((item, index) => {
+    const productRef = document.querySelector(`[ref="productDropdownRef${index}"]`)
+    if (productRef && !productRef.contains(event.target)) {
+      item.showProductDropdown = false
+    }
+  })
+}
+
 
 
 
@@ -365,7 +429,7 @@ const handleSubmit = async () => {
   console.log('Form data:', form.value)
 
   if (!isFormValid.value) {
-    alert('لطفاً تمام فیلدهای اجباری را پر کنید')
+    showAlert('error', 'خطا در اعتبارسنجی', 'لطفاً تمام فیلدهای اجباری را پر کنید')
     return
   }
 
@@ -393,12 +457,12 @@ const handleSubmit = async () => {
 
     // Validate data before sending
     if (!orderData.customer) {
-      alert('لطفاً مشتری را انتخاب کنید')
+      showAlert('error', 'خطا در اعتبارسنجی', 'لطفاً مشتری را انتخاب کنید')
       return
     }
 
     if (!orderData.items || orderData.items.length === 0) {
-      alert('لطفاً حداقل یک محصول اضافه کنید')
+      showAlert('error', 'خطا در اعتبارسنجی', 'لطفاً حداقل یک محصول اضافه کنید')
       return
     }
 
@@ -417,12 +481,14 @@ const handleSubmit = async () => {
 
     if (result.success) {
       console.log('Order saved successfully:', result.data)
-      alert('سفارش با موفقیت ذخیره شد!')
-      emit('saved', result.data)
-      emit('close')
+      showAlert('success', 'موفقیت', 'سفارش با موفقیت ذخیره شد!')
+      setTimeout(() => {
+        emit('saved', result.data)
+        emit('close')
+      }, 1500)
     } else {
       console.error('Order save failed:', result.error)
-      alert('خطا در ذخیره سفارش: ' + result.error)
+      showAlert('error', 'خطا در ذخیره', 'خطا در ذخیره سفارش: ' + result.error)
     }
   } catch (error) {
     console.error('Error saving sales order:', error)
@@ -444,7 +510,7 @@ const handleSubmit = async () => {
       errorMessage += ': ' + error.message
     }
 
-    alert(errorMessage)
+    showAlert('error', 'خطا در ذخیره', errorMessage)
   } finally {
     loading.value = false
   }
@@ -486,5 +552,13 @@ onMounted(async () => {
   if (!isEditing.value && form.value.items.length === 0) {
     addProduct()
   }
+
+  // Add click outside event listener
+  document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  // Remove click outside event listener
+  document.removeEventListener('click', handleClickOutside)
 })
 </script>

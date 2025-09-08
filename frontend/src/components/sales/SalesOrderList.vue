@@ -16,6 +16,16 @@
       </div>
     </div>
 
+    <!-- Alert Messages -->
+    <div v-if="alertMessage.show" class="px-6 py-4">
+      <AlertJS
+        :variant="alertMessage.type"
+        :title="alertMessage.title"
+        :message="alertMessage.message"
+        @close="alertMessage.show = false"
+      />
+    </div>
+
     <!-- Filters -->
     <div class="border-b border-gray-200 bg-gray-50 px-6 py-4 dark:border-gray-700 dark:bg-gray-800/50">
       <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
@@ -113,13 +123,42 @@
             <td class="px-5 py-4 sm:px-6">
               <p class="text-gray-500 text-sm dark:text-gray-400">{{ formatDate(order.sale_date) }}</p>
             </td>
-            <td class="px-5 py-4 sm:px-6 text-center">
-              <span :class="[
-                'rounded-full px-2 py-0.5 text-xs font-medium',
-                getStatusClass(order.status)
-              ]">
-                {{ getStatusText(order.status) }}
-              </span>
+            <td class="">
+              <div class="flex items-center gap-2">
+                <span :class="[
+                  'rounded-lg px-2 py-0.5 text-xs font-medium',
+                  getStatusClass(order.status)
+                ]">
+                  {{ getStatusText(order.status) }}
+                </span>
+
+                <!-- Status Action Buttons -->
+                <div v-if="order.status === 'draft'" class="flex gap-1 mr-2">
+                  <button @click="updateOrderStatus(order, 'confirmed')"
+                    class="px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                    title="تایید سفارش">
+                    تایید
+                  </button>
+                  <button @click="updateOrderStatus(order, 'cancelled')"
+                    class="px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                    title="لغو سفارش">
+                    لغو
+                  </button>
+                </div>
+
+                <div v-else-if="order.status === 'confirmed'" class="flex gap-1 mr-2">
+                  <button @click="updateOrderStatus(order, 'completed')"
+                    class="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                    title="تکمیل سفارش">
+                    تکمیل
+                  </button>
+                  <button @click="updateOrderStatus(order, 'cancelled')"
+                    class="px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                    title="لغو سفارش">
+                    لغو
+                  </button>
+                </div>
+              </div>
             </td>
             <td class="px-5 py-4 sm:px-6">
               <p class="text-gray-800 text-sm font-medium dark:text-white/90">{{ formatPrice(order.total) }}</p>
@@ -145,35 +184,7 @@
                   </svg>
                 </button>
 
-                <!-- Status Actions -->
-                <div class="relative">
-                  <button @click="toggleStatusMenu(order.id)"
-                    class="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 hover:text-primary transition-colors"
-                    title="تغییر وضعیت">
-                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                    </svg>
-                  </button>
 
-                  <!-- Status Menu -->
-                  <div v-if="activeStatusMenu === order.id"
-                    class="absolute right-0 top-8 z-10 w-48 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 dark:bg-gray-800">
-                    <div class="py-1">
-                      <button v-if="order.status === 'draft'" @click="updateOrderStatus(order, 'confirmed')"
-                        class="block w-full px-4 py-2 text-right text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">
-                        تأیید سفارش
-                      </button>
-                      <button v-if="order.status === 'confirmed'" @click="updateOrderStatus(order, 'completed')"
-                        class="block w-full px-4 py-2 text-right text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">
-                        تکمیل سفارش
-                      </button>
-                      <button v-if="['draft', 'confirmed'].includes(order.status)" @click="updateOrderStatus(order, 'cancelled')"
-                        class="block w-full px-4 py-2 text-right text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700">
-                        لغو سفارش
-                      </button>
-                    </div>
-                  </div>
-                </div>
 
                 <!-- Delete -->
                 <button v-if="order.status === 'draft'" @click="deleteOrder(order)" class="text-red-600" title="حذف">
@@ -219,6 +230,7 @@ import { useSalesStore } from '@/stores/sales'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import SalesOrderForm from './SalesOrderForm.vue'
 import SalesOrderView from './SalesOrderView.vue'
+import AlertJS from '@/components/ui/AlertJS.vue'
 
 // Store
 const salesStore = useSalesStore()
@@ -235,6 +247,27 @@ const showViewModal = ref(false)
 const editingOrder = ref(null)
 const viewingOrder = ref(null)
 const loading = ref(false)
+
+// Alert system
+const alertMessage = ref({
+  show: false,
+  type: 'info',
+  title: '',
+  message: ''
+})
+
+const showAlert = (type, title, message) => {
+  alertMessage.value = {
+    show: true,
+    type,
+    title,
+    message
+  }
+  // Auto hide after 5 seconds
+  setTimeout(() => {
+    alertMessage.value.show = false
+  }, 5000)
+}
 const activeStatusMenu = ref(null)
 
 // Computed
@@ -324,9 +357,7 @@ const deleteOrder = async (order) => {
   }
 }
 
-const toggleStatusMenu = (orderId) => {
-  activeStatusMenu.value = activeStatusMenu.value === orderId ? null : orderId
-}
+
 
 const updateOrderStatus = async (order, newStatus) => {
   // Confirm action with user
@@ -349,10 +380,10 @@ const updateOrderStatus = async (order, newStatus) => {
   if (result.success) {
     console.log('Status updated successfully')
     // Success message
-    alert(`وضعیت سفارش با موفقیت به "${statusText[newStatus]}" تغییر یافت`)
+    showAlert('success', 'موفقیت', `وضعیت سفارش با موفقیت به "${statusText[newStatus]}" تغییر یافت`)
   } else {
     console.error('Status update failed:', result.error)
-    alert('خطا در تغییر وضعیت: ' + result.error)
+    showAlert('error', 'خطا در تغییر وضعیت', result.error)
   }
 }
 
