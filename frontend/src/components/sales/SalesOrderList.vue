@@ -7,7 +7,7 @@
           سفارشات فروش
         </h4>
         <button @click="showCreateModal = true"
-          class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-black dark:text-white hover:bg-opacity-90 transition-colors">
+          class="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-black dark:text-white border-2 border-black dark:border-white hover:bg-opacity-90 transition-colors">
           <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
           </svg>
@@ -16,63 +16,19 @@
       </div>
     </div>
 
-    <!-- Statistics Cards -->
-    <div class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:gap-6 2xl:gap-7.5 mb-6">
-      <!-- Total Orders Card -->
-      <InventoryCard
-        :value="salesStats.totalOrders"
-        label="کل سفارشات"
-        type="total"
-      />
-
-      <!-- Today Revenue Card -->
-      <InventoryCard
-        :value="salesStats.todayRevenue"
-        label="درآمد امروز"
-        type="success"
-      />
-
-      <!-- Pending Orders Card -->
-      <InventoryCard
-        :value="salesStats.pendingOrders"
-        label="سفارشات در انتظار"
-        type="warning"
-      />
-
-      <!-- Cancelled Orders Card -->
-      <InventoryCard
-        :value="salesStats.cancelledOrders"
-        label="سفارشات لغو شده"
-        type="danger"
-      />
-    </div>
-
-    <!-- Alert Messages -->
-    <div v-if="alertMessage.show" class="px-6 py-4">
-      <AlertJS
-        :variant="alertMessage.type"
-        :title="alertMessage.title"
-        :message="alertMessage.message"
-        @close="alertMessage.show = false"
-      />
-    </div>
-
     <!-- Filters -->
-    <div class="rounded-sm border border-stroke bg-white p-6 shadow-default dark:border-strokedark dark:bg-boxdark mb-6">
+    <div class="border-b border-gray-200 bg-gray-50 px-6 py-4 dark:border-gray-700 dark:bg-gray-800/50">
       <div class="grid grid-cols-1 gap-4 md:grid-cols-5">
         <!-- Search Input -->
-        <div class="relative">
+        <div>
           <input v-model="searchQuery" type="text" placeholder="جستجو در سفارشات..."
-            class="w-full rounded-lg border-[1.5px] border-stroke bg-transparent py-3 pl-12 pr-4 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary" />
-          <svg class="absolute left-2 top-1/2 h-5 w-5 -translate-y-1/2 text-black dark:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
+            class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-primary focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white" />
         </div>
 
         <!-- Status Filter -->
         <div>
           <select v-model="statusFilter"
-            class="w-full rounded-lg border-[1.5px] border-stroke bg-transparent py-3 px-4 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
+            class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-primary focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white">
             <option value="">همه وضعیت‌ها</option>
             <option value="draft">پیش‌نویس</option>
             <option value="confirmed">تأیید شده</option>
@@ -84,7 +40,7 @@
         <!-- Customer Filter -->
         <div>
           <select v-model="customerFilter"
-            class="w-full rounded-lg border-[1.5px] border-stroke bg-transparent py-3 px-4 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
+            class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-primary focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white">
             <option value="">همه مشتریان</option>
             <option v-for="customer in customers" :key="customer.id" :value="customer.id">
               {{ customer.name }}
@@ -102,14 +58,14 @@
             :auto-submit="true"
             :clearable="true"
             class="w-full"
-            input-class="w-full rounded-lg border-[1.5px] border-stroke bg-transparent py-3 px-4 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
+            input-class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-primary focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
           />
         </div>
 
         <!-- Clear Filters Button -->
         <div>
           <button @click="clearFilters"
-            class="w-full inline-flex items-center justify-center rounded-md border-[1.5px] border-gray-200 bg-gray-100 px-4 py-3 text-center font-medium text-dark hover:bg-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600 transition-colors">
+            class="w-full inline-flex items-center justify-center rounded-md border border-gray-300 px-4 py-2 text-center text-sm text-black hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600 transition-colors">
             <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
@@ -117,6 +73,16 @@
           </button>
         </div>
       </div>
+    </div>
+
+    <!-- Alert Messages -->
+    <div v-if="alertMessage.show" class="px-6 py-4">
+      <AlertJS
+        :variant="alertMessage.type"
+        :title="alertMessage.title"
+        :message="alertMessage.message"
+        @close="alertMessage.show = false"
+      />
     </div>
 
     <!-- Loading -->
@@ -141,51 +107,50 @@
     </div>
 
     <!-- Sales Orders Table -->
-    <div v-else class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
-      <div class="max-w-full overflow-x-auto">
-        <table class="w-full table-auto">
+    <div v-else class="max-w-full overflow-x-auto custom-scrollbar">
+      <table class="min-w-full">
         <thead>
-          <tr class="border-b border-[#eee] bg-gray-2 text-left dark:bg-meta-4">
-            <th class="min-w-[220px] px-4 py-4 font-medium text-black dark:text-white xl:pl-11">
-              شماره فاکتور
+          <tr class="border-b border-gray-200 dark:border-gray-700">
+            <th class="px-5 py-3 text-right w-2/12 sm:px-6">
+              <p class="font-medium text-gray-500 text-sm dark:text-gray-400">شماره فاکتور</p>
             </th>
-            <th class="min-w-[150px] px-4 py-4 font-medium text-black dark:text-white">
-              مشتری
+            <th class="px-5 py-3 text-right w-3/12 sm:px-6">
+              <p class="font-medium text-gray-500 text-sm dark:text-gray-400">مشتری</p>
             </th>
-            <th class="min-w-[120px] px-4 py-4 font-medium text-black dark:text-white">
-              تاریخ
+            <th class="px-5 py-3 text-right w-2/12 sm:px-6">
+              <p class="font-medium text-gray-500 text-sm dark:text-gray-400">تاریخ</p>
             </th>
-            <th class="min-w-[120px] px-4 py-4 font-medium text-black dark:text-white">
-              وضعیت
+            <th class="px-5 py-3 text-right w-2/12 sm:px-6">
+              <p class="font-medium text-gray-500 text-sm dark:text-gray-400">وضعیت</p>
             </th>
-            <th class="min-w-[120px] px-4 py-4 font-medium text-black dark:text-white">
-              مبلغ کل
+            <th class="px-5 py-3 text-right w-2/12 sm:px-6">
+              <p class="font-medium text-gray-500 text-sm dark:text-gray-400">مبلغ کل</p>
             </th>
-            <th class="px-4 py-4 font-medium text-black dark:text-white">
-              عملیات
+            <th class="px-5 py-3 text-center w-1/12 sm:px-6">
+              <p class="font-medium text-gray-500 text-sm dark:text-gray-400">عملیات</p>
             </th>
           </tr>
         </thead>
-        <tbody>
+        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
           <tr v-for="order in paginatedOrders" :key="order.id"
-            class="border-b border-[#eee] dark:border-strokedark hover:bg-gray-2 dark:hover:bg-meta-4">
-            <td class="border-b border-[#eee] px-4 py-5 pl-9 dark:border-strokedark xl:pl-11">
-              <h5 class="font-medium text-black dark:text-white">
+            class="border-t border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
+            <td class="px-5 py-4 sm:px-6">
+              <h5 class="font-medium text-black dark:text-white text-sm">
                 {{ order.invoice_number || 'در انتظار تولید' }}
               </h5>
             </td>
-            <td class="border-b border-[#eee] px-4 py-5 dark:border-strokedark">
-              <p class="text-black dark:text-white">
+            <td class="px-5 py-4 sm:px-6">
+              <p class="text-black dark:text-white text-sm">
                 {{ order.customer_name }}
               </p>
             </td>
-            <td class="border-b border-[#eee] px-4 py-5 dark:border-strokedark">
-              <p class="text-black dark:text-white">{{ formatDate(order.sale_date) }}</p>
+            <td class="px-5 py-4 sm:px-6">
+              <p class="text-black dark:text-white text-sm">{{ formatDate(order.sale_date) }}</p>
             </td>
-            <td class="">
+            <td class="px-5 py-4 sm:px-6">
               <div class="flex items-center gap-2">
                 <span :class="[
-                  'rounded-lg px-2 py-0.5 text-xs font-medium',
+                  'rounded-full px-2 py-0.5 text-xs font-medium',
                   getStatusClass(order.status)
                 ]">
                   {{ getStatusText(order.status) }}
@@ -243,10 +208,10 @@
                   </svg>
                 </button>
 
-
-
                 <!-- Delete -->
-                <button v-if="order.status === 'draft'" @click="deleteOrder(order)" class="text-red-600" title="حذف">
+                <button v-if="order.status === 'draft'" @click="deleteOrder(order)"
+                  class="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 hover:text-red-600 transition-colors"
+                  title="حذف">
                   <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                   </svg>
@@ -273,7 +238,6 @@
           class="rounded-lg border border-gray-300 px-3 py-1 text-sm disabled:opacity-50 dark:border-gray-600">
           بعدی
         </button>
-        </div>
       </div>
     </div>
 
@@ -291,7 +255,6 @@ import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import SalesOrderForm from './SalesOrderForm.vue'
 import SalesOrderView from './SalesOrderView.vue'
 import AlertJS from '@/components/ui/AlertJS.vue'
-import InventoryCard from '@/components/common/InventoryCard.vue'
 import DatePicker from 'vue3-persian-datetime-picker'
 
 // Store
