@@ -16,6 +16,37 @@
       </div>
     </div>
 
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:gap-6 2xl:gap-7.5 mb-6">
+      <!-- Total Orders Card -->
+      <InventoryCard
+        :value="salesStats.totalOrders"
+        label="کل سفارشات"
+        type="total"
+      />
+
+      <!-- Today Revenue Card -->
+      <InventoryCard
+        :value="salesStats.todayRevenue"
+        label="درآمد امروز"
+        type="success"
+      />
+
+      <!-- Pending Orders Card -->
+      <InventoryCard
+        :value="salesStats.pendingOrders"
+        label="سفارشات در انتظار"
+        type="warning"
+      />
+
+      <!-- Cancelled Orders Card -->
+      <InventoryCard
+        :value="salesStats.cancelledOrders"
+        label="سفارشات لغو شده"
+        type="danger"
+      />
+    </div>
+
     <!-- Filters -->
     <div class="border-b border-gray-200 bg-gray-50 px-6 py-4 dark:border-gray-700 dark:bg-gray-800/50">
       <div class="grid grid-cols-1 gap-4 md:grid-cols-5">
@@ -255,6 +286,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import SalesOrderForm from './SalesOrderForm.vue'
 import SalesOrderView from './SalesOrderView.vue'
 import AlertJS from '@/components/ui/AlertJS.vue'
+import InventoryCard from '@/components/common/InventoryCard.vue'
 import DatePicker from 'vue3-persian-datetime-picker'
 
 // Store
@@ -452,6 +484,8 @@ const updateOrderStatus = async (order, newStatus) => {
 
   if (result.success) {
     console.log('Status updated successfully')
+    // Update statistics after status change
+    calculateStatistics()
     // Success message
     showAlert('success', 'موفقیت', `وضعیت سفارش با موفقیت به "${statusText[newStatus]}" تغییر یافت`)
   } else {
@@ -469,6 +503,7 @@ const handleOrderSaved = async () => {
   showEditModal.value = false
   editingOrder.value = null
   await refreshData()
+  calculateStatistics()
 }
 
 // Close status menu when clicking outside
