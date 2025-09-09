@@ -3,19 +3,7 @@
     <div>
       <!-- Breadcrumb -->
       <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 class="text-title-md2 font-bold text-black dark:text-white">
-          مدیریت فروش
-        </h2>
-        <nav>
-          <ol class="flex items-center gap-2">
-            <li>
-              <router-link class="font-medium text-black dark:text-white" to="/">داشبورد /</router-link>
-            </li>
-            <li class="font-medium text-black dark:text-white">فروش</li>
-          </ol>
-        </nav>
-      </div>
-      <!-- Modern Tabs -->
+        <!-- Modern Tabs -->
       <div class="mb-6">
         <div class="bg-gray-100 dark:bg-gray-800 p-1 rounded-xl inline-flex">
           <button @click="activeTab = 'orders'" :class="[
@@ -46,6 +34,16 @@
           </button>
         </div>
       </div>
+        <nav>
+          <ol class="flex items-center gap-2">
+            <li>
+              <router-link class="font-medium text-black dark:text-white" to="/">داشبورد /</router-link>
+            </li>
+            <li class="font-medium text-black dark:text-white">فروش</li>
+          </ol>
+        </nav>
+      </div>
+
 
       <!-- Tab Content -->
       <div v-if="activeTab === 'orders'">

@@ -17,7 +17,7 @@
     </div>
 
     <!-- Statistics Cards -->
-    <div class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:gap-6 2xl:gap-7.5 mb-6">
+    <div class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:gap-6 2xl:gap-7.5 mx-4 my-4">
       <!-- Total Orders Card -->
       <InventoryCard
         :value="salesStats.totalOrders"
