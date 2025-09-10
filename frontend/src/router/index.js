@@ -17,6 +17,24 @@ const router = createRouter({
       },
     },
     {
+      path: '/qr-test',
+      name: 'QRTest',
+      component: () => import('../views/QRTest.vue'),
+      meta: {
+        title: 'QR Code Test',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/mobile-receipt/:invoiceKey',
+      name: 'MobilePDFDownload',
+      component: () => import('../views/MobilePDFDownload.vue'),
+      meta: {
+        title: 'دانلود رسید',
+        requiresAuth: false, // Allow mobile access without login
+      },
+    },
+    {
       path: '/calendar',
       name: 'Calendar',
       component: () => import('../views/Others/Calendar.vue'),

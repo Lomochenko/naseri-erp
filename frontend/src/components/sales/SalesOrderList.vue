@@ -6,13 +6,22 @@
         <h4 class="text-xl font-semibold text-gray-900 dark:text-white">
           سفارشات فروش
         </h4>
-        <button @click="showCreateModal = true"
-          class="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-black dark:text-white border-2 border-black dark:border-white hover:bg-opacity-90 transition-colors">
-          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-          </svg>
-          سفارش جدید
-        </button>
+        <div class="flex items-center gap-3">
+          <button @click="showQRScanner = true"
+            class="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 border-2 border-blue-600 dark:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+            </svg>
+            اسکن QR
+          </button>
+          <button @click="showCreateModal = true"
+            class="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-black dark:text-white border-2 border-black dark:border-white hover:bg-opacity-90 transition-colors">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            سفارش جدید
+          </button>
+        </div>
       </div>
     </div>
 
@@ -239,6 +248,15 @@
                   </svg>
                 </button>
 
+                <!-- Unified Receipt Button -->
+                <button @click="handleReceiptAction(order)"
+                  class="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 hover:text-green-600 transition-colors"
+                  title="رسید و QR کد">
+                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </button>
+
                 <!-- Delete -->
                 <button v-if="order.status === 'draft'" @click="deleteOrder(order)"
                   class="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 hover:text-red-600 transition-colors"
@@ -276,6 +294,8 @@
     <SalesOrderForm :show="showCreateModal" @close="showCreateModal = false" @saved="handleOrderSaved" />
     <SalesOrderForm :show="showEditModal" :sales-order="editingOrder" @close="showEditModal = false" @saved="handleOrderSaved" />
     <SalesOrderView :show="showViewModal" :sales-order="viewingOrder" @close="showViewModal = false" />
+    <ReceiptPrint :show="showReceiptModal" :sales-order="receiptOrder" @close="showReceiptModal = false" />
+    <QRScanner :show="showQRScanner" @close="showQRScanner = false" @invoice-found="handleInvoiceFound" />
   </div>
 </template>
 
@@ -285,9 +305,14 @@ import { useSalesStore } from '@/stores/sales'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import SalesOrderForm from './SalesOrderForm.vue'
 import SalesOrderView from './SalesOrderView.vue'
+import ReceiptPrint from './ReceiptPrint.vue'
+import QRScanner from './QRScanner.vue'
 import AlertJS from '@/components/ui/AlertJS.vue'
 import InventoryCard from '@/components/common/InventoryCard.vue'
 import DatePicker from 'vue3-persian-datetime-picker'
+import { storeInvoiceOffline } from '@/utils/qrCodeUtils'
+import { downloadReceiptPDF } from '@/utils/pdfUtils'
+import { generateMobileQRCodeURL } from '@/utils/qrCodeUtils'
 
 // Store
 const salesStore = useSalesStore()
@@ -303,8 +328,11 @@ const pageSize = ref(10)
 const showCreateModal = ref(false)
 const showEditModal = ref(false)
 const showViewModal = ref(false)
+const showReceiptModal = ref(false)
+const showQRScanner = ref(false)
 const editingOrder = ref(null)
 const viewingOrder = ref(null)
+const receiptOrder = ref(null)
 const loading = ref(false)
 
 // Statistics
@@ -430,6 +458,24 @@ const viewOrder = (order) => {
 const editOrder = (order) => {
   editingOrder.value = order
   showEditModal.value = true
+}
+
+const handleReceiptAction = (order) => {
+  // Store invoice offline first
+  storeInvoiceOffline(order)
+
+  // Show receipt modal with QR code
+  receiptOrder.value = order
+  showReceiptModal.value = true
+
+  showAlert('success', 'رسید آماده', 'رسید با کد QR آماده مشاهده و چاپ است')
+}
+
+const handleInvoiceFound = (invoice) => {
+  // Show the found invoice in view modal
+  viewingOrder.value = invoice
+  showViewModal.value = true
+  showAlert('success', 'فاکتور یافت شد', `فاکتور ${invoice.invoice_number || 'بدون شماره'} با موفقیت بازیابی شد`)
 }
 
 const deleteOrder = async (order) => {
