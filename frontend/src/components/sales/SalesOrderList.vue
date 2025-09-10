@@ -275,7 +275,7 @@
     <!-- Modals -->
     <SalesOrderForm :show="showCreateModal" @close="showCreateModal = false" @saved="handleOrderSaved" />
     <SalesOrderForm :show="showEditModal" :sales-order="editingOrder" @close="showEditModal = false" @saved="handleOrderSaved" />
-    <SalesOrderView v-if="showViewModal" :sales-order="viewingOrder" @close="showViewModal = false" />
+    <SalesOrderView :show="showViewModal" :sales-order="viewingOrder" @close="showViewModal = false" />
   </div>
 </template>
 
