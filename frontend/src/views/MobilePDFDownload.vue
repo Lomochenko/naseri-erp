@@ -119,7 +119,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { retrieveStoredInvoice } from '@/utils/qrCodeUtils'
-import { downloadReceiptPDF } from '@/utils/pdfUtils'
+import { downloadReceiptPDF, loadPersianFonts } from '@/utils/pdfUtilsFixed'
 
 // Route
 const route = useRoute()
@@ -159,6 +159,9 @@ const loadInvoice = async () => {
   try {
     loading.value = true
     error.value = false
+    
+    // Load Persian fonts for proper PDF generation
+    await loadPersianFonts()
 
     const invoiceKey = route.params.invoiceKey
 

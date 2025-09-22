@@ -204,7 +204,7 @@
 <script setup>
 import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
 import { getAllStoredInvoices, getInvoiceByQRCode, formatPrice, formatDate, retrieveStoredInvoice } from '@/utils/qrCodeUtils'
-import { downloadReceiptPDF } from '@/utils/pdfUtils'
+import { downloadReceiptPDF, loadPersianFonts } from '@/utils/pdfUtilsFixed'
 
 const props = defineProps({
   show: {
@@ -238,6 +238,9 @@ const closeModal = () => {
 const processQRCode = async (qrData) => {
   errorMessage.value = ''
   scannedInvoice.value = null
+  
+  // Load Persian fonts for proper PDF generation
+  await loadPersianFonts()
 
   if (!qrData || !qrData.trim()) {
     errorMessage.value = 'لطفاً کد QR را وارد کنید'

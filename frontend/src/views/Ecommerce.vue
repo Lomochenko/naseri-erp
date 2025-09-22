@@ -30,21 +30,21 @@
         label="فروش امروز"
         type="success"
       />
-      
+
       <!-- Total Products Card -->
       <InventoryCard
         :value="todayStats.totalProducts"
         label="کل محصولات"
         type="total"
       />
-      
+
       <!-- Low Stock Card -->
       <InventoryCard
         :value="todayStats.lowStockItems"
         label="موجودی کم"
         type="warning"
       />
-      
+
       <!-- Customers Card -->
       <InventoryCard
         :value="todayStats.totalCustomers"
@@ -83,26 +83,8 @@
             </svg>
           </div>
           <div>
-            <h4 class="text-lg font-semibold text-black dark:text-white">فروش جدید</h4>
-            <p class="text-sm text-gray-600 dark:text-gray-400">ثبت فروش جدید</p>
-          </div>
-        </div>
-      </router-link>
-
-      <router-link
-        to="/customers"
-        class="rounded-sm border border-stroke bg-white p-6 shadow-default dark:border-strokedark dark:bg-boxdark hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-      >
-        <div class="flex items-center gap-4">
-          <div class="flex h-11.5 w-11.5 items-center justify-center rounded-full bg-blue-light-500/10">
-            <svg class="fill-blue-light-500" width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path d="M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke="currentColor" stroke-width="2"/>
-              <path d="M12 14C8.13401 14 5 17.134 5 21H19C19 17.134 15.866 14 12 14Z" stroke="currentColor" stroke-width="2"/>
-            </svg>
-          </div>
-          <div>
-            <h4 class="text-lg font-semibold text-black dark:text-white">مشتری جدید</h4>
-            <p class="text-sm text-gray-600 dark:text-gray-400">افزودن مشتری جدید</p>
+            <h4 class="text-lg font-semibold text-black dark:text-white">فروش/مشتریان</h4>
+            <p class="text-sm text-gray-600 dark:text-gray-400">ثبت فروش/مشتری جدید</p>
           </div>
         </div>
       </router-link>
