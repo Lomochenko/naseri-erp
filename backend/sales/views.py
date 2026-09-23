@@ -6,6 +6,7 @@ from django.db.models import Sum, F, Count
 from django.utils import timezone
 from datetime import timedelta
 from .models import Customer, Sale, SaleItem, Invoice, Payment
+from inventory.models import InventoryTransaction
 from .serializers import (
     CustomerSerializer, SaleSerializer, SaleCreateUpdateSerializer, SaleItemSerializer,
     InvoiceSerializer, PaymentSerializer
@@ -107,11 +108,20 @@ class SaleViewSet(viewsets.ModelViewSet):
                             raise ValueError(f'Insufficient stock for {item.product.name}')
 
                 elif new_status == 'cancelled':
-                    # When cancelling, restore stock if it was previously confirmed
+                    # When cancelling, restore stock via inventory transaction
                     if old_status in ['confirmed', 'completed']:
                         for item in sale.items.all():
-                            item.product.current_stock += item.quantity
-                            item.product.save()
+                            InventoryTransaction.objects.create(
+                                transaction_type='return_from_customer',
+                                product=item.product,
+                                warehouse=sale.warehouse,
+                                quantity=item.quantity,
+                                unit_price=item.unit_price,
+                                reference_number=sale.invoice_number,
+                                reference_type='sale_cancel',
+                                reference_id=sale.id,
+                                created_by=request.user
+                            )
                             print(f"Restored stock for {item.product.name}: +{item.quantity}")
 
                 print(f"Status updated successfully: {old_status} -> {new_status}")

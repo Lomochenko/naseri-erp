@@ -59,14 +59,27 @@ class StockLevelsView(generics.ListAPIView):
     queryset = Product.objects.none()  # Required for DRF but not used
 
     def list(self, request, *args, **kwargs):
-        """Get current stock levels for all products."""
-        products = Product.objects.select_related('category', 'unit').all()
+        """Get current stock levels for all products using aggregated queries."""
+        from django.db.models import Sum, Case, When, DecimalField
+        from django.db.models.functions import Coalesce
+
+        products = Product.objects.select_related('category', 'unit').filter(is_active=True)
+
+        # Single query: aggregate all incoming transactions per product
+        incoming_qs = InventoryTransaction.objects.filter(
+            transaction_type__in=['purchase', 'return_from_customer', 'adjustment_add']
+        ).values('product_id').annotate(total=Sum('quantity'))
+        incoming_map = {r['product_id']: r['total'] for r in incoming_qs}
+
+        # Single query: aggregate all outgoing transactions per product
+        outgoing_qs = InventoryTransaction.objects.filter(
+            transaction_type__in=['sale', 'return_to_supplier', 'adjustment_subtract']
+        ).values('product_id').annotate(total=Sum('quantity'))
+        outgoing_map = {r['product_id']: r['total'] for r in outgoing_qs}
 
         stock_data = []
         for product in products:
-            # Use the property from the model which has correct logic
-            current_stock = product.current_stock
-
+            current_stock = (incoming_map.get(product.id, 0) or 0) - (outgoing_map.get(product.id, 0) or 0)
             stock_data.append({
                 'product_id': product.id,
                 'product_name': product.name,
@@ -76,13 +89,12 @@ class StockLevelsView(generics.ListAPIView):
                 'current_stock': current_stock,
                 'min_stock': float(product.min_stock),
                 'max_stock': float(product.max_stock) if product.max_stock else 0,
-                'is_low_stock': current_stock <= product.min_stock,
+                'is_low_stock': current_stock <= float(product.min_stock),
                 'selling_price': float(product.selling_price),
                 'purchase_price': float(product.purchase_price),
             })
 
         return Response(stock_data)
-    search_fields = ['notes']
 
 class ProductStockView(generics.RetrieveAPIView):
     """API view for retrieving product stock information."""
@@ -182,16 +194,26 @@ class LowStockProductsView(generics.ListAPIView):
 
     def get(self, request):
         """Handle GET requests for low stock products."""
-        low_stock_products = []
+        incoming_qs = InventoryTransaction.objects.filter(
+            transaction_type__in=['purchase', 'return_from_customer', 'adjustment_add']
+        ).values('product_id').annotate(total=Sum('quantity'))
+        incoming_map = {r['product_id']: r['total'] for r in incoming_qs}
 
-        for product in Product.objects.filter(is_active=True):
-            if product.current_stock <= product.min_stock:
+        outgoing_qs = InventoryTransaction.objects.filter(
+            transaction_type__in=['sale', 'return_to_supplier', 'adjustment_subtract']
+        ).values('product_id').annotate(total=Sum('quantity'))
+        outgoing_map = {r['product_id']: r['total'] for r in outgoing_qs}
+
+        low_stock_products = []
+        for product in Product.objects.filter(is_active=True).select_related('unit'):
+            current_stock = (incoming_map.get(product.id, 0) or 0) - (outgoing_map.get(product.id, 0) or 0)
+            if current_stock <= float(product.min_stock):
                 low_stock_products.append({
                     'product_id': product.id,
                     'product_name': product.name,
                     'product_code': product.code,
-                    'current_stock': product.current_stock,
-                    'min_stock': product.min_stock,
+                    'current_stock': current_stock,
+                    'min_stock': float(product.min_stock),
                     'unit': product.unit.symbol
                 })
 

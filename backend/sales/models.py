@@ -141,32 +141,16 @@ class Sale(models.Model):
         return self.subtotal + self.tax_amount - self.discount_amount
 
     def save(self, *args, **kwargs):
-        """Override save to handle status changes and inventory sync."""
+        """Override save to auto-assign warehouse, generate invoice number, and check stock on confirm."""
         is_new = self.pk is None
         old_status = None
 
         if not is_new:
-            old_sale = Sale.objects.get(pk=self.pk)
-            old_status = old_sale.status
+            try:
+                old_status = Sale.objects.values_list('status', flat=True).get(pk=self.pk)
+            except Sale.DoesNotExist:
+                pass
 
-        # Generate invoice number if new
-        if is_new and not self.invoice_number:
-            self.generate_invoice_number()
-
-        super().save(*args, **kwargs)
-
-        # Handle status change to confirmed - check stock
-        if self.status == 'confirmed' and old_status == 'draft':
-            for item in self.items.all():
-                current_stock = item.product.current_stock
-                if current_stock < item.quantity:
-                    # Revert status change
-                    self.status = 'draft'
-                    self.save(update_fields=['status'])
-                    raise ValueError(f'موجودی کافی نیست برای محصول {item.product.name}. موجودی فعلی: {current_stock}، مقدار درخواستی: {item.quantity}')
-
-    def save(self, *args, **kwargs):
-        """Override save to auto-assign warehouse and generate invoice number."""
         # Auto-assign warehouse if not set
         if not self.warehouse_id:
             from inventory.models import Warehouse
@@ -179,6 +163,17 @@ class Sale(models.Model):
             self.generate_invoice_number()
 
         super().save(*args, **kwargs)
+
+        # Check stock when confirming a draft sale
+        if self.status == 'confirmed' and old_status == 'draft':
+            for item in self.items.all():
+                current_stock = item.product.current_stock
+                if current_stock < item.quantity:
+                    Sale.objects.filter(pk=self.pk).update(status='draft')
+                    raise ValueError(
+                        f'موجودی کافی نیست برای محصول {item.product.name}. '
+                        f'موجودی فعلی: {current_stock}، مقدار درخواستی: {item.quantity}'
+                    )
 
     def generate_invoice_number(self):
         """Generate unique invoice number."""
