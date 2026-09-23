@@ -164,17 +164,6 @@ class Sale(models.Model):
 
         super().save(*args, **kwargs)
 
-        # Check stock when confirming a draft sale
-        if self.status == 'confirmed' and old_status == 'draft':
-            for item in self.items.all():
-                current_stock = item.product.current_stock
-                if current_stock < item.quantity:
-                    Sale.objects.filter(pk=self.pk).update(status='draft')
-                    raise ValueError(
-                        f'موجودی کافی نیست برای محصول {item.product.name}. '
-                        f'موجودی فعلی: {current_stock}، مقدار درخواستی: {item.quantity}'
-                    )
-
     def generate_invoice_number(self):
         """Generate unique invoice number."""
         from django.utils import timezone
@@ -209,19 +198,18 @@ class SaleItem(models.Model):
         return (self.quantity * self.unit_price) - self.discount
 
     def save(self, *args, **kwargs):
-        """Override save to create inventory transaction when sale is confirmed."""
+        """Override save - only creates inventory transaction when item is added to an already-confirmed sale."""
         is_new = self.pk is None
-        old_status = None
+        old_sale_status = None
 
         if not is_new:
-            old_item = SaleItem.objects.get(pk=self.pk)
-            old_status = old_item.sale.status
+            old_sale_status = SaleItem.objects.values_list('sale__status', flat=True).get(pk=self.pk)
 
         super().save(*args, **kwargs)
 
-        # Create inventory transaction if sale status changed to confirmed or completed
-        if self.sale.status in ['confirmed', 'completed'] and (is_new or old_status == 'draft'):
-            # Check stock availability
+        # Only create transaction if item is NEW and sale is already confirmed/completed
+        # (status transitions are handled by update_status in views.py)
+        if is_new and self.sale.status in ['confirmed', 'completed']:
             current_stock = self.product.current_stock
             if current_stock < self.quantity:
                 raise ValueError(f'موجودی کافی نیست. موجودی فعلی: {current_stock}، مقدار درخواستی: {self.quantity}')

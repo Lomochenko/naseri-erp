@@ -101,11 +101,26 @@ class SaleViewSet(viewsets.ModelViewSet):
                 sale.save()
 
                 # Handle inventory updates based on status change
-                if new_status == 'confirmed' and old_status == 'draft':
-                    # When confirming, ensure stock is still available
-                    for item in sale.items.all():
-                        if item.product.current_stock < item.quantity:
-                            raise ValueError(f'Insufficient stock for {item.product.name}')
+                if new_status in ['confirmed', 'completed'] and old_status == 'draft':
+                    # Check stock and create inventory transactions
+                    for item in sale.items.select_related('product'):
+                        current_stock = item.product.current_stock
+                        if current_stock < item.quantity:
+                            raise ValueError(
+                                f'موجودی کافی نیست برای {item.product.name}. '
+                                f'موجودی: {current_stock}، درخواستی: {item.quantity}'
+                            )
+                        InventoryTransaction.objects.create(
+                            transaction_type='sale',
+                            product=item.product,
+                            warehouse=sale.warehouse,
+                            quantity=item.quantity,
+                            unit_price=item.unit_price,
+                            reference_number=sale.invoice_number,
+                            reference_type='sale',
+                            reference_id=sale.id,
+                            created_by=request.user
+                        )
 
                 elif new_status == 'cancelled':
                     # When cancelling, restore stock via inventory transaction
