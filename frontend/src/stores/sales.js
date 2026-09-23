@@ -275,10 +275,53 @@ export const useSalesStore = defineStore('sales', () => {
     currentSalesOrder.value = null
   }
 
+  // Get total purchases amount for all customers
+  const getTotalPurchases = async () => {
+    try {
+      // Fetch all invoices to calculate total purchases
+      const response = await salesAPI.getInvoices()
+      const invoices = response.data.results || response.data
+      return invoices.reduce((sum, invoice) => sum + parseFloat(invoice.total_amount || 0), 0)
+    } catch (err) {
+      console.error('Error fetching total purchases:', err)
+      return 0
+    }
+  }
+
   // Stats Actions
   const fetchStats = async () => {
     try {
-      // For now, calculate stats from existing data
+      // Get current date info
+      const today = new Date().toISOString().split('T')[0]
+      const thisMonth = new Date().toISOString().slice(0, 7)
+      const firstDayOfMonth = new Date().toISOString().slice(0, 8) + '01'
+
+      // Fetch sales report for this month
+      const monthlyReportResponse = await salesAPI.getSalesReport({
+        start_date: firstDayOfMonth,
+        end_date: today,
+        period: 'monthly'
+      })
+
+      // Fetch daily report for today
+      const dailyReportResponse = await salesAPI.getSalesReport({
+        start_date: today,
+        end_date: today,
+        period: 'daily'
+      })
+
+      const monthlyReport = monthlyReportResponse.data
+      const dailyReport = dailyReportResponse.data
+
+      stats.value = {
+        todaySales: dailyReport.total_amount || 0,
+        monthSales: monthlyReport.total_amount || 0,
+        totalCustomers: customers.value.length,
+        pendingOrders: salesOrders.value.filter(order => order.status === 'draft').length
+      }
+    } catch (err) {
+      console.error('Error fetching stats:', err)
+      // Fallback to calculating from existing data
       const today = new Date().toISOString().split('T')[0]
       const thisMonth = new Date().toISOString().slice(0, 7)
 
@@ -292,8 +335,6 @@ export const useSalesStore = defineStore('sales', () => {
         totalCustomers: customers.value.length,
         pendingOrders: salesOrders.value.filter(order => order.status === 'draft').length
       }
-    } catch (err) {
-      console.error('Error fetching stats:', err)
     }
   }
 
@@ -329,6 +370,7 @@ export const useSalesStore = defineStore('sales', () => {
     fetchPayments,
     createPayment,
     fetchStats,
+    getTotalPurchases,
     clearError,
     clearCurrentCustomer,
     clearCurrentSalesOrder,

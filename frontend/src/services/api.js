@@ -86,6 +86,12 @@ export const salesAPI = {
 
   getPayments: (params = {}) => api.get('/sales/payments/', { params }),
   createPayment: (data) => api.post('/sales/payments/', data),
+
+  // Statistics and Reports
+  getSalesReport: (params = {}) => api.get('/sales/sales-report/', { params }),
+  getSalesByProduct: (params = {}) => api.get('/sales/sales-by-product/', { params }),
+  getCustomerSales: (customerId) => api.get(`/sales/customer-sales/${customerId}/`),
+  getCustomerInvoices: (customerId) => api.get(`/sales/customer-invoices/${customerId}/`),
 }
 
 // Inventory API
@@ -130,6 +136,16 @@ export const accountingAPI = {
   getTrialBalance: () => api.get('/accounting/trial-balance/'),
   getIncomeStatement: (params = {}) => api.get('/accounting/income-statement/', { params }),
   getBalanceSheet: (params = {}) => api.get('/accounting/balance-sheet/', { params }),
+}
+
+// Audit/Notifications API
+export const auditAPI = {
+  getActivities: (params = {}) => api.get('/audit/activities/', { params }),
+  getNotifications: () => api.get('/audit/activities/notifications/'),
+  getRecentActivities: (params = {}) => api.get('/audit/activities/recent/', { params }),
+  getUnreadActivities: () => api.get('/audit/activities/unread/'),
+  markAsRead: (activityIds = []) => api.post('/audit/activities/mark_read/', { activity_ids: activityIds }),
+  getActivitySummary: (params = {}) => api.get('/audit/activities/summary/', { params }),
 }
 
 export default api

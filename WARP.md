@@ -12,6 +12,37 @@ This is a comprehensive ERP (Enterprise Resource Planning) system for Naseri Har
 - **Database**: PostgreSQL (production) / SQLite (development fallback)
 - **Authentication**: Token-based authentication with Django REST Framework
 
+## New Features Added
+
+### ✅ Advanced Search System
+- **Global Search**: Search across customers, products, sales, and categories from header
+- **Smart Navigation**: Click on search results to navigate to relevant pages with context
+- **Keyboard Shortcuts**: Cmd/Ctrl + K to focus search
+- **Real-time Results**: Live search with debounced API calls
+
+### ✅ Comprehensive Activity Tracking System
+**All User Activities Tracked:**
+- **User Activities**: Login, logout, user creation/updates
+- **Product Activities**: Create, update, delete, view products and categories
+- **Customer Activities**: Create, update, delete customer records
+- **Sales Activities**: Create, confirm, complete, cancel invoices; receipt generation/printing
+- **Inventory Activities**: Stock adjustments, low stock warnings, inventory transactions
+- **Purchase Activities**: Create, confirm, receive, cancel purchase orders
+- **Payment Activities**: Receive payments, payment cancellations
+- **System Activities**: Backups, reports, data import/export, system errors
+
+### ✅ Web Notification System
+- **Browser Notifications**: Native web notifications for critical activities
+- **Real-time Updates**: Periodic refresh of notifications every 30 seconds
+- **Priority-based**: Different notification levels (low, medium, high, critical)
+- **Mobile Responsive**: Optimized for both desktop and mobile devices
+- **Tabbed Interface**: Separate tabs for notifications and recent activities
+
+### ✅ Enhanced QR Code System
+- **Fixed Character Encoding**: Proper Persian/UTF-8 support in PDF generation
+- **Vazirmatn Font**: Persian font integration for receipt generation
+- **Mobile PDF Download**: Optimized mobile receipt download experience
+
 ## Development Commands
 
 ### Backend (Django)
@@ -222,6 +253,14 @@ Main API endpoints available under `/api/`:
 - `/api/accounting/` - Financial transactions
 - `/api/reports/` - Business reports and analytics
 - `/api/audit/` - Audit trail and system logs
+
+### New Activity & Notification Endpoints:
+- `/api/audit/activities/` - List and filter activities
+- `/api/audit/activities/recent/` - Get recent activities
+- `/api/audit/activities/unread/` - Get unread activities
+- `/api/audit/activities/notifications/` - Get notifications for header menu
+- `/api/audit/activities/mark_read/` - Mark activities as read
+- `/api/audit/activities/summary/` - Get activity summary for dashboard
 
 ## Regional Settings
 

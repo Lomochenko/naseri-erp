@@ -158,10 +158,13 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { useProductsStore } from '@/stores/products'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import ErrorMessage from '@/components/common/ErrorMessage.vue'
+
+const route = useRoute()
 
 const productsStore = useProductsStore()
 
@@ -234,10 +237,22 @@ const handleScroll = () => {
   }
 }
 
+// Watch for route query changes (from search bar)
+watch(() => route.query, (newQuery) => {
+  if (newQuery.search) {
+    searchQuery.value = newQuery.search
+  }
+}, { immediate: true })
+
 // Lifecycle
 onMounted(async () => {
   // Add scroll event listener for infinite scroll
   window.addEventListener('scroll', handleScroll)
+
+  // Check if search query is passed from route
+  if (route.query.search) {
+    searchQuery.value = route.query.search
+  }
 
   // Only fetch categories and units if they haven't been loaded yet
   const promises = [

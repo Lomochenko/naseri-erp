@@ -33,7 +33,7 @@
               <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">وضعیت پرداخت</p>
               <span :class="[
                 'inline-flex px-2 py-1 text-xs font-medium rounded-full',
-                paymentData.payment_status === 'paid' 
+                paymentData.payment_status === 'paid'
                   ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
                   : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
               ]">
@@ -72,7 +72,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="payment in paymentHistory" :key="payment.id" 
+                  <tr v-for="payment in paymentHistory" :key="payment.id"
                       class="border-b border-gray-100 dark:border-gray-800">
                     <td class="py-2 text-gray-800 dark:text-white/90">{{ payment.date }}</td>
                     <td class="py-2 text-gray-800 dark:text-white/90">{{ formatCurrency(payment.amount) }}</td>
@@ -80,7 +80,7 @@
                     <td class="py-2">
                       <span :class="[
                         'inline-flex px-2 py-1 text-xs font-medium rounded-full',
-                        payment.status === 'paid' 
+                        payment.status === 'paid'
                           ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
                           : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
                       ]">
@@ -100,9 +100,9 @@
         </div>
 
         <!-- Edit Button (Only for System Owner) -->
-        <button 
+        <button
           v-if="canEdit"
-          @click="isPaymentModal = true" 
+          @click="isPaymentModal = true"
           class="edit-button"
         >
           <svg
@@ -138,7 +138,7 @@
               <path fill-rule="evenodd" clip-rule="evenodd" d="M6.04289 16.5418C5.65237 16.9323 5.65237 17.5655 6.04289 17.956C6.43342 18.3465 7.06658 18.3465 7.45711 17.956L11.9987 13.4144L16.5408 17.9565C16.9313 18.347 17.5645 18.347 17.955 17.9565C18.3455 17.566 18.3455 16.9328 17.955 16.5423L13.4129 12.0002L17.955 7.45808C18.3455 7.06756 18.3455 6.43439 17.955 6.04387C17.5645 5.65335 16.9313 5.65335 16.5408 6.04387L11.9987 10.586L7.45711 6.04439C7.06658 5.65386 6.43342 5.65386 6.04289 6.04439C5.65237 6.43491 5.65237 7.06808 6.04289 7.4586L10.5845 12.0002L6.04289 16.5418Z" fill="" />
             </svg>
           </button>
-          
+
           <div class="px-2 pr-14">
             <h4 class="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
               ویرایش اطلاعات حقوق و دستمزد
@@ -304,14 +304,14 @@ const savePaymentData = async () => {
   try {
     // TODO: Implement actual API call to update payment data
     // const response = await paymentAPI.updatePaymentData(editForm.value)
-    
+
     // For now, just update local data
     paymentData.value = {
       ...paymentData.value,
       ...editForm.value,
       yearly_salary: editForm.value.monthly_salary * 12
     }
-    
+
     console.log('Payment data saved successfully')
     isPaymentModal.value = false
   } catch (error) {
@@ -327,6 +327,35 @@ onMounted(() => {
 
 <style scoped>
 .edit-button {
-  @apply flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700 dark:hover:bg-white/[0.03] transition-colors;
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  background-color: white;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  transition: all 0.2s;
+}
+
+.edit-button:hover {
+  background-color: #f9fafb;
+}
+
+.edit-button > * + * {
+  margin-left: 0.5rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .edit-button {
+    background-color: #1f2937;
+    color: #9ca3af;
+    border-color: #374151;
+  }
+
+  .edit-button:hover {
+    background-color: rgba(255, 255, 255, 0.03);
+  }
 }
 </style>

@@ -256,9 +256,13 @@ const menuGroups = [
       },
       {
         icon: BarChartIcon,
-        name: "فروش/مشتریان",
+        name: "فروش",
         path: "/sales"
-
+      },
+      {
+        icon: UserGroupIcon,
+        name: "مشتریان",
+        path: "/customers"
       },
       {
         icon: TableIcon,

@@ -293,7 +293,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { useSalesStore } from '@/stores/sales'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import SalesOrderForm from './SalesOrderForm.vue'
@@ -309,6 +310,7 @@ import { generateMobileQRCodeURL } from '@/utils/qrCodeUtils'
 
 // Store
 const salesStore = useSalesStore()
+const route = useRoute()
 
 // State
 const searchQuery = ref('')
@@ -552,6 +554,20 @@ const handleClickOutside = (event) => {
   }
 }
 
+// Watch for route query changes (from search bar)
+watch(() => route.query, (newQuery) => {
+  if (newQuery.search) {
+    searchQuery.value = newQuery.search
+  }
+  if (newQuery.invoice) {
+    // If searching for specific invoice, set search query to invoice number
+    const invoice = salesStore.salesOrders.find(order => order.id == newQuery.invoice)
+    if (invoice) {
+      searchQuery.value = invoice.invoice_number
+    }
+  }
+}, { immediate: true })
+
 // Lifecycle
 onMounted(async () => {
   document.addEventListener('click', handleClickOutside)
@@ -561,6 +577,18 @@ onMounted(async () => {
       salesStore.fetchSalesOrders(),
       salesStore.fetchCustomers()
     ])
+
+    // Check if search query is passed from route
+    if (route.query.search) {
+      searchQuery.value = route.query.search
+    }
+    if (route.query.invoice) {
+      // If searching for specific invoice, set search query to invoice number
+      const invoice = salesStore.salesOrders.find(order => order.id == route.query.invoice)
+      if (invoice) {
+        searchQuery.value = invoice.invoice_number
+      }
+    }
 
     // Calculate statistics
     calculateStatistics()

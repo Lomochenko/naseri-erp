@@ -28,7 +28,7 @@
 
         <!-- Search Results Dropdown -->
         <div
-          v-if="showResults && (searchResults.products.length > 0 || searchResults.customers.length > 0 || searchQuery.length > 0)"
+          v-if="showResults && (totalResults > 0 || searchQuery.length > 0)"
           class="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto"
         >
           <!-- Loading State -->
@@ -38,7 +38,7 @@
           </div>
 
           <!-- No Results -->
-          <div v-else-if="searchQuery.length > 0 && searchResults.products.length === 0 && searchResults.customers.length === 0"
+          <div v-else-if="searchQuery.length > 0 && totalResults === 0"
                class="p-4 text-center text-gray-500 dark:text-gray-400">
             نتیجه‌ای یافت نشد
           </div>
@@ -106,7 +106,7 @@
           </div>
 
           <!-- View All Results -->
-          <div v-if="searchQuery.length > 0 && (searchResults.products.length > 5 || searchResults.customers.length > 5)"
+          <div v-if="searchQuery.length > 0 && totalResults > 5"
                class="border-t border-gray-200 dark:border-gray-700">
             <button
               @click="viewAllResults"
@@ -163,12 +163,17 @@ const showResults = ref(false)
 const isLoading = ref(false)
 const searchResults = ref({
   products: [],
-  customers: []
+  customers: [],
+  sales: [],
+  categories: []
 })
 
 // Computed
 const totalResults = computed(() => {
-  return searchResults.value.products.length + searchResults.value.customers.length
+  return searchResults.value.products.length +
+         searchResults.value.customers.length +
+         searchResults.value.sales.length +
+         searchResults.value.categories.length
 })
 
 // Methods
@@ -177,49 +182,114 @@ const formatPrice = (price) => {
   return new Intl.NumberFormat('fa-IR').format(price) + ' تومان'
 }
 
+let searchTimeout = null
+
 const handleInput = async () => {
+  // Clear previous timeout
+  if (searchTimeout) {
+    clearTimeout(searchTimeout)
+  }
+
+  // If search query is too short, clear results
   if (searchQuery.value.length < 2) {
-    searchResults.value = { products: [], customers: [] }
+    searchResults.value = { products: [], customers: [], sales: [], categories: [] }
+    showResults.value = false
     return
   }
 
+  // Show results dropdown immediately
+  showResults.value = true
   isLoading.value = true
 
-  try {
-    // Search products
-    const productResults = productsStore.products.filter(product =>
-      product.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      product.code.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      (product.description && product.description.toLowerCase().includes(searchQuery.value.toLowerCase()))
-    )
+  // Debounce search to avoid excessive calls
+  searchTimeout = setTimeout(async () => {
+    try {
+      const query = searchQuery.value.toLowerCase().trim()
 
-    // Search customers
-    const customerResults = salesStore.customers.filter(customer =>
-      customer.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      (customer.phone_number && customer.phone_number.includes(searchQuery.value)) ||
-      (customer.phone && customer.phone.includes(searchQuery.value))
-    )
+      // Ensure data is loaded before searching
+      if (productsStore.products.length === 0) {
+        await productsStore.fetchProducts()
+      }
+      if (salesStore.customers.length === 0) {
+        await salesStore.fetchCustomers()
+      }
+      if (salesStore.salesOrders.length === 0) {
+        await salesStore.fetchSalesOrders()
+      }
+      if (productsStore.categories.length === 0) {
+        await productsStore.fetchCategories()
+      }
 
-    searchResults.value = {
-      products: productResults,
-      customers: customerResults
+      // Search products
+      const productResults = productsStore.products.filter(product =>
+        (product.name && product.name.toLowerCase().includes(query)) ||
+        (product.code && product.code.toLowerCase().includes(query)) ||
+        (product.description && product.description.toLowerCase().includes(query))
+      ).slice(0, 5) // Limit to 5 results for dropdown
+
+      // Search customers
+      const customerResults = salesStore.customers.filter(customer =>
+        (customer.name && customer.name.toLowerCase().includes(query)) ||
+        (customer.phone_number && customer.phone_number.includes(searchQuery.value)) ||
+        (customer.phone && customer.phone.includes(searchQuery.value)) ||
+        (customer.customer_code && customer.customer_code.toLowerCase().includes(query)) ||
+        (customer.address && customer.address.toLowerCase().includes(query))
+      ).slice(0, 5) // Limit to 5 results for dropdown
+
+      // Search sales by invoice number or customer name
+      const salesResults = salesStore.salesOrders.filter(sale => {
+        // Enhanced invoice number matching
+        const invoiceMatch = sale.invoice_number && (
+          sale.invoice_number.toLowerCase().includes(query) ||
+          sale.invoice_number.toString().toLowerCase().includes(query) ||
+          sale.invoice_number.includes(searchQuery.value) || // Exact match without case conversion
+          sale.invoice_number.toString().includes(searchQuery.value)
+        )
+
+        // Customer name matching
+        const customerMatch = (sale.customer_name && sale.customer_name.toLowerCase().includes(query)) ||
+                             (sale.customer && sale.customer.name && sale.customer.name.toLowerCase().includes(query))
+
+        return invoiceMatch || customerMatch
+      }).slice(0, 5) // Limit to 5 results for dropdown
+
+      // Search categories
+      const categoryResults = productsStore.categories.filter(category =>
+        (category.name && category.name.toLowerCase().includes(query)) ||
+        (category.description && category.description.toLowerCase().includes(query))
+      ).slice(0, 5) // Limit to 5 results for dropdown
+
+      searchResults.value = {
+        products: productResults,
+        customers: customerResults,
+        sales: salesResults,
+        categories: categoryResults
+      }
+    } catch (error) {
+      console.error('Search error:', error)
+      searchResults.value = { products: [], customers: [], sales: [], categories: [] }
+    } finally {
+      isLoading.value = false
     }
-  } catch (error) {
-    console.error('Search error:', error)
-  } finally {
-    isLoading.value = false
-  }
+  }, 300) // 300ms debounce
 }
 
 const handleSearch = () => {
   if (searchQuery.value.trim()) {
-    // Navigate to search results page or perform global search
-    router.push({
-      path: '/search',
-      query: { q: searchQuery.value.trim() }
-    })
-    showResults.value = false
+    // If we have results, show them in dropdown
+    if (totalResults.value > 0) {
+      showResults.value = true
+      return
+    }
+
+    // If no results, show "no results" message
+    showResults.value = true
+    return
   }
+
+  // Clear results if search is empty
+  searchResults.value = { products: [], customers: [], sales: [], categories: [] }
+  showResults.value = false
 }
 
 const selectResult = (type, item) => {
@@ -227,18 +297,66 @@ const selectResult = (type, item) => {
   searchQuery.value = ''
 
   if (type === 'product') {
-    router.push(`/products`)
+    router.push({
+      path: '/products',
+      query: { highlight: item.id, search: item.name }
+    })
   } else if (type === 'customer') {
-    router.push(`/customers`)
+    router.push({
+      path: '/customers',
+      query: { customer: item.id, search: item.name }
+    })
+  } else if (type === 'sale') {
+    router.push({
+      path: '/sales',
+      query: { invoice: item.id, search: item.invoice_number }
+    })
+  } else if (type === 'category') {
+    router.push({
+      path: '/products',
+      query: { category: item.id, search: item.name }
+    })
   }
 }
 
 const viewAllResults = () => {
-  handleSearch()
+  const query = searchQuery.value.trim()
+  if (!query) return
+
+  showResults.value = false
+  searchQuery.value = ''
+
+  // Determine which page to navigate to based on results
+  if (searchResults.value.products.length > 0) {
+    router.push({
+      path: '/products',
+      query: { search: query }
+    })
+  } else if (searchResults.value.customers.length > 0) {
+    router.push({
+      path: '/customers',
+      query: { search: query }
+    })
+  } else if (searchResults.value.sales.length > 0) {
+    router.push({
+      path: '/sales',
+      query: { search: query }
+    })
+  } else {
+    // Default to products page if no specific results
+    router.push({
+      path: '/products',
+      query: { search: query }
+    })
+  }
 }
 
-const closeResults = () => {
-  showResults.value = false
+// Cleanup function for search timeout
+const cleanup = () => {
+  if (searchTimeout) {
+    clearTimeout(searchTimeout)
+    searchTimeout = null
+  }
 }
 
 // Click outside to close
@@ -268,7 +386,7 @@ const handleKeydown = (event) => {
 // Watchers
 watch(searchQuery, (newValue) => {
   if (newValue.length === 0) {
-    searchResults.value = { products: [], customers: [] }
+    searchResults.value = { products: [], customers: [], sales: [], categories: [] }
     showResults.value = false
   }
 })
@@ -282,14 +400,21 @@ onMounted(() => {
   if (productsStore.products.length === 0) {
     productsStore.fetchProducts()
   }
+  if (productsStore.categories.length === 0) {
+    productsStore.fetchCategories()
+  }
   if (salesStore.customers.length === 0) {
     salesStore.fetchCustomers()
+  }
+  if (salesStore.salesOrders.length === 0) {
+    salesStore.fetchSalesOrders()
   }
 })
 
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
   document.removeEventListener('keydown', handleKeydown)
+  cleanup() // Clear any pending search timeout
 })
 </script>
 

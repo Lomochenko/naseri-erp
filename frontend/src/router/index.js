@@ -16,15 +16,7 @@ const router = createRouter({
         requiresAuth: true,
       },
     },
-    {
-      path: '/qr-test',
-      name: 'QRTest',
-      component: () => import('../views/QRTest.vue'),
-      meta: {
-        title: 'QR Code Test',
-        requiresAuth: true,
-      },
-    },
+
     {
       path: '/mobile-receipt/:invoiceKey',
       name: 'MobilePDFDownload',
@@ -189,6 +181,17 @@ const router = createRouter({
       component: () => import('../views/Sales/SalesList.vue'),
       meta: {
         title: 'فروش',
+        requiresAuth: true,
+      },
+    },
+
+    // Customers Routes
+    {
+      path: '/customers',
+      name: 'Customers',
+      component: () => import('../views/Customers/CustomersList.vue'),
+      meta: {
+        title: 'مشتریان',
         requiresAuth: true,
       },
     },
