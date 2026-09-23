@@ -28,3 +28,19 @@ frontend/.env.production
 
 # Migrations cache
 **/migrations/__pycache__/
+
+# Virtual environment
+backend/venv/
+venv/
+
+# Crash dumps
+*.stackdump
+
+# Root-level test/analysis scripts
+comprehensive_test.py
+final_test.py
+simple_test.py
+test_*.py
+
+# Data files
+backend/data.json
