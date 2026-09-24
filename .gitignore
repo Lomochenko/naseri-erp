@@ -6,7 +6,6 @@ __pycache__/
 *.pdb
 
 # Django
-db.sqlite3
 *.sqlite3
 media/
 staticfiles/
