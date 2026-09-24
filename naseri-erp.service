@@ -1,0 +1,12 @@
+[Unit]
+Description=Naseri ERP Gunicorn
+After=network.target
+
+[Service]
+User=user
+WorkingDirectory=/home/user/naseri/backend
+ExecStart=/home/user/naseri/backend/venv/bin/gunicorn naseri_erp.wsgi:application --bind 127.0.0.1:8000 --workers 3
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
