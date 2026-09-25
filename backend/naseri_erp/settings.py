@@ -5,7 +5,12 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / '.env')
 
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-faapm8!9(7he(jx6gha^m$=+@4_o@6pqge*b*g1$a1ndrsf_n_')
+SECRET_KEY = os.environ.get('SECRET_KEY')
+if not SECRET_KEY:
+    if os.environ.get('DEBUG', 'True') == 'True':
+        SECRET_KEY = 'dev-only-insecure-key-do-not-use-in-production'
+    else:
+        raise ValueError('SECRET_KEY environment variable is not set')
 
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
@@ -79,7 +84,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.environ.get('DB_NAME', 'naseri_erp_db'),
         'USER': os.environ.get('DB_USER', 'naseri_user'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', 'G0n0llah'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
         'HOST': os.environ.get('DB_HOST', 'localhost'),
         'PORT': os.environ.get('DB_PORT', '5432'),
     }
