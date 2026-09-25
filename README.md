@@ -1,144 +1,332 @@
-# سیستم ERP یراق‌آلات ناصری
+# Naseri Hardware Store ERP
 
-سیستم مدیریت منابع سازمانی (ERP) پیشرفته برای فروشگاه یراق‌آلات ناصری با رابط کاربری مدرن و واکنش‌گرا.
-
-## معرفی پروژه
-این پروژه یک سیستم مدیریت یکپارچه است که برای فروشگاه‌های یراق‌آلات و سخت‌افزار طراحی شده است. این سیستم شامل بخش‌های متعددی از جمله مدیریت محصولات، موجودی، فروش، خرید و حسابداری می‌باشد.
-
-ویژگی‌های اصلی:
-- **بک‌اند**: Django + Django REST Framework با معماری RESTful
-- **فرانت‌اند**: Vue.js 3 + Tailwind CSS + Headless UI (ساختار جدید، بدون Materio/Vuetify)
-- **سیستم کنترل دسترسی**: محدودیت دسترسی بر اساس نقش کاربران (RBAC)
-- **احراز هویت امن**: سیستم توکن‌محور برای احراز هویت کاربران
-- **رابط کاربری RTL**: بهینه‌سازی شده برای زبان فارسی
-- **واکنش‌گرایی کامل**: سازگار با تمامی دستگاه‌ها از موبایل تا دسکتاپ
-- **داشبورد جامع**: نمایش خلاصه‌ای از وضعیت فروش، موجودی و مشتریان
-- **مدیریت فروش پیشرفته**: فاکتورسازی، پیگیری پرداخت‌ها و گزارش‌گیری
-- **API مستندسازی شده**: امکان توسعه و اتصال به سایر سیستم‌ها
-
-## نیازمندی‌ها
-### بک‌اند
-- Python 3.8 یا بالاتر
-- Django 5.0.7 یا بالاتر
-- Django REST Framework 3.16.0 یا بالاتر
-- سایر پکیج‌های مورد نیاز در فایل requirements.txt
-
-### فرانت‌اند
-- Node.js 16.0 یا بالاتر
-- npm 8.0.0 یا بالاتر
-
-## راه‌اندازی بک‌اند
-1. ایجاد محیط مجازی:
-   ```
-   python -m venv venv
-   ```
-2. فعال‌سازی محیط مجازی:
-   - ویندوز (CMD):
-     ```
-     venv\Scripts\activate
-     ```
-   - ویندوز (PowerShell):
-     ```
-     .\venv\Scripts\Activate.ps1
-     ```
-   - لینوکس/مک:
-     ```
-     source venv/bin/activate
-     ```
-3. نصب پکیج‌های مورد نیاز:
-   ```
-   pip install -r requirements.txt
-   ```
-4. اجرای مایگریشن‌ها:
-   ```
-   python manage.py migrate
-   ```
-5. ایجاد کاربر ادمین (اختیاری):
-   ```
-   python manage.py createsuperuser
-   ```
-6. اجرای سرور:
-   ```
-   python manage.py runserver
-   ```
-
-## راه‌اندازی فرانت‌اند
-1. ورود به پوشه frontend:
-   ```
-   cd frontend
-   ```
-2. نصب وابستگی‌ها:
-   ```
-   npm install
-   ```
-3. اجرای سرور توسعه:
-   ```
-   npm run dev
-   ```
-4. ساخت نسخه تولید:
-   ```
-   npm run build
-   ```
-
-## تنظیم ارتباط فرانت‌اند با بک‌اند
-در فایل `.env` داخل پوشه frontend مقدار زیر را قرار دهید:
-```
-VITE_API_URL=http://localhost:8000
-```
-
-## کاربران پیش‌فرض
-- **ادمین**:
-  - شماره تلفن: 09122173180
-  - رمز عبور: Admin@123
-- **مدیر**:
-  - شماره تلفن: 09123456788
-  - رمز عبور: Manager@123
-
-## ماژول‌های سیستم
-- **کاربران**: مدیریت کاربران و احراز هویت
-- **محصولات**: مدیریت محصولات و دسته‌بندی‌ها
-- **موجودی**: مدیریت موجودی و انبار
-- **فروش**: مدیریت فروش، مشتریان، فاکتورها و پرداخت‌ها
-- **خرید**: مدیریت خرید و تامین‌کنندگان
-- **حسابداری**: مدیریت حسابداری و مالی
-- **داشبورد**: نمایش خلاصه‌ای از وضعیت کسب و کار
-
-## مستندات API
-برای دسترسی به مستندات API، پس از اجرای سرور، به آدرس‌های زیر مراجعه کنید:
-- **Swagger UI**: `http://127.0.0.1:8000/swagger/`
-- **ReDoc**: `http://127.0.0.1:8000/redoc/`
-- **OpenAPI JSON**: `http://127.0.0.1:8000/swagger.json/`
-- **OpenAPI YAML**: `http://127.0.0.1:8000/swagger.yaml/`
-
-## سناریوی تست End-to-End
-این پروژه دارای تست جامع end-to-end است که چرخه کامل عملیات (خرید، فروش، انبار، حسابداری، حذف منطقی و...) را پوشش می‌دهد. برای مشاهده سناریو و اجرای تست:
-- فایل `users/tests_e2e.py` را ببینید.
-- اجرای تست:
-  ```
-  python manage.py test users.tests_e2e
-  ```
-
-## نکات عیب‌یابی متداول
-- اگر در PowerShell با خطای `&&` مواجه شدید، دستورات را جداگانه اجرا کنید.
-- اگر با خطای Multiple Root Templates در Vue مواجه شدید، مطمئن شوید هر فایل Vue فقط یک المنت ریشه دارد.
-- برای ارتباط صحیح فرانت‌اند با بک‌اند، مقدار VITE_API_URL را در .env تنظیم کنید.
-
-## تنظیمات منطقه‌ای
-- **زبان پیش‌فرض**: فارسی
-- **منطقه زمانی**: تهران (Asia/Tehran)
-- **فرمت تاریخ**: تاریخ شمسی (jYYYY/jMM/jDD)
-- **فونت پیش‌فرض**: وزیر
-- **جهت طراحی**: راست به چپ (RTL)
-
-## مجوز استفاده
-این پروژه تحت مجوز MIT منتشر شده است.
+A full-stack ERP system for a hardware store (یراق آلات ناصری), built with Django REST Framework and Vue.js 3.
 
 ---
 
-### نکات تکمیلی توسعه و تست
-- حذف منطقی (soft delete) برای کاربران و محصولات فعال است.
-- فیلدهای تاریخچه (audit log) برای ردیابی تغییرات در مدل‌های کلیدی استفاده می‌شود.
-- تست‌های واحد و API برای همه ماژول‌ها نوشته شده است.
-- تست end-to-end چرخه کامل ERP را پوشش می‌دهد.
-- ساختار پروژه به صورت backend و frontend کاملاً جداگانه است.
-- برای توسعه frontend از Vue 3 + Tailwind CSS + Headless UI استفاده می‌شود (نه Materio/Vuetify).
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Backend | Django 5.0.7 + Django REST Framework |
+| Frontend | Vue.js 3 + Tailwind CSS + Pinia |
+| Database | PostgreSQL |
+| Auth | Token-based (DRF TokenAuthentication) |
+| Static files | WhiteNoise |
+| Web server | Nginx (production) |
+| App server | Gunicorn (production) |
+
+---
+
+## Project Structure
+
+```
+naseri/
+├── backend/                  # Django project
+│   ├── naseri_erp/           # Project settings, urls, wsgi
+│   ├── users/                # Custom user model (phone number login)
+│   ├── products/             # Products, categories, units
+│   ├── inventory/            # Warehouses, stock transactions, adjustments
+│   ├── sales/                # Customers, sales, invoices, payments
+│   ├── purchases/            # Suppliers, purchase orders, supplier payments
+│   ├── accounting/           # Chart of accounts, journal entries, expenses
+│   ├── reporting/            # Reports module
+│   ├── audit/                # Activity log, notifications
+│   ├── requirements.txt      # Dev dependencies
+│   ├── requirements-prod.txt # Prod dependencies (includes gunicorn)
+│   └── .env.example          # Environment variables template
+├── frontend/                 # Vue.js 3 project
+│   ├── src/
+│   │   ├── views/            # Pages (Dashboard, Products, Sales, Customers, Inventory, Reports)
+│   │   ├── components/       # Reusable components
+│   │   ├── stores/           # Pinia stores (auth, products, sales, inventory, notifications)
+│   │   ├── services/api.js   # Axios API client
+│   │   └── router/index.js   # Vue Router
+│   └── .env                  # Frontend env (VITE_API_BASE_URL)
+├── nginx.conf                # Nginx config for VPS
+└── naseri-erp.service        # Systemd service for Gunicorn
+```
+
+---
+
+## Modules & Features
+
+### Working Features
+- **Authentication** — Phone number login, token-based auth, role-based access (admin/manager)
+- **Products** — CRUD, categories, units, min/max stock, soft delete, product history
+- **Inventory** — Warehouses, stock transactions (purchase/sale/adjustment/return), low stock alerts
+- **Sales** — Customers, sales orders (draft→confirmed→completed), invoices, payments, auto stock deduction
+- **Purchases** — Suppliers, purchase orders, receiving, supplier invoices, supplier payments
+- **Accounting** — Chart of accounts, journal entries, fiscal years, expense tracking
+- **Audit Log** — Activity tracking with priority levels and notification system
+- **Dashboard** — Sales metrics, inventory overview, recent activity
+- **Reports** — Sales reports (daily/weekly/monthly), sales by product
+
+### Key Business Logic
+- Stock is deducted **only** when a sale moves from `draft` → `confirmed` or `completed`
+- Cancelling a confirmed sale **restores** stock via a `return_from_customer` inventory transaction
+- Stock levels are calculated from inventory transactions (not a stored field)
+- Soft delete on users and products (data is never permanently lost)
+- Auto-generated customer codes (`CUST000001`) and invoice numbers (`INV-20250101-0001`)
+
+---
+
+## Local Development Setup
+
+### Prerequisites
+- Python 3.12
+- PostgreSQL
+- Node.js 18+
+
+### Backend
+
+```bash
+cd backend
+
+# Create and activate virtual environment
+python -m venv venv
+source venv/bin/activate        # Linux/Mac
+venv\Scripts\activate           # Windows CMD
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Create .env file
+cp .env.example .env
+# Edit .env and fill in your local PostgreSQL credentials
+
+# Run migrations
+python manage.py migrate
+
+# Create superuser
+python manage.py createsuperuser
+
+# Start dev server
+python manage.py runserver
+```
+
+### Frontend
+
+```bash
+cd frontend
+
+# Create .env file
+echo "VITE_API_BASE_URL=http://localhost:8000/api" > .env
+
+# Install and run
+npm install
+npm run dev
+```
+
+Frontend runs on `http://localhost:5173`, backend on `http://localhost:8000`.
+
+---
+
+## Environment Variables
+
+Create `backend/.env` based on `backend/.env.example`:
+
+```env
+SECRET_KEY=your-50-char-random-secret-key
+DEBUG=True                          # False in production
+ALLOWED_HOSTS=localhost,127.0.0.1   # your-domain.com in production
+DB_NAME=naseri_erp_db
+DB_USER=naseri_user
+DB_PASSWORD=your-db-password
+DB_HOST=localhost
+DB_PORT=5432
+CORS_ALLOWED_ORIGINS=http://localhost:5173   # https://your-domain.com in production
+```
+
+Generate a secret key:
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(50))"
+```
+
+---
+
+## VPS Deployment
+
+### Server Requirements
+- Ubuntu 22.04 LTS
+- 1GB RAM minimum
+- PostgreSQL, Python 3.12, Node.js 18, Nginx
+
+### 1. Install System Dependencies
+
+```bash
+sudo apt update && sudo apt upgrade -y
+sudo apt install -y python3.12 python3.12-venv python3-pip postgresql postgresql-contrib nginx git
+curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+sudo apt install -y nodejs
+```
+
+### 2. Setup PostgreSQL
+
+```bash
+sudo -u postgres psql
+```
+```sql
+CREATE DATABASE naseri_erp_db;
+CREATE USER naseri_user WITH PASSWORD 'your-strong-password';
+GRANT ALL PRIVILEGES ON DATABASE naseri_erp_db TO naseri_user;
+\q
+```
+
+### 3. Clone & Setup Backend
+
+```bash
+git clone https://github.com/your-username/naseri.git /home/user/naseri
+cd /home/user/naseri/backend
+
+python3.12 -m venv venv
+source venv/bin/activate
+pip install -r requirements-prod.txt
+
+# Create .env with production values
+cp .env.example .env
+nano .env
+# Set: DEBUG=False, ALLOWED_HOSTS=your-domain.com, DB credentials, CORS_ALLOWED_ORIGINS
+```
+
+```bash
+python manage.py migrate
+python manage.py collectstatic --noinput
+python manage.py createsuperuser
+```
+
+### 4. Build Frontend
+
+```bash
+cd /home/user/naseri/frontend
+npm install
+# Set production API URL
+echo "VITE_API_BASE_URL=https://your-domain.com/api" > .env.production
+npm run build
+# Output is in frontend/dist/
+```
+
+### 5. Configure Nginx
+
+Edit `nginx.conf` (already in repo root) — replace `your-domain.com` and `/home/user/` with your actual values:
+
+```bash
+sudo cp /home/user/naseri/nginx.conf /etc/nginx/sites-available/naseri
+sudo ln -s /etc/nginx/sites-available/naseri /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+The `nginx.conf` serves:
+- `/` → Vue.js frontend (`frontend/dist/`)
+- `/api/` → Gunicorn (Django)
+- `/admin/`, `/swagger/`, `/redoc/` → Gunicorn (Django)
+- `/media/` → Django media files
+
+### 6. Setup Gunicorn as a Service
+
+Edit `naseri-erp.service` (already in repo root) — replace `user` with your actual Linux username:
+
+```bash
+sudo cp /home/user/naseri/naseri-erp.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable naseri-erp
+sudo systemctl start naseri-erp
+
+# Check status
+sudo systemctl status naseri-erp
+```
+
+### 7. SSL with Let's Encrypt (recommended)
+
+```bash
+sudo apt install certbot python3-certbot-nginx
+sudo certbot --nginx -d your-domain.com
+```
+
+---
+
+## API Documentation
+
+After starting the backend server:
+
+| URL | Description |
+|-----|-------------|
+| `/swagger/` | Swagger UI (interactive) |
+| `/redoc/` | ReDoc documentation |
+| `/swagger.json/` | OpenAPI JSON schema |
+| `/admin/` | Django admin panel |
+
+---
+
+## API Endpoints Summary
+
+```
+POST   /api/users/login/              # Login → returns token
+POST   /api/users/logout/             # Logout
+
+GET    /api/products/products/        # List products
+GET    /api/inventory/stock-levels/   # All product stock levels
+GET    /api/inventory/low-stock/      # Products below min stock
+
+GET    /api/sales/customers/          # List customers
+GET    /api/sales/sales/              # List sales
+PATCH  /api/sales/sales/{id}/update-status/  # Change sale status
+
+GET    /api/purchases/purchases/      # List purchases
+GET    /api/accounting/accounts/      # Chart of accounts
+
+GET    /api/sales/sales-report/       # Sales report (daily/weekly/monthly)
+GET    /api/sales/sales-by-product/   # Sales grouped by product
+```
+
+All endpoints require `Authorization: Token <your-token>` header except login.
+
+---
+
+## Running Tests
+
+```bash
+cd backend
+python manage.py test users.tests_e2e -v 2
+```
+
+The E2E test covers the full business cycle: supplier → purchase → receive stock → sell → payment → inventory check → soft delete.
+
+---
+
+## Default Users (after running createsuperuser or create_test_users command)
+
+```bash
+# Create test users with predefined credentials
+python manage.py create_test_users
+```
+
+| Role | Phone | Password |
+|------|-------|----------|
+| Admin | 09122173180 | Admin@123 |
+| Manager | 09123456788 | Manager@123 |
+
+---
+
+## Troubleshooting
+
+**Backend won't start — `No module named 'whitenoise'`**
+```bash
+pip install -r requirements.txt
+```
+
+**Frontend can't reach backend (CORS error)**
+- Check `CORS_ALLOWED_ORIGINS` in `backend/.env` matches your frontend URL exactly
+
+**Stock not updating after sale confirmation**
+- Make sure you use the `PATCH /api/sales/sales/{id}/update-status/` endpoint to change status, not a direct PATCH to the sale object
+
+**Nginx 502 Bad Gateway**
+- Check Gunicorn is running: `sudo systemctl status naseri-erp`
+- Check logs: `sudo journalctl -u naseri-erp -n 50`
+
+**Static files not loading in production**
+```bash
+python manage.py collectstatic --noinput
+```
