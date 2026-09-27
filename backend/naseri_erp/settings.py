@@ -78,17 +78,45 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'naseri_erp.wsgi.application'
 
-# Database - reads from env in production, falls back to local postgres for dev
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DB_NAME', 'naseri_erp_db'),
-        'USER': os.environ.get('DB_USER', 'naseri_user'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
-        'HOST': os.environ.get('DB_HOST', 'localhost'),
-        'PORT': os.environ.get('DB_PORT', '5432'),
+# Database - PostgreSQL remains the default; MariaDB/MySQL is available for
+# temporary shared-hosting deployments through DB_ENGINE=mysql (or mariadb).
+DB_ENGINE = os.environ.get('DB_ENGINE', 'postgresql').lower()
+
+if DB_ENGINE in ('mysql', 'mariadb'):
+    # Serverha does not provide the Python development headers required to
+    # compile mysqlclient, so use the pure-Python compatible driver there.
+    import pymysql
+    pymysql.install_as_MySQLdb()
+
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.environ.get('DB_NAME'),
+            'USER': os.environ.get('DB_USER'),
+            'PASSWORD': os.environ.get('DB_PASSWORD'),
+            'HOST': os.environ.get('DB_HOST', 'localhost'),
+            'PORT': os.environ.get('DB_PORT', '3306'),
+            'OPTIONS': {
+                'charset': 'utf8mb4',
+                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            },
+        }
     }
-}
+elif DB_ENGINE in ('postgresql', 'postgres'):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('DB_NAME', 'naseri_erp_db'),
+            'USER': os.environ.get('DB_USER', 'naseri_user'),
+            'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+            'HOST': os.environ.get('DB_HOST', 'localhost'),
+            'PORT': os.environ.get('DB_PORT', '5432'),
+        }
+    }
+else:
+    raise ValueError(
+        "DB_ENGINE must be 'postgresql', 'postgres', 'mysql', or 'mariadb'."
+    )
 
 # Also support DATABASE_URL (Railway/Render provide this)
 DATABASE_URL = os.environ.get('DATABASE_URL')
