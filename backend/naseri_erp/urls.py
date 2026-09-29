@@ -12,6 +12,7 @@ from django.shortcuts import redirect
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
+from .invoice_documents import InvoiceDocumentView, PublicInvoiceDocumentView
 
 # API documentation setup with Swagger
 schema_view = get_schema_view(
@@ -37,6 +38,8 @@ urlpatterns = [
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 
     # API endpoints
+    path('api/invoice-documents/public/<str:token>/', PublicInvoiceDocumentView.as_view(), name='public-invoice-document'),
+    path('api/invoice-documents/<str:kind>/<int:pk>/', InvoiceDocumentView.as_view(), name='invoice-document'),
     path('api/users/', include('users.urls')),
     path('api/products/', include('products.urls')),
     path('api/inventory/', include('inventory.urls')),

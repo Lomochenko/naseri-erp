@@ -304,7 +304,6 @@ import QRScanner from './QRScanner.vue'
 import AlertJS from '@/components/ui/AlertJS.vue'
 import InventoryCard from '@/components/common/InventoryCard.vue'
 import DatePicker from 'vue3-persian-datetime-picker'
-import { storeInvoiceOffline } from '@/utils/qrCodeUtils'
 import { downloadReceiptPDF } from '@/utils/pdfUtils'
 import { generateMobileQRCodeURL } from '@/utils/qrCodeUtils'
 
@@ -456,9 +455,6 @@ const editOrder = (order) => {
 }
 
 const handleReceiptAction = (order) => {
-  // Store invoice offline first
-  storeInvoiceOffline(order)
-
   // Show receipt modal with QR code
   receiptOrder.value = order
   showReceiptModal.value = true
@@ -539,12 +535,16 @@ const refreshData = async () => {
   await salesStore.fetchSalesOrders()
 }
 
-const handleOrderSaved = async () => {
+const handleOrderSaved = async (orderId) => {
   showCreateModal.value = false
   showEditModal.value = false
   editingOrder.value = null
   await refreshData()
   calculateStatistics()
+  if (orderId) {
+    receiptOrder.value = { id: typeof orderId === 'object' ? orderId.id : orderId }
+    showReceiptModal.value = true
+  }
 }
 
 // Close status menu when clicking outside

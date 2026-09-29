@@ -31,6 +31,9 @@ class PurchaseViewSet(viewsets.ModelViewSet):
     ordering_fields = ['purchase_date', 'created_at']
     ordering = ['-purchase_date']
 
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user)
+
 class PurchaseItemViewSet(viewsets.ModelViewSet):
     """ViewSet for viewing and editing PurchaseItem instances."""
     queryset = PurchaseItem.objects.all()
@@ -39,6 +42,56 @@ class PurchaseItemViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['purchase', 'product']
     search_fields = ['notes']
+
+    def perform_create(self, serializer):
+        from django.db import transaction
+        from rest_framework.exceptions import ValidationError
+        from naseri_erp.invoice_documents import purchase_invoice
+        data = serializer.validated_data
+        if data.get('received_quantity', 0) > data['quantity']:
+            raise ValidationError({'received_quantity': 'تعداد دریافتی بیش از خرید است.'})
+        if data['purchase'].status == 'cancelled':
+            raise ValidationError('خرید لغوشده قابل تغییر نیست.')
+        if data['purchase'].status != 'received' and data.get('received_quantity', 0):
+            raise ValidationError('سفارش هنوز دریافت نشده است.')
+        if data['purchase'].status == 'received' and data.get('received_quantity', data['quantity']) != data['quantity']:
+            raise ValidationError('وضعیت دریافت‌شده برای دریافت کامل کالا است.')
+        with transaction.atomic():
+            item = serializer.save(**({'received_quantity': data['quantity']} if data['purchase'].status == 'received' else {}))
+            purchase_invoice(item.purchase)
+
+    def perform_update(self, serializer):
+        from django.db import transaction
+        from rest_framework.exceptions import ValidationError
+        from naseri_erp.invoice_documents import purchase_invoice
+        purchase = serializer.instance.purchase
+        if purchase.status in ['received', 'cancelled']:
+            raise ValidationError('اقلام خرید دریافت‌شده یا لغوشده قابل ویرایش نیستند.')
+        if serializer.validated_data.get('purchase', purchase).pk != purchase.pk:
+            raise ValidationError('انتقال ردیف به خرید دیگر مجاز نیست.')
+        if serializer.validated_data.get('received_quantity', 0):
+            raise ValidationError('برای دریافت کالا وضعیت خرید را تغییر دهید.')
+        with transaction.atomic():
+            serializer.save()
+            purchase_invoice(purchase)
+
+    def perform_destroy(self, instance):
+        from django.db import transaction
+        from rest_framework.exceptions import ValidationError
+        from naseri_erp.invoice_documents import purchase_invoice
+        purchase = instance.purchase
+        if purchase.status in ['received', 'cancelled']:
+            raise ValidationError('اقلام خرید دریافت‌شده یا لغوشده قابل حذف نیستند.')
+        with transaction.atomic():
+            invoice = getattr(purchase, 'invoice', None)
+            if invoice and invoice.payments.exists():
+                raise ValidationError('اقلام خرید دارای پرداخت قابل حذف نیستند.')
+            instance.delete()
+            if purchase.items.exists():
+                purchase_invoice(purchase)
+            elif invoice:
+                invoice.total_amount = 0
+                invoice.save()
 
 class PurchaseInvoiceViewSet(viewsets.ModelViewSet):
     """ViewSet for viewing and editing PurchaseInvoice instances."""

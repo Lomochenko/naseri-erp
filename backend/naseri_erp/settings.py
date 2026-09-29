@@ -147,6 +147,9 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# QR links are bearer capabilities for one whitelisted invoice, not ERP login.
+INVOICE_SHARE_MAX_AGE = int(os.environ.get('INVOICE_SHARE_MAX_AGE', str(30 * 24 * 60 * 60)))
+
 AUTH_USER_MODEL = 'users.User'
 
 LOGIN_URL = '/api/users/login/'

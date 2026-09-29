@@ -116,14 +116,14 @@ export const purchasesAPI = {
   updateSupplier: (id, data) => api.put(`/purchases/suppliers/${id}/`, data),
   deleteSupplier: (id) => api.delete(`/purchases/suppliers/${id}/`),
 
-  getPurchaseOrders: (params = {}) => api.get('/purchases/purchase-orders/', { params }),
-  createPurchaseOrder: (data) => api.post('/purchases/purchase-orders/', data),
+  getPurchaseOrders: (params = {}) => api.get('/purchases/purchases/', { params }),
+  createPurchaseOrder: (data) => api.post('/purchases/purchases/', data),
 
-  getInvoices: (params = {}) => api.get('/purchases/invoices/', { params }),
-  createInvoice: (data) => api.post('/purchases/invoices/', data),
+  getInvoices: (params = {}) => api.get('/purchases/purchase-invoices/', { params }),
+  createInvoice: (data) => api.post('/purchases/purchase-invoices/', data),
 
-  getPayments: (params = {}) => api.get('/purchases/payments/', { params }),
-  createPayment: (data) => api.post('/purchases/payments/', data),
+  getPayments: (params = {}) => api.get('/purchases/supplier-payments/', { params }),
+  createPayment: (data) => api.post('/purchases/supplier-payments/', data),
 }
 
 // Accounting API

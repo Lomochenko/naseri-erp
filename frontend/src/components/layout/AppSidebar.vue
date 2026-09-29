@@ -259,6 +259,7 @@ const menuGroups = [
         name: "فروش",
         path: "/sales"
       },
+      { icon: BoxCubeIcon, name: "خرید", path: "/purchases" },
       {
         icon: UserGroupIcon,
         name: "مشتریان",

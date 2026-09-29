@@ -7,6 +7,8 @@ const router = createRouter({
     return savedPosition || { left: 0, top: 0 }
   },
   routes: [
+    { path: '/invoice/:token', name: 'PublicInvoice', component: () => import('../views/PublicInvoice.vue'), meta: { title: 'سند دیجیتال', requiresAuth: false } },
+    { path: '/purchases', name: 'Purchases', component: () => import('../views/Purchases/PurchasesList.vue'), meta: { title: 'خرید', requiresAuth: true } },
     {
       path: '/',
       name: 'Dashboard',
