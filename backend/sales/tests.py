@@ -298,7 +298,8 @@ class SaleAPITest(APITestCase):
             "sale_date": timezone.now().date().isoformat(),
             "discount_amount": 50000,
             "tax_amount": 180000,
-            "created_by": self.user.id
+            "created_by": self.user.id,
+            "items": [{"product": self.product.id, "quantity": 2, "unit_price": 1800000}]
         }
 
         # Create sale
@@ -327,7 +328,7 @@ class SaleAPITest(APITestCase):
         response = self.client.post(url, self.sale_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Sale.objects.count(), 2)
-        self.assertEqual(Sale.objects.get(invoice_number="S-002").customer.name, "شرکت ساختمانی آبادگران")
+        self.assertEqual(Sale.objects.get(pk=response.data['id']).customer.name, "شرکت ساختمانی آبادگران")
 
     def test_get_sale_list(self):
         """Test getting sale list."""
@@ -349,13 +350,13 @@ class SaleAPITest(APITestCase):
         """Test updating a sale."""
         url = reverse('sale-detail', args=[self.sale.id])
         updated_data = {
-            "status": "confirmed",
             "notes": "فاکتور تایید شده"
         }
         response = self.client.patch(url, updated_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.sale.refresh_from_db()
-        self.assertEqual(self.sale.status, "confirmed")
+        self.assertEqual(self.sale.status, "draft")
+        self.assertEqual(self.sale.items.count(), 1)
         self.assertEqual(self.sale.notes, "فاکتور تایید شده")
 
     def test_delete_sale(self):

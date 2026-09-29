@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import Supplier, Purchase, PurchaseItem, PurchaseInvoice, SupplierPayment
 from products.serializers import ProductSerializer
+from naseri_erp.payment_balances import PaymentValidationSerializerMixin
 
 class SupplierSerializer(serializers.ModelSerializer):
     """Serializer for Supplier model."""
@@ -64,7 +65,7 @@ class PurchaseInvoiceSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'remaining_amount']
 
-class SupplierPaymentSerializer(serializers.ModelSerializer):
+class SupplierPaymentSerializer(PaymentValidationSerializerMixin, serializers.ModelSerializer):
     """Serializer for SupplierPayment model."""
     invoice_number = serializers.ReadOnlyField(source='invoice.invoice_number')
     supplier_name = serializers.ReadOnlyField(source='invoice.supplier.name')

@@ -115,6 +115,7 @@ export const useProductsStore = defineStore('products', () => {
     try {
       await productsAPI.deleteProduct(id)
       products.value = products.value.filter(p => p.id !== id)
+      pagination.value.count = Math.max(0, pagination.value.count - 1)
       return { success: true }
     } catch (err) {
       error.value = err.response?.data?.message || 'خطا در حذف محصول'

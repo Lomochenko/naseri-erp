@@ -91,7 +91,7 @@
               <p class="font-medium text-gray-500 text-sm dark:text-gray-400">سقف اعتبار</p>
             </th>
             <th class="px-5 py-3 text-right w-2/12 sm:px-6">
-              <p class="font-medium text-gray-500 text-sm dark:text-gray-400">موجودی</p>
+              <p class="font-medium text-gray-500 text-sm dark:text-gray-400">مانده حساب</p>
             </th>
             <th class="px-5 py-3 text-right w-1/12 sm:px-6">
               <p class="font-medium text-gray-500 text-sm dark:text-gray-400">وضعیت</p>
@@ -131,6 +131,7 @@
               <p :class="(customer.account_balance || 0) < 0 ? 'text-red-600' : 'text-green-600'" class="text-sm font-medium">
                 {{ formatPrice(customer.account_balance || 0) }}
               </p>
+              <p class="text-xs text-gray-500 dark:text-gray-400">بدهی: {{ formatPrice(customer.total_due || 0) }}</p>
             </td>
             <td class="px-5 py-4 sm:px-6">
               <span :class="[

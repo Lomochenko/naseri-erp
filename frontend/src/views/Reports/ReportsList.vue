@@ -16,6 +16,9 @@
       </nav>
     </div>
 
+    <p class="mb-6 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900" role="status">
+      {{ reportNotice }}
+    </p>
     <!-- Report Categories -->
     <div class="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3 xl:gap-6 2xl:gap-7.5 max-w-7xl">
       <!-- Sales Reports -->
@@ -309,7 +312,9 @@
         </div>
       </div>
 
-      <!-- Sample Recent Reports -->
+      <p v-if="recentReports.length === 0" class="px-4 py-6 text-sm text-gray-600 dark:text-gray-400">
+        گزارش تولیدشده‌ای برای نمایش وجود ندارد.
+      </p>
       <div v-for="report in recentReports" :key="report.id" class="grid grid-cols-6 border-t border-stroke px-4 py-4.5 dark:border-strokedark sm:grid-cols-8 md:px-6 2xl:px-7.5">
         <div class="col-span-3 flex items-center">
           <p class="text-sm text-black dark:text-white">{{ report.name }}</p>
@@ -437,6 +442,7 @@ import AdminLayout from '@/components/layout/AdminLayout.vue'
 
 // Reactive data
 const showCustomReportModal = ref(false)
+const reportNotice = ref('گزارش‌گیری این صفحه هنوز فعال نیست؛ برای تصمیم مالی به این صفحه اتکا نکنید.')
 
 const customReportForm = ref({
   name: '',
@@ -445,44 +451,20 @@ const customReportForm = ref({
   endDate: ''
 })
 
-// Sample recent reports
-const recentReports = ref([
-  {
-    id: 1,
-    name: 'گزارش فروش روزانه',
-    date: '1403/01/15',
-    type: 'فروش',
-    status: 'ready'
-  },
-  {
-    id: 2,
-    name: 'گزارش موجودی کم',
-    date: '1403/01/14',
-    type: 'موجودی',
-    status: 'ready'
-  },
-  {
-    id: 3,
-    name: 'گزارش سود و زیان ماهانه',
-    date: '1403/01/13',
-    type: 'مالی',
-    status: 'processing'
-  }
-])
+// Do not present sample reports as generated business records.
+const recentReports = ref([])
 
 // Methods
 const generateReport = (reportType) => {
-  console.log('Generating report:', reportType)
-  // Here you would call the appropriate API endpoint
+  reportNotice.value = 'این گزارش هنوز به سرویس گزارش‌گیری متصل نشده است و فایلی تولید نشد.'
 }
 
 const downloadReport = (report) => {
-  console.log('Downloading report:', report)
-  // Here you would download the report file
+  reportNotice.value = 'فایل گزارش قابل دانلود در دسترس نیست.'
 }
 
 const createCustomReport = () => {
-  console.log('Creating custom report:', customReportForm.value)
+  reportNotice.value = 'گزارش سفارشی هنوز فعال نیست؛ گزارش شما ذخیره یا تولید نشد.'
   showCustomReportModal.value = false
   customReportForm.value = {
     name: '',

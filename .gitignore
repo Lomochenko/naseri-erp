@@ -39,7 +39,7 @@ venv/
 comprehensive_test.py
 final_test.py
 simple_test.py
-test_*.py
+/test_*.py
 
 # Data files
 backend/data.json

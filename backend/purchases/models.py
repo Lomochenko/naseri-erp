@@ -4,6 +4,8 @@ from django.conf import settings
 from django.core.validators import MinValueValidator
 from products.models import Product
 from inventory.models import Warehouse, InventoryTransaction
+from django.db.models.signals import pre_delete, post_delete
+from naseri_erp.payment_balances import PaymentBalanceMixin, lock_payment_invoice, payment_deleted
 
 class Supplier(models.Model):
     """Supplier model."""
@@ -29,7 +31,7 @@ class Supplier(models.Model):
     @property
     def total_due(self):
         """Calculate total amount due to supplier."""
-        return self.purchase_invoices.filter(status='unpaid').aggregate(
+        return self.purchase_invoices.filter(status__in=['unpaid', 'partially_paid']).aggregate(
             total=models.Sum('remaining_amount'))['total'] or 0
 
 class Purchase(models.Model):
@@ -176,7 +178,9 @@ class PurchaseInvoice(models.Model):
         self.remaining_amount = self.total_amount - self.paid_amount
 
         # Update status based on payment
-        if self.remaining_amount <= 0:
+        if self.status == 'cancelled':
+            pass
+        elif self.remaining_amount <= 0:
             self.status = 'paid'
         elif self.paid_amount > 0:
             self.status = 'partially_paid'
@@ -185,7 +189,7 @@ class PurchaseInvoice(models.Model):
 
         super().save(*args, **kwargs)
 
-class SupplierPayment(models.Model):
+class SupplierPayment(PaymentBalanceMixin, models.Model):
     """Supplier payment model for tracking payments to suppliers."""
     PAYMENT_METHODS = [
         ('cash', _('Cash')),
@@ -217,13 +221,5 @@ class SupplierPayment(models.Model):
     def __str__(self):
         return f"{self.payment_number} - {self.invoice.invoice_number}"
 
-    def save(self, *args, **kwargs):
-        """Override save to update invoice paid amount."""
-        is_new = self.pk is None
-        super().save(*args, **kwargs)
-
-        if is_new:
-            # Update invoice paid amount
-            invoice = self.invoice
-            invoice.paid_amount = invoice.payments.aggregate(total=models.Sum('amount'))['total'] or 0
-            invoice.save()
+pre_delete.connect(lock_payment_invoice, sender=SupplierPayment, dispatch_uid='purchases.payment.lock', weak=False)
+post_delete.connect(payment_deleted, sender=SupplierPayment, dispatch_uid='purchases.payment.balance', weak=False)

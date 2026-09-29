@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import Customer, Sale, SaleItem, Invoice, Payment
 from products.serializers import ProductSerializer
+from naseri_erp.payment_balances import PaymentValidationSerializerMixin
 
 class CustomerSerializer(serializers.ModelSerializer):
     """Serializer for Customer model."""
@@ -44,6 +45,13 @@ class SaleCreateUpdateSerializer(serializers.ModelSerializer):
         if not value:
             raise serializers.ValidationError("Customer is required")
         return value
+
+    def validate(self, attrs):
+        if self.instance and self.instance.status != 'draft':
+            raise serializers.ValidationError('فقط فروش پیش‌نویس قابل ویرایش است.')
+        if attrs.get('status', 'draft') != 'draft':
+            raise serializers.ValidationError({'status': 'برای تایید یا تکمیل از عملیات تغییر وضعیت استفاده کنید.'})
+        return attrs
 
     def validate_items(self, value):
         """Validate items."""
@@ -100,19 +108,17 @@ class SaleCreateUpdateSerializer(serializers.ModelSerializer):
             raise
 
     def update(self, instance, validated_data):
-        items_data = validated_data.pop('items', [])
-
-        # Update sale fields
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-        instance.save()
-
-        # Update items
-        instance.items.all().delete()
-        for item_data in items_data:
-            SaleItem.objects.create(sale=instance, **item_data)
-
-        return instance
+        from django.db import transaction
+        items_data = validated_data.pop('items', None)
+        with transaction.atomic():
+            for attr, value in validated_data.items():
+                setattr(instance, attr, value)
+            instance.save()
+            if items_data is not None:
+                instance.items.all().delete()
+                for item_data in items_data:
+                    SaleItem.objects.create(sale=instance, **item_data)
+            return instance
 
 class SaleSerializer(serializers.ModelSerializer):
     """Serializer for Sale model (read-only)."""
@@ -151,7 +157,7 @@ class InvoiceSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'remaining_amount']
 
-class PaymentSerializer(serializers.ModelSerializer):
+class PaymentSerializer(PaymentValidationSerializerMixin, serializers.ModelSerializer):
     """Serializer for Payment model."""
     invoice_number = serializers.ReadOnlyField(source='invoice.invoice_number')
     customer_name = serializers.ReadOnlyField(source='invoice.customer.name')

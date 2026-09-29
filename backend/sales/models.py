@@ -6,6 +6,8 @@ from decimal import Decimal
 import uuid
 from products.models import Product
 from inventory.models import Warehouse, InventoryTransaction
+from django.db.models.signals import pre_delete, post_delete
+from naseri_erp.payment_balances import PaymentBalanceMixin, lock_payment_invoice, payment_deleted
 
 class Customer(models.Model):
     """Customer model."""
@@ -49,30 +51,21 @@ class Customer(models.Model):
     @property
     def total_due(self):
         """Calculate total amount due from customer."""
-        try:
-            return self.invoices.filter(status='unpaid').aggregate(
-                total=models.Sum('remaining_amount'))['total'] or 0
-        except:
-            return 0
+        invoiced_due = self.invoices.filter(status__in=['unpaid', 'partially_paid']).aggregate(
+            total=models.Sum('remaining_amount'))['total'] or Decimal('0')
+        uninvoiced_due = sum((sale.total for sale in self.sales.filter(
+            status__in=['confirmed', 'completed'], invoice__isnull=True)), Decimal('0'))
+        return invoiced_due + uninvoiced_due
 
     @property
     def account_balance(self):
         """Calculate customer's account balance (negative = debt, positive = credit)."""
-        try:
-            # Total sales amount
-            total_sales = self.sales.filter(status__in=['confirmed', 'completed']).aggregate(
-                total=models.Sum('total_amount'))['total'] or 0
-
-            # Total payments received
-            total_payments = 0
-            for sale in self.sales.filter(status__in=['confirmed', 'completed']):
-                sale_payments = sale.payments.aggregate(total=models.Sum('amount'))['total'] or 0
-                total_payments += sale_payments
-
-            # Balance = Payments - Sales (negative means customer owes money)
-            return total_payments - total_sales
-        except:
-            return 0
+        active_sales = self.sales.filter(status__in=['confirmed', 'completed'])
+        total_sales = sum((sale.total for sale in active_sales), Decimal('0'))
+        total_payments = Payment.objects.filter(
+            invoice__sale__in=active_sales, invoice__customer=self
+        ).exclude(invoice__status='cancelled').aggregate(total=models.Sum('amount'))['total'] or Decimal('0')
+        return total_payments - total_sales
 
     def save(self, *args, **kwargs):
         """Override save to auto-generate customer code."""
@@ -133,7 +126,7 @@ class Sale(models.Model):
     def subtotal(self):
         """Calculate subtotal of all items."""
         return self.items.aggregate(total=models.Sum(
-            models.F('quantity') * models.F('unit_price')))['total'] or 0
+            models.F('quantity') * models.F('unit_price') - models.F('discount')))['total'] or 0
 
     @property
     def total(self):
@@ -267,8 +260,10 @@ class Invoice(models.Model):
         """Override save to update remaining amount."""
         self.remaining_amount = self.total_amount - self.paid_amount
 
-        # Update status based on payment
-        if self.remaining_amount <= 0:
+        # Cancellation is explicit and must survive balance recalculation.
+        if self.status == 'cancelled':
+            pass
+        elif self.remaining_amount <= 0:
             self.status = 'paid'
         elif self.paid_amount > 0:
             self.status = 'partially_paid'
@@ -277,7 +272,7 @@ class Invoice(models.Model):
 
         super().save(*args, **kwargs)
 
-class Payment(models.Model):
+class Payment(PaymentBalanceMixin, models.Model):
     """Payment model for tracking customer payments."""
     PAYMENT_METHODS = [
         ('cash', _('Cash')),
@@ -309,13 +304,5 @@ class Payment(models.Model):
     def __str__(self):
         return f"{self.payment_number} - {self.invoice.invoice_number}"
 
-    def save(self, *args, **kwargs):
-        """Override save to update invoice paid amount."""
-        is_new = self.pk is None
-        super().save(*args, **kwargs)
-
-        if is_new:
-            # Update invoice paid amount
-            invoice = self.invoice
-            invoice.paid_amount = invoice.payments.aggregate(total=models.Sum('amount'))['total'] or 0
-            invoice.save()
+pre_delete.connect(lock_payment_invoice, sender=Payment, dispatch_uid='sales.payment.lock', weak=False)
+post_delete.connect(payment_deleted, sender=Payment, dispatch_uid='sales.payment.balance', weak=False)
