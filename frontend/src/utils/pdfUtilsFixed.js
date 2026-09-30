@@ -4,6 +4,7 @@
 import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
 import { formatPrice, formatDate } from './qrCodeUtils'
+import { brand } from '@/config/brand'
 
 /**
  * Download receipt PDF with proper Persian encoding
@@ -109,7 +110,7 @@ const generateReceiptHTML = (invoice) => {
     sale_date: invoice.sale_date,
     status: invoice.status,
     storage_key: invoice.qr_key || invoice.storage_key,
-    app_name: 'Yaraghalat_Naseri_ERP'
+    app_name: brand.qrAppName
   }, null, 0)
 
   // Generate items HTML
@@ -135,7 +136,7 @@ const generateReceiptHTML = (invoice) => {
           color: #1e40af;
           margin: 0 0 10px 0;
           font-family: 'Vazirmatn', 'Tahoma', sans-serif;
-        ">یراقالات ناصری</h1>
+        ">${brand.shortName}</h1>
         <h2 style="
           font-size: 24px;
           color: #64748b;
@@ -232,7 +233,7 @@ const generateReceiptHTML = (invoice) => {
             تاریخ چاپ: ${formatDate(new Date().toISOString())}
           </div>
           <div style="font-weight: 500;">
-            سیستم مدیریت یراقالات ناصری
+            ${brand.businessName}
           </div>
         </div>
       </div>

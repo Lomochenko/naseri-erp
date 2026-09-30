@@ -5,6 +5,7 @@ The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/5.0/topics/http/urls/
 """
 from django.contrib import admin
+import os
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
@@ -17,9 +18,9 @@ from .invoice_documents import InvoiceDocumentView, PublicInvoiceDocumentView
 # API documentation setup with Swagger
 schema_view = get_schema_view(
     openapi.Info(
-        title="یراق‌آلات ناصری API",
+        title=f"{os.environ.get('ERP_DISPLAY_NAME', 'یراق‌آلات ناصری')} API",
         default_version='v1',
-        description="مستندات API سیستم مدیریت منابع سازمانی یراق‌آلات ناصری",
+        description=f"مستندات API {os.environ.get('ERP_DISPLAY_NAME', 'یراق‌آلات ناصری')}",
         terms_of_service="https://www.example.com/terms/",
         contact=openapi.Contact(email="contact@example.com"),
         license=openapi.License(name="BSD License"),

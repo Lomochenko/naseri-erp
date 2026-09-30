@@ -21,7 +21,7 @@
     >
       <router-link to="/">
         <h2 class="text-title-md2 font-bold text-black dark:text-white">
-        داشبورد یراقالات ناصری
+        {{ brand.dashboardName }}
       </h2>
       </router-link>
     </div>
@@ -210,6 +210,7 @@
 </template>
 
 <script setup>
+import { brand } from '@/config/brand'
 import { ref, computed } from "vue";
 import { useRoute } from "vue-router";
 

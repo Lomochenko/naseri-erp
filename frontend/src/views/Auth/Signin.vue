@@ -192,7 +192,7 @@
                   <p
                     class="text-sm font-normal text-center text-gray-700 dark:text-gray-400 sm:text-start"
                   >
-                    سیستم مدیریت یراقالات ناصری
+                    {{ brand.businessName }}
                   </p>
                 </div>
               </div>
@@ -220,6 +220,7 @@
 </template>
 
 <script setup>
+import { brand } from '@/config/brand'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'

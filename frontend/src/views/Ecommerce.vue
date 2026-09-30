@@ -3,7 +3,7 @@
     <!-- Breadcrumb -->
     <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <h2 class="text-title-md2 font-bold text-black dark:text-white">
-        داشبورد یراقالات ناصری
+        {{ brand.dashboardName }}
       </h2>
       <nav>
         <ol class="flex items-center gap-2">
@@ -18,7 +18,7 @@
         خوش آمدید {{ authStore.user?.first_name || 'کاربر گرامی' }}
       </h3>
       <p class="text-gray-600 dark:text-gray-400">
-        سیستم مدیریت یراقالات ناصری
+        {{ brand.businessName }}
       </p>
     </div>
 
@@ -80,6 +80,7 @@
 </template>
 
 <script setup>
+import { brand } from '@/config/brand'
 import { useAuthStore } from '@/stores/auth'
 import AdminLayout from '../components/layout/AdminLayout.vue'
 

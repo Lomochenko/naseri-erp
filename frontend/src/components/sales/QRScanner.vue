@@ -202,6 +202,7 @@
 </template>
 
 <script setup>
+import { brand } from '@/config/brand'
 import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
 import { getAllStoredInvoices, getInvoiceByQRCode, formatPrice, formatDate, retrieveStoredInvoice } from '@/utils/qrCodeUtils'
 import { downloadReceiptPDF, loadPersianFonts } from '@/utils/pdfUtilsFixed'
@@ -440,7 +441,7 @@ const generateReceiptHTML = (invoice) => {
     </head>
     <body>
       <div class="header">
-        <h1>یراقالات ناصری</h1>
+        <h1>${brand.shortName}</h1>
         <h2>رسید فروش</h2>
       </div>
 
@@ -474,7 +475,7 @@ const generateReceiptHTML = (invoice) => {
 
       <div style="text-align: center; margin-top: 30px; font-size: 12px; color: #666;">
         تاریخ چاپ: ${new Date().toLocaleString('fa-IR')}<br>
-        سیستم مدیریت یراقالات ناصری
+        ${brand.businessName}
       </div>
     </body>
     </html>
@@ -503,7 +504,7 @@ const generateReceiptWithQRHTML = (invoice) => {
     sale_date: invoice.sale_date,
     status: invoice.status,
     storage_key: invoice.qr_key || invoice.storage_key,
-    app_name: 'Yaraghalat_Naseri_ERP'
+    app_name: brand.qrAppName
   })
 
   const invoiceNumber = escapeHTML(invoice.invoice_number)
@@ -542,7 +543,7 @@ const generateReceiptWithQRHTML = (invoice) => {
     </head>
     <body>
       <div class="header">
-        <h1>یراقالات ناصری</h1>
+        <h1>${brand.shortName}</h1>
         <h2>رسید فروش</h2>
       </div>
 
@@ -583,7 +584,7 @@ const generateReceiptWithQRHTML = (invoice) => {
 
       <div style="text-align: center; margin-top: 30px; font-size: 12px; color: #666;">
         تاریخ چاپ: ${new Date().toLocaleString('fa-IR')}<br>
-        سیستم مدیریت یراقالات ناصری
+        ${brand.businessName}
       </div>
 
       <script>

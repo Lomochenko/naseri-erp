@@ -1,3 +1,5 @@
+import { brand } from '@/config/brand'
+
 /**
  * QR Code utilities for offline invoice management
  */
@@ -16,7 +18,7 @@ export const generateQRCodeData = (order) => {
     sale_date: order.sale_date,
     status: order.status,
     generated_at: new Date().toISOString(),
-    app_name: 'Yaraghalat_Naseri_ERP',
+    app_name: brand.qrAppName,
     version: '1.0'
   }
 
@@ -135,7 +137,7 @@ export const parseQRCode = (qrCodeString) => {
     const parsedData = JSON.parse(qrCodeString)
 
     // Validate that it's our app's QR code
-    if (parsedData.app_name !== 'Yaraghalat_Naseri_ERP') {
+    if (parsedData.app_name !== brand.qrAppName) {
       throw new Error('Invalid QR code - not from this app')
     }
 

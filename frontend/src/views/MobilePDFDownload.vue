@@ -8,7 +8,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
         </div>
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">یراقالات ناصری</h1>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">{{ brand.shortName }}</h1>
         <p class="text-gray-600 dark:text-gray-400">دانلود رسید فروش</p>
       </div>
 
@@ -108,7 +108,7 @@
       <!-- Footer -->
       <div class="text-center mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
         <p class="text-xs text-gray-500 dark:text-gray-400">
-          سیستم مدیریت یراقالات ناصری
+          {{ brand.businessName }}
         </p>
       </div>
     </div>
@@ -116,6 +116,7 @@
 </template>
 
 <script setup>
+import { brand } from '@/config/brand'
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { retrieveStoredInvoice } from '@/utils/qrCodeUtils'
@@ -254,7 +255,7 @@ const generateReceiptHTML = () => {
     <body>
       <div class="receipt">
         <div class="header">
-          <div class="company-name">یراقالات ناصری</div>
+          <div class="company-name">${brand.shortName}</div>
           <div class="receipt-title">رسید فروش</div>
         </div>
 
@@ -293,7 +294,7 @@ const generateReceiptHTML = () => {
 
         <div class="footer">
           <p>تاریخ چاپ: ${formatDate(new Date().toISOString())}</p>
-          <p>سیستم مدیریت یراقالات ناصری</p>
+          <p>${brand.businessName}</p>
         </div>
       </div>
     </body>

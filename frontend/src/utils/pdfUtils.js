@@ -4,6 +4,7 @@
 import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
 import { formatPrice, formatDate } from './qrCodeUtils'
+import { brand } from '@/config/brand'
 
 /**
  * Generate PDF receipt with Persian text support
@@ -33,13 +34,13 @@ export const generateReceiptPDF = async (invoice, autoDownload = true) => {
       sale_date: invoice.sale_date,
       status: invoice.status,
       storage_key: invoice.qr_key || invoice.storage_key,
-      app_name: 'Yaraghalat_Naseri_ERP'
+      app_name: brand.qrAppName
     })
 
     // Create receipt HTML
     tempDiv.innerHTML = `
       <div style="text-align: center; margin-bottom: 30px;">
-        <h1 style="font-size: 28px; margin: 0; color: #333;">یراقالات ناصری</h1>
+        <h1 style="font-size: 28px; margin: 0; color: #333;">${brand.shortName}</h1>
         <h2 style="font-size: 20px; margin: 10px 0; color: #666;">رسید فروش</h2>
       </div>
 
@@ -85,7 +86,7 @@ export const generateReceiptPDF = async (invoice, autoDownload = true) => {
         </div>
         <div style="text-align: left; font-size: 12px; color: #666;">
           <div>تاریخ چاپ: ${formatDate(new Date().toISOString())}</div>
-          <div style="margin-top: 5px;">سیستم مدیریت یراقالات ناصری</div>
+          <div style="margin-top: 5px;">${brand.businessName}</div>
         </div>
       </div>
     `
@@ -262,12 +263,12 @@ export const downloadReceiptPDF = async (invoice) => {
 
     // Add mobile-friendly header
     pdf.setFontSize(18)
-    pdf.text('Yaraghalat Naseri Hardware Store', 105, yPosition, { align: 'center' })
+    pdf.text(brand.businessName, 105, yPosition, { align: 'center' })
     yPosition += 8
 
     // Persian Header (for Persian-capable devices)
     pdf.setFontSize(16)
-    pdf.text('یراقالات ناصری', 105, yPosition, { align: 'center' })
+    pdf.text(brand.shortName, 105, yPosition, { align: 'center' })
     yPosition += 8
 
     pdf.setFontSize(14)
@@ -321,7 +322,7 @@ export const downloadReceiptPDF = async (invoice) => {
       id: invoice.id,
       invoice_number: invoice.invoice_number,
       total: invoice.total,
-      app_name: 'Yaraghalat_Naseri_ERP'
+      app_name: brand.qrAppName
     })
 
     pdf.setFontSize(8)
@@ -334,7 +335,7 @@ export const downloadReceiptPDF = async (invoice) => {
     pdf.setFontSize(10)
     pdf.text(`تاریخ چاپ: ${formatDate(new Date().toISOString())}`, 20, yPosition)
     yPosition += 5
-    pdf.text('سیستم مدیریت یراقالات ناصری', 20, yPosition)
+    pdf.text(brand.businessName, 20, yPosition)
 
     // Generate filename and download
     const filename = `receipt_${invoice.invoice_number || invoice.id}_${new Date().getTime()}.pdf`

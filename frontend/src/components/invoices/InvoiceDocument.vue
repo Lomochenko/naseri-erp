@@ -1,7 +1,7 @@
 <template>
   <article class="invoice-paper" dir="rtl">
     <header class="invoice-header" data-pdf-block>
-      <div class="invoice-brand"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32" width="28" height="28" xmlns="http://www.w3.org/2000/svg"><path d="M7 13v6c0 5 18 5 18 0v-6" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/><circle cx="16" cy="9" r="1.8" fill="#ffffff"/></svg></span><div><strong>یراق‌آلات ناصری</strong><p>سند معاملات · NASERI ERP</p></div></div>
+      <div class="invoice-brand"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32" width="28" height="28" xmlns="http://www.w3.org/2000/svg"><path d="M7 13v6c0 5 18 5 18 0v-6" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/><circle cx="16" cy="9" r="1.8" fill="#ffffff"/></svg></span><div><strong>{{ brand.invoiceName }}</strong><p>{{ brand.invoiceSubtitle }}</p></div></div>
       <div class="invoice-heading"><span class="invoice-eyebrow">{{ document.kind === 'purchase' ? 'خرید کالا' : 'فروش کالا' }}</span><h1>{{ title }}</h1><span class="invoice-status">{{ statusText }}</span></div>
     </header>
     <section class="invoice-details" data-pdf-block>
@@ -16,13 +16,14 @@
       <div class="invoice-notes"><span class="invoice-eyebrow">یادداشت سند</span><p>{{ document.notes || 'یادداشتی برای این سند ثبت نشده است.' }}</p><p class="subtle">این سند بر اساس اطلاعات ثبت‌شده در سامانه تهیه شده است.</p></div>
       <dl class="invoice-totals"><div><dt>جمع اقلام</dt><dd>{{ money(document.subtotal) }}</dd></div><div><dt>تخفیف سند</dt><dd>{{ money(document.discount_amount) }}</dd></div><div><dt>مالیات</dt><dd>{{ money(document.tax_amount) }}</dd></div><div class="grand-total"><dt>مبلغ نهایی <small>تومان</small></dt><dd>{{ money(document.total) }}</dd></div><div><dt>پرداخت‌شده</dt><dd>{{ money(document.paid_amount) }}</dd></div><div class="balance"><dt>مانده</dt><dd>{{ money(document.remaining_amount) }} <small>تومان</small></dd></div></dl>
     </section>
-    <footer class="invoice-footer" data-pdf-block><div class="qr-area"><img v-if="qr" :src="qr" alt="کد QR مشاهده و دانلود فاکتور" width="112" height="112"/><div><strong>نسخهٔ دیجیتال، همراه شما</strong><p>با اسکن، سند را در گوشی مشاهده و PDF را دریافت کنید.</p><small v-if="document.share_token">لینک تا {{ expiryDays }} روز معتبر است؛ با تغییر فاکتور، QR تازه لازم است. آن را فقط با طرف معامله به اشتراک بگذارید.</small><small v-else>لینک اشتراک برای این سند موجود نیست.</small></div></div><span class="footer-label">ناصری / {{ document.kind === 'purchase' ? 'خرید' : 'فروش' }}</span></footer>
+    <footer class="invoice-footer" data-pdf-block><div class="qr-area"><img v-if="qr" :src="qr" alt="کد QR مشاهده و دانلود فاکتور" width="112" height="112"/><div><strong>نسخهٔ دیجیتال، همراه شما</strong><p>با اسکن، سند را در گوشی مشاهده و PDF را دریافت کنید.</p><small v-if="document.share_token">لینک تا {{ expiryDays }} روز معتبر است؛ با تغییر فاکتور، QR تازه لازم است. آن را فقط با طرف معامله به اشتراک بگذارید.</small><small v-else>لینک اشتراک برای این سند موجود نیست.</small></div></div><span class="footer-label">{{ brand.shortName }} / {{ document.kind === 'purchase' ? 'خرید' : 'فروش' }}</span></footer>
   </article>
 </template>
 <script setup>
 import { computed, ref, watch } from 'vue'
 import QRCode from 'qrcode'
 import { invoiceURL } from '@/services/invoiceDocuments'
+import { brand } from '@/config/brand'
 const props = defineProps({ document: { type: Object, required: true } })
 const qr = ref('')
 const emit = defineEmits(['qr-ready'])

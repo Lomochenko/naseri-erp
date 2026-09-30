@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import { brand } from '../config/brand'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -247,7 +248,7 @@ const router = createRouter({
 export default router
 
 router.beforeEach((to, from, next) => {
-  document.title = `یراقالات ناصری - ${to.meta.title || 'سیستم مدیریت'}`
+  document.title = `${brand.businessName} - ${to.meta.title || 'سیستم مدیریت'}`
 
   // Check if route requires authentication
   if (to.meta.requiresAuth) {
