@@ -4,8 +4,8 @@
       class="flex items-center text-gray-700 dark:text-gray-400"
       @click.prevent="toggleDropdown"
     >
-      <span class="mr-3 overflow-hidden rounded-full h-11 w-11">
-        <img src="/images/user/owner.jpg" alt="User" />
+      <span aria-hidden="true" class="mr-3 flex items-center justify-center rounded-full h-11 w-11 bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-200 font-semibold">
+        {{ displayName.slice(0, 1) }}
       </span>
 
       <span class="block mr-1 font-medium text-theme-sm">{{ displayName }}</span>

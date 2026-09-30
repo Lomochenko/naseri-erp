@@ -72,6 +72,8 @@ class Product(models.Model):
     @property
     def current_stock(self):
         """Calculate current stock from inventory transactions."""
+        if hasattr(self, '_list_current_stock'):
+            return self._list_current_stock
         from inventory.models import InventoryTransaction
 
         incoming = InventoryTransaction.objects.filter(

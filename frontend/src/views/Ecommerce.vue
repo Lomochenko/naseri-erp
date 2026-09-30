@@ -7,7 +7,7 @@
       </h2>
       <nav>
         <ol class="flex items-center gap-2">
-          <li class="font-medium text-primary">داشبورد اصلی</li>
+          <li class="font-medium text-primary dark:text-brand-300">داشبورد اصلی</li>
         </ol>
       </nav>
     </div>
@@ -23,10 +23,10 @@
     </div>
 
     <!-- Quick Actions -->
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4 2xl:gap-7.5 mb-6">
+    <div class="quick-actions grid grid-cols-1 gap-4 md:grid-cols-3 mb-6" aria-label="دسترسی سریع">
       <router-link
         to="/products/create"
-        class="rounded-sm border border-stroke bg-white p-6 shadow-default dark:border-strokedark dark:bg-boxdark hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+        class="quick-action action-products"
       >
         <div class="flex items-center gap-4">
           <div class="flex h-11.5 w-11.5 items-center justify-center rounded-full bg-primary/10">
@@ -43,11 +43,11 @@
 
       <router-link
         to="/sales"
-        class="rounded-sm border border-stroke bg-white p-6 shadow-default dark:border-strokedark dark:bg-boxdark hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+        class="quick-action action-sales"
       >
         <div class="flex items-center gap-4">
           <div class="flex h-11.5 w-11.5 items-center justify-center rounded-full bg-success/10">
-            <svg class="fill-success" width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
               <path d="M7 9L10 12L17 5M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2"/>
             </svg>
           </div>
@@ -60,7 +60,7 @@
 
       <router-link
         to="/inventory"
-        class="rounded-sm border border-stroke bg-white p-6 shadow-default dark:border-strokedark dark:bg-boxdark hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+        class="quick-action action-inventory"
       >
         <div class="flex items-center gap-4">
           <div class="flex h-11.5 w-11.5 items-center justify-center rounded-full bg-orange-500/10">
@@ -86,3 +86,16 @@ import AdminLayout from '../components/layout/AdminLayout.vue'
 
 const authStore = useAuthStore()
 </script>
+
+<style scoped>
+.quick-action { --action-color: #1d4ed8; --action-tint: #eff6ff; display: block; padding: 1.5rem; border: 1px solid color-mix(in srgb, var(--action-color) 25%, transparent); border-inline-start: 4px solid var(--action-color); border-radius: 14px; background: var(--action-tint); transition: transform 180ms ease, box-shadow 180ms ease; }
+.action-sales { --action-color: #047857; --action-tint: #ecfdf5; }
+.action-inventory { --action-color: #b45309; --action-tint: #fffbeb; }
+.quick-action svg { color: var(--action-color); fill: none; }
+.quick-action:hover { transform: translateY(-2px); box-shadow: 0 6px 18px #10182812; }
+.quick-action:focus-visible { outline: 3px solid var(--action-color); outline-offset: 3px; }
+:global(.dark .quick-action) { --action-tint: #1d2939; --action-color: #93c5fd; }
+:global(.dark .action-sales) { --action-color: #6ee7b7; }
+:global(.dark .action-inventory) { --action-color: #fcd34d; }
+@media (prefers-reduced-motion: reduce) { .quick-action { transition: none; } .quick-action:hover { transform: none; } }
+</style>

@@ -41,7 +41,6 @@ class LoginView(APIView):
 
     def post(self, request):
         """Handle POST requests for user login."""
-        print("Login request data:", request.data)
         
         serializer = LoginSerializer(data=request.data)
         if serializer.is_valid():
@@ -70,7 +69,6 @@ class LoginView(APIView):
                 # ایجاد یا بازیابی توکن
                 token, created = Token.objects.get_or_create(user=user)
                 
-                print(f"Login successful for user: {phone_number}, token: {token.key}")
                 
                 # ارسال پاسخ موفقیت‌آمیز
                 return Response({

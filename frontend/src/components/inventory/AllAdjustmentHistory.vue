@@ -3,7 +3,7 @@
     @click.self="handleOverlayClick">
     <!-- Modal container - full screen on mobile, centered on desktop -->
     <div
-      class="w-full h-full lg:w-auto lg:max-w-4xl lg:h-[70vh] rounded-lg bg-white shadow-xl flex flex-col overflow-visible relative">
+      class="w-full h-full lg:w-auto lg:max-w-4xl lg:h-[70vh] rounded-lg bg-white dark:bg-gray-900 dark:text-gray-100 shadow-xl flex flex-col overflow-visible relative">
 
       <!-- Close button for large screens (top-left corner with blinking effect) -->
       <button @click="$emit('close')"
@@ -15,7 +15,7 @@
 
       <!-- Filters Container (sticky with collapse animation) -->
       <div ref="filtersContainer" :class="[
-        'sticky z-20 bg-white border-b border-gray-200 overflow-hidden transition-all duration-300 ease-in-out',
+        'sticky z-20 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 overflow-hidden transition-all duration-300 ease-in-out',
         showFilters ? 'max-h-60' : 'max-h-0 border-b-0',
         'pt-16 lg:pt-0'  // Add top padding for mobile header space
       ]">

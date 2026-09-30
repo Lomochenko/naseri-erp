@@ -2,13 +2,15 @@ from rest_framework import viewsets, permissions, generics, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
-from django.db.models import Sum, F, Count
+from django.db.models import Sum, F, Count, Prefetch, Value, DecimalField
+from django.db.models.functions import Coalesce
+from decimal import Decimal
 from django.utils import timezone
 from datetime import timedelta
 from .models import Customer, Sale, SaleItem, Invoice, Payment
 from inventory.models import InventoryTransaction
 from .serializers import (
-    CustomerSerializer, SaleSerializer, SaleCreateUpdateSerializer, SaleItemSerializer,
+    CustomerSerializer, CustomerLookupSerializer, SaleSerializer, SaleCreateUpdateSerializer, SaleItemSerializer,
     InvoiceSerializer, PaymentSerializer
 )
 
@@ -18,9 +20,14 @@ class CustomerViewSet(viewsets.ModelViewSet):
     serializer_class = CustomerSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ['name', 'phone', 'address']
+    search_fields = ['name', 'phone', 'address', 'customer_code']
     ordering_fields = ['name', 'created_at']
     ordering = ['name']
+
+    def get_serializer_class(self):
+        if self.action == 'list' and self.request.query_params.get('lookup') == 'true':
+            return CustomerLookupSerializer
+        return self.serializer_class
 
 class SaleViewSet(viewsets.ModelViewSet):
     """ViewSet for viewing and editing Sale instances."""
@@ -31,6 +38,16 @@ class SaleViewSet(viewsets.ModelViewSet):
     search_fields = ['invoice_number', 'notes']
     ordering_fields = ['sale_date', 'created_at']
     ordering = ['-sale_date']
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if self.action != 'list':
+            return queryset
+        return queryset.select_related('customer', 'warehouse', 'created_by').prefetch_related(
+            Prefetch('items', queryset=SaleItem.objects.select_related('product'))
+        ).annotate(_list_subtotal=Coalesce(
+            Sum(F('items__quantity') * F('items__unit_price') - F('items__discount')),
+            Value(Decimal('0')), output_field=DecimalField(max_digits=24, decimal_places=2)))
 
     def get_serializer_class(self):
         if self.action in ['create', 'update', 'partial_update']:

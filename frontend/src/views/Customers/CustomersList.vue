@@ -1,6 +1,6 @@
 <template>
   <AdminLayout>
-    <div class="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10">
+    <div class="mx-auto min-w-0 max-w-screen-2xl p-4 md:p-6 2xl:p-10">
     <!-- Breadcrumb -->
     <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <h2 class="text-title-md2 font-bold text-black dark:text-white">
@@ -9,23 +9,23 @@
       <nav>
         <ol class="flex items-center gap-2">
           <li>
-            <router-link class="font-medium" to="/">داشبورد /</router-link>
+            <router-link class="font-medium text-gray-700 dark:text-gray-200" to="/">داشبورد /</router-link>
           </li>
-          <li class="font-medium text-primary">مشتریان</li>
+          <li class="font-medium text-primary dark:text-brand-300">مشتریان</li>
         </ol>
       </nav>
     </div>
 
     <!-- Search and Actions -->
     <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-      <div class="flex items-center gap-4">
+      <div class="flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
         <!-- Search Input -->
-        <div class="relative">
+        <div class="relative min-w-0 w-full sm:w-64">
           <input
             v-model="searchQuery"
             type="text"
             placeholder="جستجو در مشتریان..."
-            class="w-64 rounded-lg border border-gray-200 bg-white py-2.5 pl-10 pr-4 text-sm text-gray-800 shadow-sm placeholder:text-gray-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
+            class="w-full min-w-0 rounded-lg border border-gray-200 bg-white py-2.5 pl-10 pr-4 text-sm text-gray-800 shadow-sm placeholder:text-gray-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
             @input="handleSearch"
           />
           <div class="absolute left-3 top-1/2 -translate-y-1/2">
@@ -38,7 +38,7 @@
         <!-- Filter Dropdown -->
         <select
           v-model="selectedFilter"
-          class="rounded-lg border border-gray-200 bg-white py-2.5 px-4 text-sm text-gray-800 shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+          class="w-full min-w-0 sm:w-auto rounded-lg border border-gray-200 bg-white py-2.5 px-4 text-sm text-gray-800 shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
           @change="handleSearch"
         >
           <option value="all">همه مشتریان</option>
@@ -62,7 +62,7 @@
     <!-- Statistics Cards -->
     <div class="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
       <div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-        <div class="flex items-center justify-between">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p class="text-sm font-medium text-gray-600 dark:text-gray-400">کل مشتریان</p>
             <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ totalCustomers }}</p>
@@ -216,13 +216,13 @@
       <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
         <div class="flex items-center justify-between">
           <div class="text-sm text-gray-700 dark:text-gray-300">
-            نمایش {{ (currentPage - 1) * itemsPerPage + 1 }} تا {{ Math.min(currentPage * itemsPerPage, filteredCustomers.length) }} از {{ filteredCustomers.length }} مشتری
+            نمایش {{ filteredCustomers.length ? (currentPage - 1) * itemsPerPage + 1 : 0 }} تا {{ Math.min(currentPage * itemsPerPage, filteredCustomers.length) }} از {{ filteredCustomers.length }} مشتری
           </div>
           <div class="flex items-center gap-2">
             <button
               @click="currentPage--"
               :disabled="currentPage === 1"
-              class="px-3 py-1 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-800 dark:border-gray-600 dark:hover:bg-gray-700"
+              class="px-3 py-1 text-sm text-gray-700 dark:text-gray-200 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-800 dark:border-gray-600 dark:hover:bg-gray-700"
             >
               قبلی
             </button>
@@ -232,7 +232,7 @@
             <button
               @click="currentPage++"
               :disabled="currentPage === totalPages"
-              class="px-3 py-1 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-800 dark:border-gray-600 dark:hover:bg-gray-700"
+              class="px-3 py-1 text-sm text-gray-700 dark:text-gray-200 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-800 dark:border-gray-600 dark:hover:bg-gray-700"
             >
               بعدی
             </button>
@@ -308,7 +308,7 @@ const filteredCustomers = computed(() => {
   return customers
 })
 
-const totalPages = computed(() => Math.ceil(filteredCustomers.value.length / itemsPerPage.value))
+const totalPages = computed(() => Math.max(1, Math.ceil(filteredCustomers.value.length / itemsPerPage.value)))
 
 const paginatedCustomers = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage.value

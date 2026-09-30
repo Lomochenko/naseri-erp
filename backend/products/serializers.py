@@ -34,6 +34,13 @@ class ProductSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'current_stock']
 
+class ProductLookupSerializer(serializers.ModelSerializer):
+    """Minimal authenticated search result; no per-product stock calculation."""
+    class Meta:
+        model = Product
+        fields = ['id', 'code', 'name', 'selling_price']
+
+
 class ProductListSerializer(serializers.ModelSerializer):
     """Simplified serializer for Product list view."""
     category_name = serializers.ReadOnlyField(source='category.name')

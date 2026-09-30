@@ -13,6 +13,9 @@ export const useNotificationStore = defineStore('notifications', () => {
   const error = ref(null)
   const lastFetch = ref(null)
   const refreshTimer = ref(null)
+  let retryAfter = 0
+  let failures = 0
+  let cachedToken = null
 
   // Computed
   const unreadCount = computed(() => {
@@ -32,25 +35,40 @@ export const useNotificationStore = defineStore('notifications', () => {
   })
 
   // Actions
-  const fetchNotifications = async () => {
-    if (loading.value) return
+  const fetchNotifications = async ({ force = false } = {}) => {
+    const token = localStorage.getItem('auth_token')
+    if (token !== cachedToken) {
+      notifications.value = []
+      recentActivities.value = []
+      lastFetch.value = null
+      error.value = null
+      retryAfter = 0
+      failures = 0
+      cachedToken = token
+    }
+    if (loading.value || document.hidden || !token) return
+    if (!force && (Date.now() < retryAfter || (lastFetch.value && Date.now() - lastFetch.value.getTime() < 60000))) return
 
     try {
       loading.value = true
       error.value = null
 
       const response = await auditAPI.getNotifications()
+      if (localStorage.getItem('auth_token') !== token) return
 
       if (response.data) {
         notifications.value = response.data.notifications || []
         recentActivities.value = response.data.recent_activities || []
         lastFetch.value = new Date()
+        failures = 0
+        retryAfter = 0
       }
     } catch (err) {
-      console.error('Error fetching notifications:', err)
+      if (localStorage.getItem('auth_token') !== token) return
+      if (import.meta.env.DEV) console.warn('Notification request failed:', err.code || err.response?.status)
       error.value = 'دریافت اعلان‌ها در حال حاضر ممکن نیست. بعداً دوباره تلاش کنید.'
-      notifications.value = []
-      recentActivities.value = []
+      failures++
+      retryAfter = Date.now() + Math.min(300000, 30000 * 2 ** failures)
     } finally {
       loading.value = false
     }
@@ -147,7 +165,7 @@ export const useNotificationStore = defineStore('notifications', () => {
     return Notification.permission
   }
 
-  const startPeriodicRefresh = (interval = 30000) => {
+  const startPeriodicRefresh = (interval = 60000) => {
     // Stop existing timer
     stopPeriodicRefresh()
 
@@ -201,6 +219,10 @@ export const useNotificationStore = defineStore('notifications', () => {
   const clearAllNotifications = () => {
     notifications.value = []
     recentActivities.value = []
+    lastFetch.value = null
+    cachedToken = null
+    retryAfter = 0
+    failures = 0
   }
 
   const updateNotificationPreferences = async (preferences) => {

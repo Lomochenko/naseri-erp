@@ -11,7 +11,7 @@
             <li>
               <router-link class="font-medium" to="/">داشبورد /</router-link>
             </li>
-            <li class="font-medium text-primary">محصولات</li>
+            <li class="font-medium text-primary dark:text-brand-300">محصولات</li>
           </ol>
         </nav>
       </div>
@@ -20,7 +20,7 @@
       <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div class="flex gap-2">
           <router-link to="/products/create"
-            class="inline-flex items-center justify-center rounded-md border-[1.5px] border-gray-200 bg-primary px-3 py-3 text-center font-medium text-black dark:text-white hover:bg-opacity-90">
+            class="inline-flex items-center justify-center rounded-md border-[1.5px] border-gray-200 bg-primary px-3 py-3 text-center font-medium text-white dark:text-white hover:bg-opacity-90">
             افزودن محصول جدید
             <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -49,9 +49,9 @@
 
       <!-- Products Table -->
       <div v-else
-        class="rounded-sm border border-stroke bg-slate-100 dark:bg-slate-300 shadow-default dark:border-strokedark dark:bg-boxdark">
+        class="rounded-sm border border-stroke bg-slate-100 dark:bg-gray-800 shadow-default dark:border-strokedark dark:bg-boxdark">
         <div class="px-4 py-6 md:px-6 xl:px-7.5">
-          <h4 class="text-xl font-semibold text-black">
+          <h4 class="text-xl font-semibold text-black dark:text-gray-100">
             لیست محصولات ({{ productsStore.totalProducts }})
           </h4>
         </div>
@@ -85,18 +85,18 @@
         </div>
 
         <div v-for="product in filteredProducts" :key="product.id"
-          class="grid grid-cols-7 border-t hover:bg-slate-200 border-stroke px-4 py-4.5 dark:border-strokedark sm:grid-cols-9 md:px-6 2xl:px-7.5">
+          class="grid grid-cols-7 border-t hover:bg-slate-200 dark:hover:bg-gray-700 border-stroke px-4 py-4.5 dark:border-strokedark sm:grid-cols-9 md:px-6 2xl:px-7.5">
           <div class="col-span-2 flex items-center">
             <div class="flex flex-col gap-1">
-              <p class="text-sm font-medium text-black ">{{ product.name }}</p>
+              <p class="text-sm font-medium text-black  dark:text-gray-100">{{ product.name }}</p>
               <p class="text-xs text-gray-500">کد: {{ product.code }}</p>
             </div>
           </div>
           <div class="col-span-1 hidden items-center sm:flex">
-            <p class="text-sm text-black ">{{ product.category_name || '-' }}</p>
+            <p class="text-sm text-black  dark:text-gray-100">{{ product.category_name || '-' }}</p>
           </div>
           <div class="col-span-1 flex items-center">
-            <p class="text-sm text-black ">{{ formatPrice(product.selling_price) }}</p>
+            <p class="text-sm text-black  dark:text-gray-100">{{ formatPrice(product.selling_price) }}</p>
           </div>
           <div class="col-span-1 flex items-center">
             <p class="text-sm" :class="getStockClass(product.current_stock)">
@@ -104,22 +104,22 @@
             </p>
           </div>
           <div class="col-span-1 hidden items-center sm:flex">
-            <p class="text-sm text-black ">{{ product.unit_symbol || '-' }}</p>
+            <p class="text-sm text-black  dark:text-gray-100">{{ product.unit_symbol || '-' }}</p>
           </div>
           <div class="col-span-1 hidden items-center lg:flex">
-            <p class="text-sm text-black  truncate max-w-32" :title="product.description">
+            <p class="text-sm text-black  truncate max-w-32 dark:text-gray-100" :title="product.description">
               {{ product.description ? (product.description.length > 30 ? product.description.substring(0, 30) + '...' :
                 product.description) : '-' }}
             </p>
           </div>
           <div class="col-span-1 flex items-center">
-            <span :class="product.is_active ? 'bg-success text-success' : 'bg-danger text-danger'"
-              class="inline-flex rounded-full bg-opacity-10 px-3 py-1 text-sm font-medium">
+            <span :class="product.is_active ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200' : 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200'"
+              class="inline-flex rounded-full px-3 py-1 text-sm font-medium">
               {{ product.is_active ? 'فعال' : 'غیرفعال' }}
             </span>
           </div>
           <div class="col-span-1 flex items-center space-x-2">
-            <router-link :to="`/products/${product.id}/edit`" class="hover:text-primary" title="ویرایش">
+            <router-link :to="`/products/${product.id}/edit`" class="hover:text-primary dark:text-brand-300" title="ویرایش">
               <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -192,9 +192,9 @@ const formatPrice = (price) => {
 }
 
 const getStockClass = (stock) => {
-  if (stock <= 0) return 'text-danger'
-  if (stock <= 10) return 'text-warning'
-  return 'text-success'
+  if (stock <= 0) return 'text-red-700 dark:text-red-300'
+  if (stock <= 10) return 'text-amber-700 dark:text-amber-300'
+  return 'text-emerald-700 dark:text-emerald-300'
 }
 
 const deleteProduct = async (id) => {

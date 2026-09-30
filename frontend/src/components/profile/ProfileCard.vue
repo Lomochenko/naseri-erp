@@ -7,26 +7,9 @@
             <div
               class="w-20 h-20 overflow-hidden border border-gray-200 rounded-full dark:border-gray-800"
             >
-              <img :src="profileImage" alt="user" class="w-full h-full object-cover" />
+              <img v-if="profileImage" :src="profileImage" alt="تصویر کاربر" class="w-full h-full object-cover" />
+              <span v-else aria-hidden="true" class="flex w-full h-full items-center justify-center bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-200 text-2xl font-semibold">{{ displayName.slice(0, 1) }}</span>
             </div>
-            <!-- Profile Image Upload Button -->
-            <button
-              @click="triggerImageUpload"
-              class="absolute bottom-0 right-0 w-6 h-6 bg-brand-500 hover:bg-brand-600 rounded-full flex items-center justify-center text-white text-xs transition-colors"
-              title="تغییر تصویر پروفایل"
-            >
-              <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-              </svg>
-            </button>
-            <!-- Hidden file input -->
-            <input
-              ref="imageInput"
-              type="file"
-              accept="image/*"
-              @change="handleImageUpload"
-              class="hidden"
-            />
           </div>
           <div class="order-3 xl:order-2">
             <h4
@@ -179,7 +162,7 @@ import Modal from './Modal.vue'
 const authStore = useAuthStore()
 const isProfileInfoModal = ref(false)
 const imageInput = ref(null)
-const profileImage = ref('/images/user/owner.jpg')
+const profileImage = computed(() => authStore.user?.profile_image || '')
 const isUploading = ref(false)
 
 // Form data
@@ -209,52 +192,6 @@ const userRole = computed(() => {
 })
 
 // Methods
-const triggerImageUpload = () => {
-  imageInput.value?.click()
-}
-
-const handleImageUpload = async (event) => {
-  const file = event.target.files[0]
-  if (!file) return
-
-  // Validate file type
-  if (!file.type.startsWith('image/')) {
-    alert('لطفاً یک فایل تصویری انتخاب کنید')
-    return
-  }
-
-  // Validate file size (max 5MB)
-  if (file.size > 5 * 1024 * 1024) {
-    alert('حجم فایل نباید بیشتر از 5 مگابایت باشد')
-    return
-  }
-
-  isUploading.value = true
-
-  try {
-    // Create FormData for file upload
-    const uploadData = new FormData()
-    uploadData.append('profile_image', file)
-
-    // TODO: Implement actual API call for image upload
-    // const response = await authAPI.uploadProfileImage(uploadData)
-
-    // For now, create a local preview
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      profileImage.value = e.target.result
-    }
-    reader.readAsDataURL(file)
-
-    console.log('Profile image uploaded successfully')
-  } catch (error) {
-    console.error('Error uploading profile image:', error)
-    alert('خطا در آپلود تصویر')
-  } finally {
-    isUploading.value = false
-  }
-}
-
 const loadUserData = () => {
   if (authStore.user) {
     formData.value = {
@@ -263,11 +200,6 @@ const loadUserData = () => {
       email: authStore.user.email || '',
       phone_number: authStore.user.phone_number || '',
       bio: authStore.user.bio || ''
-    }
-
-    // Load profile image if available
-    if (authStore.user.profile_image) {
-      profileImage.value = authStore.user.profile_image
     }
   }
 }

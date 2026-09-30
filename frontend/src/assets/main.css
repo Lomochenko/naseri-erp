@@ -1,14 +1,28 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap')
-layer(base);
-@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap');
-
 @import 'tailwindcss';
+
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('/fonts/vazirmatn-variable.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
 
 @custom-variant dark (&:is(.dark *));
 
 @theme {
+  /* Compatibility colors for the ERP views inherited from TailAdmin v1. */
+  --color-primary: #465fff;
+  --color-stroke: #d0d5dd;
+  --color-strokedark: #344054;
+  --color-boxdark: #1d2939;
+  --color-meta-4: #1d2939;
+  --color-form-input: #101828;
+  --color-form-strokedark: #475467;
+  --color-whiter: #f2f4f7;
+  --color-success: #039855;
   --font-*: initial;
-  --font-outfit: Outfit, sans-serif;
+  --font-outfit: Vazirmatn, sans-serif;
 
   --breakpoint-*: initial;
   --breakpoint-2xsm: 375px;
@@ -291,7 +305,7 @@ layer(base);
   }
 
   &::-webkit-scrollbar-thumb {
-    @apply bg-gray-200 rounded-full dark:bg-gray-700;
+    @apply bg-gray-200 rounded-full;
   }
 }
 
@@ -777,6 +791,14 @@ span.flatpickr-weekday,
 
 .social-button {
   @apply flex h-11 w-11 items-center justify-center gap-2 rounded-full border border-gray-300 bg-white text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200;
+}
+
+.page-enter-active, .page-leave-active { transition: opacity 170ms ease, transform 170ms ease; }
+.page-enter-from { opacity: 0; transform: translateY(6px); }
+.page-leave-to { opacity: 0; transform: translateY(-3px); }
+@media (prefers-reduced-motion: reduce) {
+  .page-enter-active, .page-leave-active { transition: none; }
+  .page-enter-from, .page-leave-to { transform: none; }
 }
 
 .edit-button {

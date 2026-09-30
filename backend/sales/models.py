@@ -125,6 +125,8 @@ class Sale(models.Model):
     @property
     def subtotal(self):
         """Calculate subtotal of all items."""
+        if hasattr(self, '_list_subtotal'):
+            return self._list_subtotal
         return self.items.aggregate(total=models.Sum(
             models.F('quantity') * models.F('unit_price') - models.F('discount')))['total'] or 0
 

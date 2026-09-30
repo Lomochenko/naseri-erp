@@ -3,6 +3,13 @@ from .models import Customer, Sale, SaleItem, Invoice, Payment
 from products.serializers import ProductSerializer
 from naseri_erp.payment_balances import PaymentValidationSerializerMixin
 
+class CustomerLookupSerializer(serializers.ModelSerializer):
+    """Search fields only, avoiding financial calculations in header lookups."""
+    class Meta:
+        model = Customer
+        fields = ['id', 'customer_code', 'name', 'phone']
+
+
 class CustomerSerializer(serializers.ModelSerializer):
     """Serializer for Customer model."""
     

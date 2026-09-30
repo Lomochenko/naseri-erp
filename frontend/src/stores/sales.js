@@ -112,14 +112,11 @@ export const useSalesStore = defineStore('sales', () => {
     isLoading.value = true
     error.value = null
 
-    console.log('Store: Fetching sales orders with params:', params)
 
     try {
       const response = await salesAPI.getSalesOrders(params)
-      console.log('Store: Fetch response:', response)
 
       salesOrders.value = response.data.results || response.data
-      console.log('Store: Updated salesOrders:', salesOrders.value)
     } catch (err) {
       error.value = err.response?.data?.message || 'خطا در دریافت سفارشات فروش'
       console.error('Store: Fetch sales orders error:', err)
@@ -132,14 +129,11 @@ export const useSalesStore = defineStore('sales', () => {
     isLoading.value = true
     error.value = null
 
-    console.log('Store: Creating sales order with data:', orderData)
 
     try {
       const response = await salesAPI.createSalesOrder(orderData)
-      console.log('Store: API response:', response)
 
       salesOrders.value.unshift(response.data)
-      console.log('Store: Updated salesOrders:', salesOrders.value)
 
       return { success: true, data: response.data }
     } catch (err) {
@@ -176,17 +170,14 @@ export const useSalesStore = defineStore('sales', () => {
     isLoading.value = true
     error.value = null
 
-    console.log('Store: Updating sales order status:', { id, status })
 
     try {
       const response = await salesAPI.updateSalesOrderStatus(id, status)
-      console.log('Store: Status update response:', response)
 
       // Update the order in the local state
       const index = salesOrders.value.findIndex(o => o.id === id)
       if (index !== -1) {
         salesOrders.value[index] = response.data
-        console.log('Store: Updated order in local state')
       }
 
       return { success: true, data: response.data }

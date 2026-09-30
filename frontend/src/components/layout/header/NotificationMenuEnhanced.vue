@@ -259,7 +259,7 @@ const fetchError = computed(() => notificationStore.error)
 const retryFetch = async () => {
   loading.value = true
   try {
-    await notificationStore.fetchNotifications()
+    await notificationStore.fetchNotifications({ force: true })
   } finally {
     loading.value = false
   }

@@ -330,20 +330,16 @@ export const loadPersianFonts = async () => {
     }
 
     // Create font face for Vazirmatn
-    const vazirmatn = new FontFace('Vazirmatn', 'url(https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/fonts/webfonts/Vazirmatn-Regular.woff2)')
-    const vazirmatenBold = new FontFace('Vazirmatn', 'url(https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/fonts/webfonts/Vazirmatn-Bold.woff2)', { weight: 'bold' })
+    const vazirmatn = new FontFace('Vazirmatn', 'url(/fonts/vazirmatn-variable.woff2)', { weight: '100 900' })
 
     // Load fonts
     await Promise.all([
-      vazirmatn.load(),
-      vazirmatenBold.load()
+      vazirmatn.load()
     ])
 
     // Add fonts to document
     document.fonts.add(vazirmatn)
-    document.fonts.add(vazirmatenBold)
 
-    console.log('Persian fonts loaded successfully')
     return Promise.resolve()
   } catch (error) {
     console.warn('Could not load Persian fonts:', error)

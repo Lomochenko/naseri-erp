@@ -26,7 +26,7 @@
                   stroke-linejoin="round"
                 />
               </svg>
-              Back to dashboard
+              بازگشت به داشبورد
             </router-link>
           </div>
           <div class="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
@@ -43,7 +43,7 @@
               </div>
               <div>
                 <!-- Error Message -->
-                <div v-if="errorMessage" class="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+                <div v-if="errorMessage" role="alert" class="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 dark:bg-red-950 dark:border-red-700 dark:text-red-200 rounded-lg">
                   {{ errorMessage }}
                 </div>
                 <form @submit.prevent="handleSubmit">
@@ -61,6 +61,7 @@
                         type="tel"
                         id="phone"
                         name="phone"
+                        autocomplete="username"
                         placeholder="09123456789"
                         class="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
                       />
@@ -78,12 +79,18 @@
                           v-model="password"
                           :type="showPassword ? 'text' : 'password'"
                           id="password"
+                          name="password"
+                          autocomplete="current-password"
                           placeholder="رمز عبور خود را وارد کنید"
-                          class="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 pl-4 pr-11 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+                          class="password-input h-12 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-500 focus:border-brand-500 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-gray-400"
                         />
-                        <span
+                        <button
+                          type="button"
+                          :aria-label="showPassword ? 'پنهان کردن رمز عبور' : 'نمایش رمز عبور'"
+                          :aria-pressed="showPassword"
+                          aria-controls="password"
                           @click="togglePasswordVisibility"
-                          class="absolute z-30 text-gray-500 -translate-y-1/2 cursor-pointer right-4 top-1/2 dark:text-gray-400"
+                          class="password-toggle text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 focus-visible:outline-2 focus-visible:outline-brand-500"
                         >
                           <svg
                             v-if="!showPassword"
@@ -117,7 +124,7 @@
                               fill="#98A2B3"
                             />
                           </svg>
-                        </span>
+                        </button>
                       </div>
                     </div>
                     <!-- Checkbox -->
@@ -164,11 +171,9 @@
                           مرا به خاطر بسپار
                         </label>
                       </div>
-                      <router-link
-                        to="/reset-password"
-                        class="text-sm text-brand-500 hover:text-brand-600 dark:text-brand-400"
-                        >Forgot password?</router-link
-                      >
+                      <span class="max-w-40 text-xs text-gray-600 dark:text-gray-300">
+                        بازیابی رمز از طریق مدیر سیستم
+                      </span>
                     </div>
                     <!-- Button -->
                     <div>
@@ -205,11 +210,9 @@
           <div class="flex items-center justify-center z-1">
             <common-grid-shape />
             <div class="flex flex-col items-center max-w-xs">
-              <router-link to="/" class="block mb-4">
-                <img width="{231}" height="{48}" src="/images/logo/auth-logo.svg" alt="Logo" />
-              </router-link>
-              <p class="text-center text-gray-400 dark:text-white/60">
-                Free and Open-Source Tailwind CSS Admin Dashboard Template
+              <h2 class="mb-4 text-center text-2xl font-semibold text-white">{{ brand.businessName }}</h2>
+              <p class="text-center text-gray-300">
+                فضای کاری شما برای مدیریت فروش، کالاها و موجودی
               </p>
             </div>
           </div>
@@ -261,3 +264,8 @@ const handleSubmit = async () => {
   isLoading.value = false
 }
 </script>
+
+<style scoped>
+.password-input { padding-inline-start: 1rem; padding-inline-end: 3.5rem; }
+.password-toggle { position: absolute; inset-inline-end: 2px; top: 2px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 8px; }
+</style>

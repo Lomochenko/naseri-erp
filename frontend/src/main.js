@@ -6,19 +6,17 @@ import 'swiper/css/pagination'
 import 'jsvectormap/dist/jsvectormap.css'
 import 'flatpickr/dist/flatpickr.css'
 
-import { createApp } from 'vue'
+import { createApp, defineAsyncComponent } from 'vue'
 import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
-import VueApexCharts from 'vue3-apexcharts'
-import DatePicker from 'vue3-persian-datetime-picker'
 
 const app = createApp(App)
 const pinia = createPinia()
 
 app.use(pinia)
 app.use(router)
-app.use(VueApexCharts)
-app.component('DatePicker', DatePicker)
+app.component('apexchart', defineAsyncComponent(() => import('vue3-apexcharts')))
+app.component('DatePicker', defineAsyncComponent(() => import('vue3-persian-datetime-picker')))
 
 app.mount('#app')

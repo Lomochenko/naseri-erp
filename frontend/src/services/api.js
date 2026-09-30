@@ -62,7 +62,7 @@ export const productsAPI = {
   getUnits: () => api.get('/products/units/'),
   createUnit: (data) => api.post('/products/units/', data),
 
-  getProducts: (params = {}) => api.get('/products/', { params }),
+  getProducts: (params = {}, config = {}) => api.get('/products/', { ...config, params }),
   createProduct: (data) => api.post('/products/', data),
   updateProduct: (id, data) => api.put(`/products/${id}/`, data),
   deleteProduct: (id) => api.delete(`/products/${id}/`),
@@ -71,7 +71,7 @@ export const productsAPI = {
 
 // Sales API
 export const salesAPI = {
-  getCustomers: (params = {}) => api.get('/sales/customers/', { params }),
+  getCustomers: (params = {}, config = {}) => api.get('/sales/customers/', { ...config, params }),
   createCustomer: (data) => api.post('/sales/customers/', data),
   updateCustomer: (id, data) => api.put(`/sales/customers/${id}/`, data),
   deleteCustomer: (id) => api.delete(`/sales/customers/${id}/`),

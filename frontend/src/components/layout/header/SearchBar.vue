@@ -37,8 +37,9 @@
             در حال جستجو...
           </div>
 
+          <div v-if="searchError && !isLoading" role="status" class="p-3 text-sm text-error-600 dark:text-error-400">{{ searchError }}</div>
           <!-- No Results -->
-          <div v-else-if="searchQuery.length > 0 && totalResults === 0"
+          <div v-if="!isLoading && !searchError && searchQuery.length > 0 && totalResults === 0"
                class="p-4 text-center text-gray-500 dark:text-gray-400">
             نتیجه‌ای یافت نشد
           </div>
@@ -52,6 +53,7 @@
               <button
                 v-for="product in searchResults.products.slice(0, 5)"
                 :key="`product-${product.id}`"
+                type="button"
                 @click="selectResult('product', product)"
                 class="w-full px-4 py-3 text-right hover:bg-gray-50 dark:hover:bg-gray-800 border-b border-gray-100 dark:border-gray-700 last:border-b-0"
               >
@@ -83,6 +85,7 @@
               <button
                 v-for="customer in searchResults.customers.slice(0, 5)"
                 :key="`customer-${customer.id}`"
+                type="button"
                 @click="selectResult('customer', customer)"
                 class="w-full px-4 py-3 text-right hover:bg-gray-50 dark:hover:bg-gray-800 border-b border-gray-100 dark:border-gray-700 last:border-b-0"
               >
@@ -109,6 +112,7 @@
           <div v-if="searchQuery.length > 0 && totalResults > 5"
                class="border-t border-gray-200 dark:border-gray-700">
             <button
+              type="button"
               @click="viewAllResults"
               class="w-full px-4 py-3 text-sm text-brand-600 dark:text-brand-400 hover:bg-gray-50 dark:hover:bg-gray-800 font-medium"
             >
@@ -140,281 +144,96 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useProductsStore } from '@/stores/products'
-import { useSalesStore } from '@/stores/sales'
+import { productsAPI, salesAPI } from '@/services/api'
 
+defineProps({ showMobileSearch: { type: Boolean, default: false } })
 const router = useRouter()
-const productsStore = useProductsStore()
-const salesStore = useSalesStore()
-
-// Props
-const props = defineProps({
-  showMobileSearch: {
-    type: Boolean,
-    default: false
-  }
-})
-
-// Reactive data
 const searchQuery = ref('')
 const showResults = ref(false)
 const isLoading = ref(false)
-const searchResults = ref({
-  products: [],
-  customers: [],
-  sales: [],
-  categories: []
-})
+const searchError = ref('')
+const searchResults = ref({ products: [], customers: [] })
+const totalResults = computed(() => searchResults.value.products.length + searchResults.value.customers.length)
+const formatPrice = price => new Intl.NumberFormat('fa-IR').format(price || 0) + ' تومان'
+let searchTimeout
+let controller
+let revision = 0
 
-// Computed
-const totalResults = computed(() => {
-  return searchResults.value.products.length +
-         searchResults.value.customers.length +
-         searchResults.value.sales.length +
-         searchResults.value.categories.length
-})
-
-// Methods
-const formatPrice = (price) => {
-  if (!price) return '0 تومان'
-  return new Intl.NumberFormat('fa-IR').format(price) + ' تومان'
+const cleanup = () => {
+  clearTimeout(searchTimeout)
+  controller?.abort()
+  revision++
 }
-
-let searchTimeout = null
-
-const handleInput = async () => {
-  // Clear previous timeout
-  if (searchTimeout) {
-    clearTimeout(searchTimeout)
-  }
-
-  // If search query is too short, clear results
-  if (searchQuery.value.length < 2) {
-    searchResults.value = { products: [], customers: [], sales: [], categories: [] }
-    showResults.value = false
-    return
-  }
-
-  // Show results dropdown immediately
-  showResults.value = true
-  isLoading.value = true
-
-  // Debounce search to avoid excessive calls
+const handleInput = () => {
+  cleanup()
+  const query = searchQuery.value.trim()
+  searchError.value = ''
+  searchResults.value = { products: [], customers: [] }
+  isLoading.value = query.length >= 2
+  showResults.value = query.length >= 2
+  if (query.length < 2) return
+  const currentRevision = revision
   searchTimeout = setTimeout(async () => {
-    try {
-      const query = searchQuery.value.toLowerCase().trim()
-
-      // Ensure data is loaded before searching
-      if (productsStore.products.length === 0) {
-        await productsStore.fetchProducts()
-      }
-      if (salesStore.customers.length === 0) {
-        await salesStore.fetchCustomers()
-      }
-      if (salesStore.salesOrders.length === 0) {
-        await salesStore.fetchSalesOrders()
-      }
-      if (productsStore.categories.length === 0) {
-        await productsStore.fetchCategories()
-      }
-
-      // Search products
-      const productResults = productsStore.products.filter(product =>
-        (product.name && product.name.toLowerCase().includes(query)) ||
-        (product.code && product.code.toLowerCase().includes(query)) ||
-        (product.description && product.description.toLowerCase().includes(query))
-      ).slice(0, 5) // Limit to 5 results for dropdown
-
-      // Search customers
-      const customerResults = salesStore.customers.filter(customer =>
-        (customer.name && customer.name.toLowerCase().includes(query)) ||
-        (customer.phone_number && customer.phone_number.includes(searchQuery.value)) ||
-        (customer.phone && customer.phone.includes(searchQuery.value)) ||
-        (customer.customer_code && customer.customer_code.toLowerCase().includes(query)) ||
-        (customer.address && customer.address.toLowerCase().includes(query))
-      ).slice(0, 5) // Limit to 5 results for dropdown
-
-      // Search sales by invoice number or customer name
-      const salesResults = salesStore.salesOrders.filter(sale => {
-        // Enhanced invoice number matching
-        const invoiceMatch = sale.invoice_number && (
-          sale.invoice_number.toLowerCase().includes(query) ||
-          sale.invoice_number.toString().toLowerCase().includes(query) ||
-          sale.invoice_number.includes(searchQuery.value) || // Exact match without case conversion
-          sale.invoice_number.toString().includes(searchQuery.value)
-        )
-
-        // Customer name matching
-        const customerMatch = (sale.customer_name && sale.customer_name.toLowerCase().includes(query)) ||
-                             (sale.customer && sale.customer.name && sale.customer.name.toLowerCase().includes(query))
-
-        return invoiceMatch || customerMatch
-      }).slice(0, 5) // Limit to 5 results for dropdown
-
-      // Search categories
-      const categoryResults = productsStore.categories.filter(category =>
-        (category.name && category.name.toLowerCase().includes(query)) ||
-        (category.description && category.description.toLowerCase().includes(query))
-      ).slice(0, 5) // Limit to 5 results for dropdown
-
-      searchResults.value = {
-        products: productResults,
-        customers: customerResults,
-        sales: salesResults,
-        categories: categoryResults
-      }
-    } catch (error) {
-      console.error('Search error:', error)
-      searchResults.value = { products: [], customers: [], sales: [], categories: [] }
-    } finally {
-      isLoading.value = false
+    controller = new AbortController()
+    const params = { search: query, page_size: 5, lookup: 'true' }
+    const responses = await Promise.allSettled([
+      productsAPI.getProducts(params, { signal: controller.signal }),
+      salesAPI.getCustomers(params, { signal: controller.signal }),
+    ])
+    if (revision !== currentRevision) return
+    const rows = response => response.status === 'fulfilled'
+      ? (response.value.data.results || response.value.data || []) : []
+    searchResults.value = { products: rows(responses[0]), customers: rows(responses[1]) }
+    if (responses.some(response => response.status === 'rejected')) {
+      searchError.value = 'بخشی از نتایج دریافت نشد. برای تلاش دوباره، عبارت را تغییر دهید.'
     }
-  }, 300) // 300ms debounce
+    isLoading.value = false
+  }, 300)
 }
-
 const handleSearch = () => {
-  if (searchQuery.value.trim()) {
-    // If we have results, show them in dropdown
-    if (totalResults.value > 0) {
-      showResults.value = true
-      return
-    }
-
-    // If no results, show "no results" message
+  if (searchQuery.value.trim().length >= 2) {
+    if (!isLoading.value && !totalResults.value) handleInput()
     showResults.value = true
-    return
   }
-
-  // Clear results if search is empty
-  searchResults.value = { products: [], customers: [], sales: [], categories: [] }
-  showResults.value = false
 }
-
 const selectResult = (type, item) => {
+  cleanup()
   showResults.value = false
   searchQuery.value = ''
-
-  if (type === 'product') {
-    router.push({
-      path: '/products',
-      query: { highlight: item.id, search: item.name }
-    })
-  } else if (type === 'customer') {
-    router.push({
-      path: '/customers',
-      query: { customer: item.id, search: item.name }
-    })
-  } else if (type === 'sale') {
-    router.push({
-      path: '/sales',
-      query: { invoice: item.id, search: item.invoice_number }
-    })
-  } else if (type === 'category') {
-    router.push({
-      path: '/products',
-      query: { category: item.id, search: item.name }
-    })
-  }
+  router.push({
+    path: type === 'product' ? '/products' : '/customers',
+    query: { search: item.name, ...(type === 'product' ? { highlight: item.id } : { customer: item.id }) },
+  })
 }
-
 const viewAllResults = () => {
   const query = searchQuery.value.trim()
   if (!query) return
-
+  const path = searchResults.value.products.length ? '/products' : '/customers'
+  cleanup()
   showResults.value = false
   searchQuery.value = ''
-
-  // Determine which page to navigate to based on results
-  if (searchResults.value.products.length > 0) {
-    router.push({
-      path: '/products',
-      query: { search: query }
-    })
-  } else if (searchResults.value.customers.length > 0) {
-    router.push({
-      path: '/customers',
-      query: { search: query }
-    })
-  } else if (searchResults.value.sales.length > 0) {
-    router.push({
-      path: '/sales',
-      query: { search: query }
-    })
-  } else {
-    // Default to products page if no specific results
-    router.push({
-      path: '/products',
-      query: { search: query }
-    })
-  }
+  router.push({ path, query: { search: query } })
 }
-
-// Cleanup function for search timeout
-const cleanup = () => {
-  if (searchTimeout) {
-    clearTimeout(searchTimeout)
-    searchTimeout = null
-  }
+const handleClickOutside = event => {
+  if (!event.target.closest('.search-container')) showResults.value = false
 }
-
-// Click outside to close
-const handleClickOutside = (event) => {
-  if (!event.target.closest('.search-container')) {
-    showResults.value = false
-  }
-}
-
-// Keyboard shortcuts
-const handleKeydown = (event) => {
-  // Cmd/Ctrl + K to focus search
+const handleKeydown = event => {
   if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
     event.preventDefault()
-    const searchInput = document.querySelector('input[placeholder*="جستجو"]')
-    if (searchInput) {
-      searchInput.focus()
-    }
+    document.querySelector('.search-container input')?.focus()
   }
-
-  // Escape to close results
-  if (event.key === 'Escape') {
-    showResults.value = false
-  }
+  if (event.key === 'Escape') showResults.value = false
 }
-
-// Watchers
-watch(searchQuery, (newValue) => {
-  if (newValue.length === 0) {
-    searchResults.value = { products: [], customers: [], sales: [], categories: [] }
-    showResults.value = false
-  }
-})
-
-// Lifecycle
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
   document.addEventListener('keydown', handleKeydown)
-
-  // Load initial data if not already loaded
-  if (productsStore.products.length === 0) {
-    productsStore.fetchProducts()
-  }
-  if (productsStore.categories.length === 0) {
-    productsStore.fetchCategories()
-  }
-  if (salesStore.customers.length === 0) {
-    salesStore.fetchCustomers()
-  }
-  if (salesStore.salesOrders.length === 0) {
-    salesStore.fetchSalesOrders()
-  }
 })
-
 onUnmounted(() => {
+  cleanup()
   document.removeEventListener('click', handleClickOutside)
   document.removeEventListener('keydown', handleKeydown)
-  cleanup() // Clear any pending search timeout
 })
 </script>
 

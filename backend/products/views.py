@@ -3,10 +3,12 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from decimal import Decimal
+from django.db.models import Sum, Q, Value, DecimalField
+from django.db.models.functions import Coalesce
 from .models import Category, Unit, Product
 from .serializers import (
     CategorySerializer, UnitSerializer,
-    ProductSerializer, ProductListSerializer
+    ProductSerializer, ProductListSerializer, ProductLookupSerializer
 )
 
 class CategoryViewSet(viewsets.ModelViewSet):
@@ -43,8 +45,26 @@ class ProductViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         """Return appropriate serializer class based on action."""
         if self.action == 'list':
+            if self.request.query_params.get('lookup') == 'true':
+                return ProductLookupSerializer
             return ProductListSerializer
         return self.serializer_class
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if self.action != 'list' or self.request.query_params.get('lookup') == 'true':
+            return queryset
+        quantity = DecimalField(max_digits=20, decimal_places=2)
+        incoming = Coalesce(Sum('inventory_transactions__quantity', filter=Q(
+            inventory_transactions__transaction_type__in=[
+                'purchase', 'return_from_customer', 'adjustment_add'])),
+            Value(Decimal('0')), output_field=quantity)
+        outgoing = Coalesce(Sum('inventory_transactions__quantity', filter=Q(
+            inventory_transactions__transaction_type__in=[
+                'sale', 'return_to_supplier', 'adjustment_subtract'])),
+            Value(Decimal('0')), output_field=quantity)
+        return queryset.select_related('category', 'unit').annotate(
+            _list_current_stock=incoming - outgoing)
     
     def create(self, request, *args, **kwargs):
         """Create product and handle initial stock if provided."""

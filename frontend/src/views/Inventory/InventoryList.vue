@@ -3,7 +3,7 @@
     <div>
       <!-- Breadcrumb -->
       <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 class="text-title-md2 font-bold text-black">
+        <h2 class="text-title-md2 font-bold text-black dark:text-gray-100">
           مدیریت موجودی
         </h2>
         <nav>
@@ -11,7 +11,7 @@
             <li>
               <router-link class="font-medium" to="/">داشبورد /</router-link>
             </li>
-            <li class="font-medium text-primary">موجودی</li>
+            <li class="font-medium text-primary dark:text-brand-300">موجودی</li>
           </ol>
         </nav>
       </div>
@@ -34,7 +34,7 @@
       <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div class="flex gap-3">
           <button @click="showAdjustmentModal = true"
-            class="inline-flex items-center justify-center rounded-md border-[1.5px] border-gray-200 bg-primary px-6 py-3 text-center font-medium text-dark dark:text-white">
+            class="inline-flex items-center justify-center rounded-md border-[1.5px] border-gray-200 bg-primary px-6 py-3 text-center font-medium text-white dark:text-white">
             <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
@@ -57,9 +57,9 @@
 
       <!-- Inventory Table -->
       <div
-        class="rounded-sm border border-stroke  bg-slate-100 dark:bg-slate-300  shadow-default dark:border-strokedark dark:bg-boxdark">
+        class="rounded-sm border border-stroke  bg-slate-100 dark:bg-gray-800  shadow-default dark:border-strokedark dark:bg-boxdark">
       <div class="px-4 py-6 md:px-6 xl:px-7.5 flex items-center justify-between">
-        <h4 class="text-xl font-semibold text-black">
+        <h4 class="text-xl font-semibold text-black dark:text-gray-100">
           وضعیت موجودی محصولات
         </h4>
         <button
@@ -74,7 +74,7 @@
       </div>
 
         <div
-          class="grid grid-cols-6 bg-slate-100 dark:bg-slate-300 border-t border-stroke px-4 py-4.5 dark:border-strokedark sm:grid-cols-8 md:px-6 2xl:px-7.5">
+          class="grid grid-cols-6 bg-slate-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-t border-stroke px-4 py-4.5 dark:border-strokedark sm:grid-cols-8 md:px-6 2xl:px-7.5">
           <div class="col-span-2 flex items-center">
             <p class="font-medium">نام محصول</p>
           </div>
@@ -100,15 +100,15 @@
 
         <!-- Inventory Data -->
         <div v-for="product in filteredInventoryProducts" :key="product.id"
-          class="grid grid-cols-6 hover:bg-slate-200 border-t border-stroke px-4 py-4.5 dark:border-strokedark sm:grid-cols-8 md:px-6 2xl:px-7.5">
+          class="grid grid-cols-6 hover:bg-slate-200 dark:hover:bg-gray-700 border-t border-stroke px-4 py-4.5 dark:border-strokedark sm:grid-cols-8 md:px-6 2xl:px-7.5">
           <div class="col-span-2 flex items-center">
             <div class="flex flex-col gap-1">
-              <p class="text-sm font-medium text-black">{{ product.name }}</p>
+              <p class="text-sm font-medium text-black dark:text-gray-100">{{ product.name }}</p>
               <p class="text-xs text-gray-500">کد: {{ product.code }}</p>
             </div>
           </div>
           <div class="col-span-1 hidden items-center sm:flex">
-            <p class="text-sm text-black">{{ product.category_name || '-' }}</p>
+            <p class="text-sm text-black dark:text-gray-100">{{ product.category_name || '-' }}</p>
           </div>
           <div class="col-span-1 flex items-center">
             <p class="text-sm font-medium" :class="getStockClass(product.current_stock, product.min_stock)">
@@ -116,10 +116,10 @@
             </p>
           </div>
           <div class="col-span-1 flex items-center">
-            <p class="text-sm text-black">{{ product.min_stock || 0 }}</p>
+            <p class="text-sm text-black dark:text-gray-100">{{ product.min_stock || 0 }}</p>
           </div>
           <div class="col-span-1 flex items-center">
-            <p class="text-sm text-black">{{ product.max_stock || '-' }}</p>
+            <p class="text-sm text-black dark:text-gray-100">{{ product.max_stock || '-' }}</p>
           </div>
           <div class="col-span-1 flex items-center">
             <span :class="getStatusClass(product.current_stock, product.min_stock)"
@@ -128,7 +128,7 @@
             </span>
           </div>
           <div class="col-span-1 flex items-center space-x-2">
-            <button @click="adjustStock(product)" class="hover:text-primary" title="تعدیل موجودی">
+            <button @click="adjustStock(product)" class="hover:text-primary dark:text-brand-300" title="تعدیل موجودی">
               <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -167,7 +167,7 @@
         <div
           class="w-full max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl rounded-lg bg-white p-6 dark:bg-boxdark max-h-[70vh] overflow-y-auto">
           <div class="mb-4 flex items-center justify-between">
-            <h3 class="text-lg font-medium text-black">
+            <h3 class="text-lg font-medium text-black dark:text-gray-100">
               تعدیل موجودی
             </h3>
             <button @click="closeAdjustmentModal" class="text-red-600 hover:text-red-800">
@@ -179,7 +179,7 @@
 
           <form @submit.prevent="handleAdjustment">
             <div class="mb-4">
-              <label class="mb-2 block text-sm font-medium text-black">
+              <label class="mb-2 block text-sm font-medium text-black dark:text-gray-100">
                 محصول
               </label>
               <!-- Search Input with Dropdown -->
@@ -210,7 +210,7 @@
               </div>
               <!-- Product Selection -->
               <select v-model="adjustmentForm.productId" required
-                class="w-full rounded border border-stroke bg-transparent px-3 py-2 text-black outline-none focus:border-primary dark:border-strokedark dark:bg-meta-4 dark:focus:border-primary">
+                class="w-full rounded border border-stroke bg-transparent px-3 py-2 text-black outline-none focus:border-primary dark:border-strokedark dark:bg-meta-4 dark:focus:border-primary dark:text-gray-100">
                 <option value="">محصول را انتخاب کنید</option>
                 <option v-for="product in productsStore.products" :key="product.id" :value="product.id">
                   {{ product.name }} (موجودی فعلی: {{ product.current_stock || 0 }})
@@ -219,11 +219,11 @@
             </div>
 
             <div class="mb-4">
-              <label class="mb-2 block text-sm font-medium text-black">
+              <label class="mb-2 block text-sm font-medium text-black dark:text-gray-100">
                 نوع تعدیل
               </label>
               <select v-model="adjustmentForm.type" required
-                class="w-full rounded border border-stroke bg-transparent px-3 py-2 text-black outline-none focus:border-primary dark:border-strokedark dark:bg-meta-4 dark:focus:border-primary">
+                class="w-full rounded border border-stroke bg-transparent px-3 py-2 text-black outline-none focus:border-primary dark:border-strokedark dark:bg-meta-4 dark:focus:border-primary dark:text-gray-100">
                 <option value="">نوع تعدیل را انتخاب کنید</option>
                 <option value="increase">افزایش موجودی</option>
                 <option value="decrease">کاهش موجودی</option>
@@ -231,20 +231,20 @@
             </div>
 
             <div class="mb-4">
-              <label class="mb-2 block text-sm font-medium text-black">
+              <label class="mb-2 block text-sm font-medium text-black dark:text-gray-100">
                 مقدار
               </label>
               <input v-model="adjustmentForm.quantity" type="number" min="1" required
-                class="w-full rounded border border-stroke bg-transparent px-3 py-2 text-black outline-none focus:border-primary dark:border-strokedark dark:bg-meta-4 dark:focus:border-primary"
+                class="w-full rounded border border-stroke bg-transparent px-3 py-2 text-black outline-none focus:border-primary dark:border-strokedark dark:bg-meta-4 dark:focus:border-primary dark:text-gray-100"
                 placeholder="مقدار تعدیل" />
             </div>
 
             <div class="mb-6">
-              <label class="mb-2 block text-sm font-medium text-black">
+              <label class="mb-2 block text-sm font-medium text-black dark:text-gray-100">
                 دلیل تعدیل
               </label>
               <textarea v-model="adjustmentForm.reason" rows="3"
-                class="w-full rounded border border-stroke bg-transparent px-3 py-2 text-black outline-none focus:border-primary dark:border-strokedark dark:bg-meta-4 dark:focus:border-primary"
+                class="w-full rounded border border-stroke bg-transparent px-3 py-2 text-black outline-none focus:border-primary dark:border-strokedark dark:bg-meta-4 dark:focus:border-primary dark:text-gray-100"
                 placeholder="دلیل تعدیل موجودی"></textarea>
             </div>
 
@@ -253,7 +253,7 @@
                 تعدیل موجودی
               </button>
               <button type="button" @click="closeAdjustmentModal"
-                class="flex-1 rounded border border-stroke px-4 py-2 text-black hover:bg-gray-50 dark:border-strokedark dark:hover:bg-meta-4">
+                class="flex-1 rounded border border-stroke px-4 py-2 text-black hover:bg-gray-50 dark:border-strokedark dark:hover:bg-meta-4 dark:text-gray-100">
                 انصراف
               </button>
             </div>
