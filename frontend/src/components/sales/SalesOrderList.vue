@@ -295,6 +295,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import { useQuickCreate } from '@/composables/useQuickCreate'
 import { useSalesStore } from '@/stores/sales'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import SalesOrderForm from './SalesOrderForm.vue'
@@ -320,6 +321,7 @@ const dateToFilter = ref('')
 const currentPage = ref(1)
 const pageSize = ref(10)
 const showCreateModal = ref(false)
+useQuickCreate('sale', '/sales', () => { showCreateModal.value = true })
 const showEditModal = ref(false)
 const showViewModal = ref(false)
 const showReceiptModal = ref(false)
