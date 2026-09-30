@@ -3,6 +3,7 @@
     <button
       class="relative flex items-center justify-center text-gray-500 transition-colors bg-white border border-gray-200 rounded-full hover:text-dark-900 h-11 w-11 hover:bg-gray-100 hover:text-gray-700 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
       @click="toggleDropdown"
+      aria-label="اعلان‌ها و فعالیت‌ها"
     >
       <span
         :class="{ hidden: unreadCount === 0, flex: unreadCount > 0 }"
@@ -41,7 +42,7 @@
     <!-- Dropdown Start -->
     <div
       v-if="dropdownOpen"
-      class="absolute -right-[240px] mt-[17px] flex h-[500px] w-[380px] flex-col rounded-2xl border border-gray-200 bg-white p-3 shadow-theme-lg dark:border-gray-800 dark:bg-gray-dark sm:w-[400px] lg:right-0"
+      class="fixed inset-x-3 top-16 z-50 flex max-h-[min(500px,calc(100dvh-5rem))] flex-col rounded-2xl border border-gray-200 bg-white p-3 shadow-theme-lg dark:border-gray-800 dark:bg-gray-dark sm:absolute sm:inset-x-auto sm:right-0 sm:top-auto sm:mt-[17px] sm:h-[500px] sm:w-[400px]"
     >
       <!-- Header -->
       <div
@@ -116,6 +117,11 @@
       </div>
 
       <!-- Content -->
+      <div v-else-if="fetchError" class="flex-1 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-100" role="alert">
+        <p class="font-semibold">اعلان‌ها در دسترس نیستند</p>
+        <p class="mt-2 leading-6">{{ fetchError }}</p>
+        <button type="button" @click="retryFetch" class="mt-4 min-h-11 rounded-md border border-amber-700 px-3 py-2 font-medium hover:bg-amber-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-700 dark:hover:bg-amber-900/30">تلاش دوباره</button>
+      </div>
       <div v-else class="flex-1 overflow-hidden">
         <!-- Notifications Tab -->
         <div v-if="activeTab === 'notifications'" class="h-full overflow-y-auto custom-scrollbar">
@@ -224,16 +230,6 @@
         </div>
       </div>
 
-      <!-- Footer -->
-      <div class="border-t border-gray-200 dark:border-gray-700 pt-3 mt-3">
-        <router-link
-          to="/reports"
-          class="w-full flex justify-center rounded-lg border border-gray-300 bg-white p-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
-          @click="closeDropdown"
-        >
-          مشاهده همه فعالیت‌ها
-        </router-link>
-      </div>
     </div>
     <!-- Dropdown End -->
   </div>
@@ -258,6 +254,16 @@ const markingAsRead = ref(false)
 const notifications = computed(() => notificationStore.notifications)
 const recentActivities = computed(() => notificationStore.recentActivities)
 const unreadCount = computed(() => notificationStore.unreadCount)
+const fetchError = computed(() => notificationStore.error)
+
+const retryFetch = async () => {
+  loading.value = true
+  try {
+    await notificationStore.fetchNotifications()
+  } finally {
+    loading.value = false
+  }
+}
 
 // Methods
 const toggleDropdown = async () => {

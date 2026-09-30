@@ -127,7 +127,9 @@
                   <span
                     v-if="isExpanded || isHovered || isMobileOpen"
                     class="menu-item-text"
-                    >{{ item.name }}</span
+                    >{{ item.name }}
+                    <span v-if="item.comingSoon" class="mr-2 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-900 dark:bg-amber-900/50 dark:text-amber-100">به‌زودی</span>
+                    </span
                   >
                 </router-link>
                 <transition
@@ -274,11 +276,7 @@ const menuGroups = [
         icon: PieChartIcon,
         name: "گزارشات",
         path: "/reports",
-      },
-      {
-        icon: PlugInIcon,
-        name: "تست سیستم",
-        path: "/test",
+        comingSoon: true,
       },
     ],
   },
@@ -289,6 +287,7 @@ const menuGroups = [
         icon: UserCircleIcon,
         name: "پروفایل کاربری",
         path: "/profile",
+        comingSoon: true,
       },
       {
         icon: LogoutIcon,

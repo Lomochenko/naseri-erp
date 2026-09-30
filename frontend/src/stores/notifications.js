@@ -48,13 +48,9 @@ export const useNotificationStore = defineStore('notifications', () => {
       }
     } catch (err) {
       console.error('Error fetching notifications:', err)
-      error.value = 'خطا در بارگذاری اعلانات'
-
-      // Fallback to mock data if API fails
-      if (err.response?.status === 404 || err.response?.status === 500) {
-        console.log('API endpoint not available, using mock data')
-        loadMockData()
-      }
+      error.value = 'دریافت اعلان‌ها در حال حاضر ممکن نیست. بعداً دوباره تلاش کنید.'
+      notifications.value = []
+      recentActivities.value = []
     } finally {
       loading.value = false
     }
@@ -185,76 +181,6 @@ export const useNotificationStore = defineStore('notifications', () => {
     }
   }
 
-  const loadMockData = () => {
-    // Fallback mock data for development/testing
-    notifications.value = [
-      {
-        id: 1,
-        activity_type: 'sale_created',
-        activity_type_display: 'ایجاد فاکتور جدید',
-        title: 'فاکتور جدید INV-20250922-0001 ایجاد شد',
-        priority: 'medium',
-        user_name: 'احمد محمدی',
-        user_image: '/images/user/default-avatar.png',
-        formatted_time: '۵ دقیقه پیش',
-        is_read: false,
-        created_at: new Date().toISOString()
-      },
-      {
-        id: 2,
-        activity_type: 'stock_low_warning',
-        activity_type_display: 'هشدار موجودی کم',
-        title: 'موجودی محصول "پیچ فلنج ۸×۴۰" به حداقل رسیده است',
-        priority: 'high',
-        user_name: 'سیستم',
-        user_image: '/images/user/default-avatar.png',
-        formatted_time: '۱۰ دقیقه پیش',
-        is_read: false,
-        created_at: new Date(Date.now() - 10 * 60 * 1000).toISOString()
-      },
-      {
-        id: 3,
-        activity_type: 'payment_received',
-        activity_type_display: 'دریافت پرداخت',
-        title: 'پرداخت ۳۴۰,۰۰۰ تومان دریافت شد',
-        priority: 'medium',
-        user_name: 'فاطمه احمدی',
-        user_image: '/images/user/default-avatar.png',
-        formatted_time: '۱۵ دقیقه پیش',
-        is_read: true,
-        created_at: new Date(Date.now() - 15 * 60 * 1000).toISOString()
-      }
-    ]
-
-    recentActivities.value = [
-      ...notifications.value,
-      {
-        id: 4,
-        activity_type: 'user_login',
-        activity_type_display: 'ورود کاربر',
-        title: 'علی رضایی وارد سیستم شد',
-        priority: 'low',
-        user_name: 'علی رضایی',
-        user_image: '/images/user/default-avatar.png',
-        formatted_time: '۲۰ دقیقه پیش',
-        is_read: true,
-        created_at: new Date(Date.now() - 20 * 60 * 1000).toISOString()
-      },
-      {
-        id: 5,
-        activity_type: 'product_created',
-        activity_type_display: 'ایجاد محصول جدید',
-        title: 'محصول جدید "مهره فلنج ۱۰" ایجاد شد',
-        priority: 'medium',
-        user_name: 'مریم حسینی',
-        user_image: '/images/user/default-avatar.png',
-        formatted_time: '۳۰ دقیقه پیش',
-        is_read: true,
-        created_at: new Date(Date.now() - 30 * 60 * 1000).toISOString()
-      }
-    ]
-  }
-
   const logActivity = async (activityData) => {
     try {
       // This would be called by other parts of the application
@@ -321,7 +247,6 @@ export const useNotificationStore = defineStore('notifications', () => {
     logActivity,
     clearAllNotifications,
     updateNotificationPreferences,
-    initialize,
-    loadMockData
+    initialize
   }
 })
